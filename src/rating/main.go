@@ -26,7 +26,7 @@ func main() {
 	router.GET("/ratings/:id", getRatingByID)
 	router.POST("ratings/new", postRating)
 
-	router.Run("localhost:8080")
+	router.Run(":50001")
 }
 
 func getAllRatings(c *gin.Context) {
