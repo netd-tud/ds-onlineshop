@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func loadRatings() ([]Rating, error) {
+func loadRatings() (map[string]Rating, error) {
 	jsonFile, err := os.Open("ratings.json")
 
 	if err != nil {
@@ -38,5 +38,10 @@ func loadRatings() ([]Rating, error) {
 		return nil, err
 	}
 
-	return wrapper.Ratings, nil
+	ratingsMap := make(map[string]Rating, len(wrapper.Ratings))
+	for _, rating := range wrapper.Ratings {
+		ratingsMap[rating.ID] = rating
+	}
+
+	return ratingsMap, nil
 }
