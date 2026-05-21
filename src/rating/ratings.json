@@ -1,0 +1,22 @@
+{
+    "ratings": [
+        {
+            "id": 1,
+            "user_id": 1,
+            "score": 4.5,
+            "Body": "Great product!"
+        },
+        {
+            "id": 2,
+            "user_id": 2,
+            "score": 3.0,
+            "Body": "It's okay."
+        },
+        {
+            "id": 3,
+            "user_id": 3,
+            "score": 5.0,
+            "Body": "Excellent! Highly recommend."
+        }
+    ]
+}
