@@ -42,6 +42,13 @@ type platformDetails struct {
 	provider string
 }
 
+type Rating struct {
+	ID     string  `json:"id"`
+	UserID int     `json:"user_id"`
+	Score  float64 `json:"score"`
+	Body   string  `json:"body"`
+}
+
 var (
 	frontendMessage  = strings.TrimSpace(os.Getenv("FRONTEND_MESSAGE"))
 	isCymbalBrand    = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
@@ -180,10 +187,28 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		log.WithField("error", err).Warn("failed to get product recommendations")
 	}
 
+	ratings := []Rating{}
+	ratingAddr := os.Getenv("RATING_SERVICE_ADDR")
+	if ratingAddr != "" {
+		resp, err := http.Get(fmt.Sprintf("http://%s/ratings", ratingAddr))
+		if err == nil {
+			defer resp.Body.Close()
+			var allRatings map[string]Rating
+			if err := json.NewDecoder(resp.Body).Decode(&allRatings); err == nil {
+				for _, r := range allRatings {
+					ratings = append(ratings, r)
+				}
+			}
+		} else {
+			log.WithField("error", err).Warn("failed to connect to ratingservice")
+		}
+	}
+
 	product := struct {
-		Item  *pb.Product
-		Price *pb.Money
-	}{p, price}
+		Item    *pb.Product
+		Price   *pb.Money
+		Ratings []Rating
+	}{p, price, ratings}
 
 	// Fetch packaging info (weight/dimensions) of the product
 	// The packaging service is an optional microservice you can run as part of a Google Cloud demo.
@@ -232,7 +257,7 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to add to cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", baseUrl + "/cart")
+	w.Header().Set("location", baseUrl+"/cart")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -244,7 +269,7 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to empty cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", baseUrl + "/")
+	w.Header().Set("location", baseUrl+"/")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -423,7 +448,7 @@ func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) 
 		c.MaxAge = -1
 		http.SetCookie(w, c)
 	}
-	w.Header().Set("Location", baseUrl + "/")
+	w.Header().Set("Location", baseUrl+"/")
 	w.WriteHeader(http.StatusFound)
 }
 

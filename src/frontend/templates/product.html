@@ -32,6 +32,21 @@
         <div class="product-wrapper">
 
           <h2>{{ $.product.Item.Name }}</h2>
+          {{ if $.product.Ratings }}
+          <script src="https://kit.fontawesome.com/0fb96d9346.js" crossorigin="anonymous"></script>
+          <div class="product-ratings-stars">
+            <a href="#ratings-section" style="text-decoration: none">
+              <span class="star-rating" style="color: #ffc107">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+              </span>
+              <span>({{ len $.product.Ratings }} Reviews)</span>
+            </a>
+          </div>
+          {{ end }}
           <p class="product-price">{{ renderMoney $.product.Price }}</p>
           <p>{{ $.product.Item.Description }}</p>
 
@@ -80,6 +95,23 @@
   <div class="ad">
    {{ if $.ad }}{{ template "text_ad" $ }}{{ end }}
   </div>
+
+  {{ if $.product.Ratings }}
+  <div id="ratings-section" class="container">
+    <h3>Customer Reviews</h3>
+    <hr>
+    {{ range $.product.Ratings }}
+    <div class="rating-item">
+      <div class="rating-header">
+        <strong>User #{{ .UserID }}</strong>
+        <span class="rating-score">- Score: {{ .Score }}/5</span>
+      </div>
+      <p class="rating-body">{{ .Body }}</p>
+      <hr>
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
 
 </main>
 {{ template "footer" . }}
