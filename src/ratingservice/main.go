@@ -14,10 +14,11 @@ type Ratings struct {
 	Ratings []Rating `json:"ratings"`
 }
 type Rating struct {
-	ID     string  `json:"id"`
-	UserID int     `json:"user_id"`
-	Score  float64 `json:"score"`
-	Body   string  `json:"body"`
+	ID        string  `json:"id"`
+	UserID    int     `json:"user_id"`
+	Score     float64 `json:"score"`
+	Body      string  `json:"body"`
+	ProductID string  `json:"product_id"`
 }
 
 var ratings map[string]Rating
@@ -32,7 +33,8 @@ func main() {
 	router := gin.Default()
 	router.GET("/_healthz", _healthz)
 	router.GET("/ratings", getAllRatings)
-	router.GET("/ratings/:id", getRatingByID)
+	router.GET("/ratings/:id", getRatingsByID)
+	router.GET("/ratings/product/:product_id", getRatingsByProductID)
 	router.POST("/ratings/new", postRating)
 
 	port := os.Getenv("PORT")
@@ -51,7 +53,7 @@ func getAllRatings(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, ratings)
 }
 
-func getRatingByID(c *gin.Context) {
+func getRatingsByID(c *gin.Context) {
 	id := c.Param("id")
 
 	rating, ok := ratings[id]
@@ -61,6 +63,24 @@ func getRatingByID(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, rating)
+}
+
+func getRatingsByProductID(c *gin.Context) {
+	productID := c.Param("product_id")
+
+	productRatings := make(map[string]Rating)
+	for rating, _ := range ratings {
+		if ratings[rating].ProductID == productID {
+			productRatings[rating] = ratings[rating]
+		}
+	}
+
+	if len(productRatings) == 0 {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "no ratings found for product"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, productRatings)
 }
 
 func postRating(c *gin.Context) {
