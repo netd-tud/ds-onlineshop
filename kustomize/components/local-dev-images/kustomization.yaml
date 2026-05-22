@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+images:
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/adservice
+    newName: adservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/cartservice
+    newName: cartservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/checkoutservice
+    newName: checkoutservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/currencyservice
+    newName: currencyservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice
+    newName: emailservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend
+    newName: frontend
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/paymentservice
+    newName: paymentservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/productcatalogservice
+    newName: productcatalogservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice
+    newName: recommendationservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/shippingservice
+    newName: shippingservice
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/loadgenerator
+    newName: loadgenerator
