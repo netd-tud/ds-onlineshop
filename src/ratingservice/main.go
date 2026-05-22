@@ -3,7 +3,9 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +35,12 @@ func main() {
 	router.GET("/ratings/:id", getRatingByID)
 	router.POST("/ratings/new", postRating)
 
-	router.Run(":50001")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "50001"
+	}
+
+	router.Run(fmt.Sprintf(":%s", port))
 }
 
 func _healthz(c *gin.Context) {
