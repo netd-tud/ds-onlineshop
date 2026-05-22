@@ -43,10 +43,11 @@ type platformDetails struct {
 }
 
 type Rating struct {
-	ID     string  `json:"id"`
-	UserID int     `json:"user_id"`
-	Score  float64 `json:"score"`
-	Body   string  `json:"body"`
+	ID        string  `json:"id"`
+	UserID    int     `json:"user_id"`
+	Score     float64 `json:"score"`
+	Body      string  `json:"body"`
+	ProductID string  `json:"product_id"`
 }
 
 var (
@@ -190,7 +191,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	ratings := []Rating{}
 	ratingAddr := os.Getenv("RATING_SERVICE_ADDR")
 	if ratingAddr != "" {
-		resp, err := http.Get(fmt.Sprintf("http://%s/ratings", ratingAddr))
+		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", ratingAddr, p.GetId()))
+		log.Println("Response: %s", resp)
 		if err == nil {
 			defer resp.Body.Close()
 			var allRatings map[string]Rating
@@ -203,6 +205,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 			log.WithField("error", err).Warn("failed to connect to ratingservice")
 		}
 	}
+
+	log.Println("Ratings: %s", ratings)
 
 	product := struct {
 		Item    *pb.Product
