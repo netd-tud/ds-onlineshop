@@ -28,7 +28,7 @@ func main() {
 	}
 
 	router := gin.Default()
-	router.GET("/healthz", healthz)
+	router.GET("/_healthz", _healthz)
 	router.GET("/ratings", getAllRatings)
 	router.GET("/ratings/:id", getRatingByID)
 	router.POST("/ratings/new", postRating)
@@ -36,7 +36,7 @@ func main() {
 	router.Run(":50001")
 }
 
-func healthz(c *gin.Context) {
+func _healthz(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
