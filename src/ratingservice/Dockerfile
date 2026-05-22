@@ -16,6 +16,7 @@ FROM gcr.io/distroless/static
 
 WORKDIR /src
 COPY --from=builder /rating ./server
+COPY ratings.json .
 
 ENV GOTRACEBACK=single
 
