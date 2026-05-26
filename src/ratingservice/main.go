@@ -14,12 +14,12 @@ import (
 
 type Ratings struct {
 	Ratings []Rating `json:"ratings"`
-	Average float64  `json:"average"`
+	Average float32  `json:"average"`
 }
 type Rating struct {
 	ID        string  `json:"id"`
-	UserID    int     `json:"user_id"`
-	Score     float64 `json:"score"`
+	UserID    string  `json:"user_id"`
+	Score     float32 `json:"score"`
 	Body      string  `json:"body"`
 	ProductID string  `json:"product_id"`
 }
@@ -76,7 +76,7 @@ func getRatingsByProductID(c *gin.Context) {
 	for rating, _ := range ratings {
 		if ratings[rating].ProductID == productID {
 			productRatings[rating] = ratings[rating]
-			totalScore += ratings[rating].Score
+			totalScore += float64(ratings[rating].Score)
 		}
 	}
 
@@ -86,7 +86,7 @@ func getRatingsByProductID(c *gin.Context) {
 	}
 
 	averageScore := totalScore / float64(len(productRatings))
-	r := Ratings{Ratings: slices.Collect(maps.Values(productRatings)), Average: averageScore}
+	r := Ratings{Ratings: slices.Collect(maps.Values(productRatings)), Average: float32(averageScore)}
 
 	c.IndentedJSON(http.StatusOK, r)
 }

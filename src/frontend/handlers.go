@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -44,12 +45,12 @@ type platformDetails struct {
 
 type Ratings struct {
 	Ratings []Rating `json:"ratings"`
-	Average float64  `json:"average"`
+	Average float32  `json:"average"`
 }
 type Rating struct {
 	ID        string  `json:"id"`
-	UserID    int     `json:"user_id"`
-	Score     float64 `json:"score"`
+	UserID    string  `json:"user_id"`
+	Score     float32 `json:"score"`
 	Body      string  `json:"body"`
 	ProductID string  `json:"product_id"`
 }
@@ -237,6 +238,58 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"packagingInfo":   packagingInfo,
 	})); err != nil {
 		log.Println(err)
+	}
+}
+
+func (fe *frontendServer) ratingHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	score, _ := strconv.ParseFloat(r.FormValue("score"), 32)
+
+	rating := Rating{
+		Score:     float32(score),
+		Body:      r.FormValue("body"),
+		ProductID: r.FormValue("product_id"),
+		UserID:    r.FormValue("user_id")[:4],
+	}
+
+	log.WithField("product", rating.ProductID).WithField("rating", rating).Debug("adding rating")
+
+	jsonData, err := json.Marshal(rating)
+	if err != nil {
+		log.WithError(err).Error("failed to marshal rating JSON")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	microserviceURL := fmt.Sprintf("http://%s/ratings/new", fe.ratingSvcAddr)
+
+	proxyReq, err := http.NewRequest(http.MethodPost, microserviceURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.WithError(err).Error("failed to create microservice request")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	proxyReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(proxyReq)
+	if err != nil {
+		log.WithError(err).Error("rating microservice connection failed")
+		http.Error(w, "Service unavailable", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusCreated {
+		http.Redirect(w, r, fmt.Sprintf("/product/%s", rating.ProductID), http.StatusSeeOther)
+	} else {
+		log.WithField("status", resp.StatusCode).Error("microservice rejected rating submission")
+		http.Error(w, "Failed to submit review to downstream service", http.StatusInternalServerError)
 	}
 }
 
