@@ -1,5 +1,5 @@
 {{ define "ratingStars" }}
-  {{ if $.product.Ratings }}
+{{ if $.product.Ratings }}
   <script src="https://kit.fontawesome.com/0fb96d9346.js" crossorigin="anonymous"></script>
   <div class="product-ratings-stars">
     <a href="#ratings-section" style="text-decoration: none">
@@ -13,10 +13,11 @@
       <span>({{ len $.product.Ratings.Ratings }} {{ if eq (len $.product.Ratings.Ratings) 1 }}Review{{ else }}Reviews{{ end }})</span>
     </a>
   </div>
-  {{ end }}
+{{ end }}
 {{ end }}
 
 {{ define "ratingSubmitForm" }}
+{{ if $.product.Ratings }}
   <hr>
   <div id="ratings-section" class="container">
     <div class="add-review-section">
@@ -52,4 +53,5 @@
       {{ end }}
     {{ end }}
   </div>
+{{ end }}
 {{ end }}

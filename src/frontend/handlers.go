@@ -193,30 +193,28 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		log.WithField("error", err).Warn("failed to get product recommendations")
 	}
 
-	//rratings := []Rating{}
-	ratings := Ratings{}
+	product := struct {
+		Item    *pb.Product
+		Price   *pb.Money
+		Ratings *Ratings
+	}{p, price, nil}
+
 	ratingAddr := os.Getenv("RATING_SERVICE_ADDR")
 	if ratingAddr != "" {
 		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", ratingAddr, p.GetId()))
 		log.Println("Response: %s", resp)
 		if err == nil {
+			var ratings Ratings
 			defer resp.Body.Close()
 			//var allRatings map[string]Rating
 			if err := json.NewDecoder(resp.Body).Decode(&ratings); err == nil {
-
+				log.Println("Ratings: %s", ratings)
+				product.Ratings = &ratings
 			}
 		} else {
 			log.WithField("error", err).Warn("failed to connect to ratingservice")
 		}
 	}
-
-	log.Println("Ratings: %s", ratings)
-
-	product := struct {
-		Item    *pb.Product
-		Price   *pb.Money
-		Ratings Ratings
-	}{p, price, ratings}
 
 	// Fetch packaging info (weight/dimensions) of the product
 	// The packaging service is an optional microservice you can run as part of a Google Cloud demo.
