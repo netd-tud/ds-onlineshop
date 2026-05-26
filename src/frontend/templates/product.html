@@ -37,13 +37,13 @@
           <div class="product-ratings-stars">
             <a href="#ratings-section" style="text-decoration: none">
               <span class="star-rating" style="color: #ffc107">
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
-                <i class="fa-solid fa-star"></i>
+                <i class="{{ if ge $.product.Ratings.Average 1.0 }}fa-solid{{ else if ge $.product.Ratings.Average 0.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                <i class="{{ if ge $.product.Ratings.Average 2.0 }}fa-solid{{ else if ge $.product.Ratings.Average 1.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                <i class="{{ if ge $.product.Ratings.Average 3.0 }}fa-solid{{ else if ge $.product.Ratings.Average 2.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                <i class="{{ if ge $.product.Ratings.Average 4.0 }}fa-solid{{ else if ge $.product.Ratings.Average 3.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                <i class="{{ if ge $.product.Ratings.Average 5.0 }}fa-solid{{ else if ge $.product.Ratings.Average 4.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
               </span>
-              <span>({{ len $.product.Ratings }} Reviews)</span>
+              <span>({{ len $.product.Ratings.Ratings }} {{ if eq (len $.product.Ratings.Ratings) 1 }}Review{{ else }}Reviews{{ end }})</span>
             </a>
           </div>
           {{ end }}
@@ -96,11 +96,11 @@
    {{ if $.ad }}{{ template "text_ad" $ }}{{ end }}
   </div>
 
-  {{ if $.product.Ratings }}
+  {{ if $.product.Ratings.Ratings }}
   <div id="ratings-section" class="container">
     <h3>Customer Reviews</h3>
     <hr>
-    {{ range $.product.Ratings }}
+    {{ range $.product.Ratings.Ratings }}
     <div class="rating-item">
       <div class="rating-header">
         <strong>User #{{ .UserID }}</strong>

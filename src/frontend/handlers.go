@@ -42,6 +42,10 @@ type platformDetails struct {
 	provider string
 }
 
+type Ratings struct {
+	Ratings []Rating `json:"ratings"`
+	Average float64  `json:"average"`
+}
 type Rating struct {
 	ID        string  `json:"id"`
 	UserID    int     `json:"user_id"`
@@ -188,18 +192,17 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		log.WithField("error", err).Warn("failed to get product recommendations")
 	}
 
-	ratings := []Rating{}
+	//rratings := []Rating{}
+	ratings := Ratings{}
 	ratingAddr := os.Getenv("RATING_SERVICE_ADDR")
 	if ratingAddr != "" {
 		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", ratingAddr, p.GetId()))
 		log.Println("Response: %s", resp)
 		if err == nil {
 			defer resp.Body.Close()
-			var allRatings map[string]Rating
-			if err := json.NewDecoder(resp.Body).Decode(&allRatings); err == nil {
-				for _, r := range allRatings {
-					ratings = append(ratings, r)
-				}
+			//var allRatings map[string]Rating
+			if err := json.NewDecoder(resp.Body).Decode(&ratings); err == nil {
+
 			}
 		} else {
 			log.WithField("error", err).Warn("failed to connect to ratingservice")
@@ -211,7 +214,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	product := struct {
 		Item    *pb.Product
 		Price   *pb.Money
-		Ratings []Rating
+		Ratings Ratings
 	}{p, price, ratings}
 
 	// Fetch packaging info (weight/dimensions) of the product

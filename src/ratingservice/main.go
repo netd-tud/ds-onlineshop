@@ -4,14 +4,17 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
+	"slices"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Ratings struct {
 	Ratings []Rating `json:"ratings"`
+	Average float64  `json:"average"`
 }
 type Rating struct {
 	ID        string  `json:"id"`
@@ -69,9 +72,11 @@ func getRatingsByProductID(c *gin.Context) {
 	productID := c.Param("product_id")
 
 	productRatings := make(map[string]Rating)
+	totalScore := 0.0
 	for rating, _ := range ratings {
 		if ratings[rating].ProductID == productID {
 			productRatings[rating] = ratings[rating]
+			totalScore += ratings[rating].Score
 		}
 	}
 
@@ -80,7 +85,10 @@ func getRatingsByProductID(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, productRatings)
+	averageScore := totalScore / float64(len(productRatings))
+	r := Ratings{Ratings: slices.Collect(maps.Values(productRatings)), Average: averageScore}
+
+	c.IndentedJSON(http.StatusOK, r)
 }
 
 func postRating(c *gin.Context) {
