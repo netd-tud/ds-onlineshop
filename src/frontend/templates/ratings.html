@@ -1,0 +1,55 @@
+{{ define "ratingStars" }}
+  {{ if $.product.Ratings }}
+  <script src="https://kit.fontawesome.com/0fb96d9346.js" crossorigin="anonymous"></script>
+  <div class="product-ratings-stars">
+    <a href="#ratings-section" style="text-decoration: none">
+                <span class="star-rating" style="color: #ffc107">
+                  <i class="{{ if ge $.product.Ratings.Average 1.0 }}fa-solid{{ else if ge $.product.Ratings.Average 0.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                  <i class="{{ if ge $.product.Ratings.Average 2.0 }}fa-solid{{ else if ge $.product.Ratings.Average 1.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                  <i class="{{ if ge $.product.Ratings.Average 3.0 }}fa-solid{{ else if ge $.product.Ratings.Average 2.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                  <i class="{{ if ge $.product.Ratings.Average 4.0 }}fa-solid{{ else if ge $.product.Ratings.Average 3.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                  <i class="{{ if ge $.product.Ratings.Average 5.0 }}fa-solid{{ else if ge $.product.Ratings.Average 4.5 }}fa-solid fa-star-half-stroke{{ else }}fa-regular{{ end }} fa-star"></i>
+                </span>
+      <span>({{ len $.product.Ratings.Ratings }} {{ if eq (len $.product.Ratings.Ratings) 1 }}Review{{ else }}Reviews{{ end }})</span>
+    </a>
+  </div>
+  {{ end }}
+{{ end }}
+
+{{ define "ratingSubmitForm" }}
+  <hr>
+  <div id="ratings-section" class="container">
+    <div class="add-review-section">
+      <h3>Write a Review</h3>
+      <form method="POST" action="{{ $.baseUrl }}/ratings/new">
+        <input type="hidden" name="user_id" value="{{$.session_id}}" />
+        <input type="hidden" name="product_id" value="{{$.product.Item.Id}}" />
+        <div class="form-group">
+          <label for="score">Score:</label>
+          <input type="number" name="score" id="score" class="form-control" min="1" max="5" step="0.5" value="5" style="width: 80px; display: inline-block;">
+        </div>
+        <div class="form-group">
+          <label for="body">Review:</label>
+          <textarea name="body" id="body" class="form-control" rows="3" placeholder="Share your thoughts about this product..."></textarea>
+        </div>
+        <button type="submit" class="cymbal-button-primary">Submit Review</button>
+      </form>
+    </div>
+    <br>
+
+    {{ if $.product.Ratings.Ratings }}
+      <h3>Customer Reviews</h3>
+      <hr>
+      {{ range $.product.Ratings.Ratings }}
+        <div class="rating-item">
+          <div class="rating-header">
+            <strong>User #{{ .UserID }}</strong>
+            <span class="rating-score">- Score: {{ .Score }}/5</span>
+          </div>
+          <p class="rating-body">{{ .Body }}</p>
+          <hr>
+        </div>
+      {{ end }}
+    {{ end }}
+  </div>
+{{ end }}

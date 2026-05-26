@@ -32,6 +32,7 @@
         <div class="product-wrapper">
 
           <h2>{{ $.product.Item.Name }}</h2>
+          {{ template "ratingStars" . }}
           <p class="product-price">{{ renderMoney $.product.Price }}</p>
           <p>{{ $.product.Item.Description }}</p>
 
@@ -80,6 +81,7 @@
   <div class="ad">
    {{ if $.ad }}{{ template "text_ad" $ }}{{ end }}
   </div>
+  {{ template "ratingSubmitForm" . }}
 
 </main>
 {{ template "footer" . }}

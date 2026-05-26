@@ -47,6 +47,8 @@ build:
     context: src/frontend
   - image: adservice
     context: src/adservice
+  - image: ratingservice
+    context: src/ratingservice
   tagPolicy:
     gitCommit: {}
   local:
@@ -55,7 +57,7 @@ build:
 manifests:
   kustomize:
     paths:
-    - kubernetes-manifests
+    - kustomize
 deploy:
   kubectl: {}
 # "gcb" profile allows building and pushing the images

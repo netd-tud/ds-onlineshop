@@ -1,0 +1,39 @@
+{
+    "ratings": [
+        {
+            "id": "001",
+            "user_id": "855a",
+            "score": 4.5,
+            "body": "Great for the summer!",
+            "product_id": "OLJCESPC7Z"
+        },
+        {
+            "id": "002",
+            "user_id": "99bf",
+            "score": 2.5,
+            "body": "Quality not very good.",
+            "product_id": "66VCHSJNUP"
+        },
+        {
+            "id": "003",
+            "user_id": "b0a9",
+            "score": 5.0,
+            "body": "Excellent! Highly recommend.",
+            "product_id": "1YMWWN1N4O"
+        },
+        {
+            "id": "004",
+            "user_id": "4fcc",
+            "score": 3.5,
+            "body": "Ok",
+            "product_id": "L9ECAV7KIM"
+        },
+        {
+            "id": "005",
+            "user_id": "4da7",
+            "score": 2.5,
+            "body": "A bit too tight",
+            "product_id": "L9ECAV7KIM"
+        }
+    ]
+}
