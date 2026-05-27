@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailservice
+spec:
+  selector:
+    matchLabels:
+      app: emailservice
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: MQTT_BROKER_ADDR
+              value: "mqtt-broker:1883"

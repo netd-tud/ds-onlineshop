@@ -4,3 +4,4 @@ resources:
   - mqtt-broker.yaml
 patches:
   - path: patch-checkout.yaml
+  - path: patch-email.yaml
