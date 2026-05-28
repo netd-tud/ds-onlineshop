@@ -16,12 +16,14 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"time"
 
 	"cloud.google.com/go/profiler"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -83,6 +85,9 @@ type checkoutService struct {
 
 	paymentSvcAddr string
 	paymentSvcConn *grpc.ClientConn
+
+	mqttBrokerAddr string
+	mqttClient     mqtt.Client
 }
 
 func main() {
@@ -114,6 +119,11 @@ func main() {
 	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 	mustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
 	mustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
+	svc.mqttBrokerAddr = os.Getenv("MQTT_BROKER_ADDR")
+	log.Infof("Broker Addr: %s", svc.mqttBrokerAddr)
+	if svc.mqttBrokerAddr != "" {
+		svc.mqttClient = svc.initializeMQTTClient()
+	}
 
 	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -376,7 +386,52 @@ func (cs *checkoutService) chargeCard(ctx context.Context, amount *pb.Money, pay
 	return paymentResp.GetTransactionId(), nil
 }
 
+func (cs *checkoutService) initializeMQTTClient() mqtt.Client {
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(fmt.Sprintf("tcp://%s", cs.mqttBrokerAddr))
+	opts.SetClientID("checkoutservice")
+	opts.OnConnect = func(client mqtt.Client) {
+		log.Info("Connected to MQTT")
+	}
+	opts.OnConnectionLost = func(client mqtt.Client, err error) {
+		log.Errorf("Connection to MQTT lost: %v", err)
+	}
+	client := mqtt.NewClient(opts)
+	log.Infof("Client: %v", client)
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		log.Fatalf("MQTT Connection Error: %v", token.Error())
+	}
+	return client
+}
+
 func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email string, order *pb.OrderResult) error {
+	if cs.mqttBrokerAddr != "" {
+		return cs.sendOrderConfirmationMQTT(ctx, email, order)
+	}
+	return cs.sendOrderConfirmationgRPC(ctx, email, order)
+}
+
+func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email string, order *pb.OrderResult) error {
+	type OrderEvent struct {
+		Email string `json:"email"`
+		Order string `json:"order"`
+	}
+
+	eventData, _ := json.Marshal(OrderEvent{
+		Email: email,
+		Order: order.OrderId,
+	})
+
+	token := cs.mqttClient.Publish("orders/checkout-complete", 1, false, eventData)
+	if token.Error() != nil {
+		return token.Error()
+	}
+	token.Wait()
+
+	return nil
+}
+
+func (cs *checkoutService) sendOrderConfirmationgRPC(ctx context.Context, email string, order *pb.OrderResult) error {
 	_, err := pb.NewEmailServiceClient(cs.emailSvcConn).SendOrderConfirmation(ctx, &pb.SendOrderConfirmationRequest{
 		Email: email,
 		Order: order})

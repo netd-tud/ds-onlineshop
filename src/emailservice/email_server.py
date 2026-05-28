@@ -19,8 +19,11 @@ import argparse
 import os
 import sys
 import time
+import json
 import grpc
 import traceback
+import threading
+import paho.mqtt.client as mqtt
 from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateError
 from google.api_core.exceptions import GoogleAPICallError
 from google.auth.exceptions import DefaultCredentialsError
@@ -53,7 +56,7 @@ class BaseEmailService(demo_pb2_grpc.EmailServiceServicer):
   def Check(self, request, context):
     return health_pb2.HealthCheckResponse(
       status=health_pb2.HealthCheckResponse.SERVING)
-  
+
   def Watch(self, request, context):
     return health_pb2.HealthCheckResponse(
       status=health_pb2.HealthCheckResponse.UNIMPLEMENTED)
@@ -107,7 +110,7 @@ class EmailService(BaseEmailService):
 
 class DummyEmailService(BaseEmailService):
   def SendOrderConfirmation(self, request, context):
-    logger.info('A request to send order confirmation email to {} has been received.'.format(request.email))
+    logger.info('A request to send order confirmation email to {} has been received via gRPC.'.format(request.email))
     return demo_pb2.Empty()
 
 class HealthCheck():
@@ -135,6 +138,46 @@ def start(dummy_mode):
       time.sleep(3600)
   except KeyboardInterrupt:
     server.stop(0)
+
+def on_mqtt_connect(client, userdata, flags, rc):
+  if rc == 0:
+    logger.info("Successfully connected to MQTT Broker!")
+    client.subscribe("orders/checkout-complete")
+    logger.info("Subscribed to topic: 'orders/checkout-complete'")
+  else:
+    logger.error(f"Failed to connect to MQTT Broker, return code {rc}")
+
+def on_mqtt_message(client, userdata, msg):
+  try:
+    payload = json.loads(msg.payload.decode('utf-8'))
+    email = payload.get('email')
+
+    if email:
+      logger.info(f"A request to send order confirmation email to {email} has been received via MQTT.")
+    else:
+      logger.warn("Received MQTT payload missing 'email' parameter.")
+  except Exception as e:
+    logger.error(f"Failed to process incoming MQTT payload: {e}")
+
+def start_mqtt_subscriber(broker_url):
+  logger.info(f"Starting email service in MQTT subscriber mode targeting: {broker_url}")
+
+  broker_host, broker_port = broker_url.split(":")
+  broker_port = int(broker_port)
+
+  client = mqtt.Client()
+  client.on_connect = on_mqtt_connect
+  client.on_message = on_mqtt_message
+
+  while True:
+    try:
+      client.connect(broker_host, broker_port, keepalive=60)
+      break
+    except Exception as e:
+      logger.warn(f"MQTT Broker connection refused ({e}). Retrying in 3 seconds...")
+      time.sleep(3)
+
+  client.loop_forever()
 
 def initStackdriverProfiling():
   project_id = None
@@ -195,6 +238,18 @@ if __name__ == '__main__':
   except (KeyError, DefaultCredentialsError):
       logger.info("Tracing disabled.")
   except Exception as e:
-      logger.warn(f"Exception on Cloud Trace setup: {traceback.format_exc()}, tracing disabled.") 
-  
+      logger.warn(f"Exception on Cloud Trace setup: {traceback.format_exc()}, tracing disabled.")
+
+  mqtt_broker_addr = os.environ.get("MQTT_BROKER_ADDR")
+
+  if mqtt_broker_addr:
+    mqtt_thread = threading.Thread(
+      target=start_mqtt_subscriber,
+      args=(mqtt_broker_addr,),
+      daemon=True
+    )
+    mqtt_thread.start()
+    logger.info("MQTT listener thread successfully started")
+
+  logger.info('starting the email service in dummy gRPC mode.')
   start(dummy_mode = True)
