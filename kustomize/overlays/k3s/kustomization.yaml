@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../base
+- ingress.yaml
+
+components:
+- ../../components/without-loadgenerator
+- ../../components/ratingservice
+- ../../components/mqtt-broker
+
+images:
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend
+    newName: frontend
+    newTag: latest
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice
+    newName: emailservice
+    newTag: latest
+  - name: ratingservice
+    newTag: latest
+
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+    target:
+      kind: Deployment
+      name: frontend
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+    target:
+      kind: Deployment
+      name: emailservice
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+    target:
+      kind: Deployment
+      name: ratingservice
