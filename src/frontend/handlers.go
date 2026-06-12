@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -68,6 +69,32 @@ var (
 )
 
 var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
+
+func (fe *frontendServer) heavyLoadHandler(w http.ResponseWriter, r *http.Request) {
+	iters := r.URL.Query().Get("iters")
+	if iters == "" {
+		iters = "5"
+	}
+	iterations, err := strconv.Atoi(iters)
+	log.WithField("iterations", iterations).Info("heavy load request")
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "failed to parse iterations"), http.StatusBadRequest)
+		return
+	}
+	w.Write([]byte(computeHeavyLoad(iterations)))
+}
+
+func computeHeavyLoad(iterations int) string {
+	data := []byte("monitoring-load-test-payload-data")
+	hash := sha256.Sum256(data)
+
+	for i := 0; i < iterations; i++ {
+		// Chain the hashes together to force serial CPU computation
+		hash = sha256.Sum256(hash[:])
+	}
+
+	return fmt.Sprintf("%x", hash)
+}
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
