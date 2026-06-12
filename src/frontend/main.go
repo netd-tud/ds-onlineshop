@@ -150,6 +150,7 @@ func main() {
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
 	r := mux.NewRouter()
+	r.HandleFunc(baseUrl+"/heavyLoad", svc.heavyLoadHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc(baseUrl+"/ratings/new", svc.ratingHandler).Methods(http.MethodPost)
