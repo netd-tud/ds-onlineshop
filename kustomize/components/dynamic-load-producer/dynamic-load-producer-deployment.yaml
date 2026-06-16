@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamic-load-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dynamic-load-producer
+  template:
+    metadata:
+      labels:
+        app: dynamic-load-producer
+    spec:
+      containers:
+        - name: dynamic-load-producer
+          imagePullPolicy: IfNotPresent
+          image: dynamic-load-producer
+          resources:
+            limits:
+              cpu: "200m"
+              memory: 128Mi
