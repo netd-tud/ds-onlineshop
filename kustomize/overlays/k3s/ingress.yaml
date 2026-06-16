@@ -14,3 +14,20 @@ spec:
                 name: frontend
                 port:
                   number: 80
+          # Grafana Subpath
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000
+
+          # Prometheus Subpath
+          - path: /prometheus
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus
+                port:
+                  number: 9090

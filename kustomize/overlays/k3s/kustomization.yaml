@@ -8,6 +8,7 @@ components:
 - ../../components/without-loadgenerator
 - ../../components/ratingservice
 - ../../components/mqtt-broker
+- ../../components/monitoring
 
 images:
   - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend
