@@ -17,6 +17,8 @@ spec:
         - name: cadvisor
           image: ghcr.io/google/cadvisor:0.57
           imagePullPolicy: IfNotPresent
+          args:
+            - --containerd=/var/run/containerd/containerd.sock
           resources:
             limits:
               cpu: 300m
@@ -34,11 +36,8 @@ spec:
             - name: sys
               mountPath: /sys
               readOnly: true
-            - name: docker
-              mountPath: /var/lib/containerd
-              readOnly: true
-            - name: disk
-              mountPath: /dev/disk
+            - name: containerd
+              mountPath: /var/run/containerd/containerd.sock
               readOnly: true
           ports:
             - containerPort: 8080
@@ -54,12 +53,9 @@ spec:
         - name: sys
           hostPath:
             path: /sys
-        - name: docker
+        - name: containerd
           hostPath:
-            path: /var/lib/containerd
-        - name: disk
-          hostPath:
-            path: /dev/disk
+            path: /run/k3s/containerd/containerd.sock
 ---
 apiVersion: v1
 kind: Service
