@@ -93,3 +93,9 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: frontend-demo
+  namespace: default

@@ -4,4 +4,3 @@ kind: Component
 resources:
   - frontend-demo.yaml
   - dynamic-load-producer-deployment.yaml
-  - serviceaccount.yaml
