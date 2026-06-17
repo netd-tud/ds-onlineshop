@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamic-load-producer-replicated
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dynamic-load-producer-replicated
+  template:
+    metadata:
+      labels:
+        app: dynamic-load-producer-replicated
+    spec:
+      containers:
+        - name: dynamic-load-producer-replicated
+          imagePullPolicy: IfNotPresent
+          image: dynamic-load-producer
+          env:
+            - name: TARGET
+              value: "frontend-demo-replicated:8080"
+          resources:
+            limits:
+              cpu: "200m"
+              memory: 128Mi
