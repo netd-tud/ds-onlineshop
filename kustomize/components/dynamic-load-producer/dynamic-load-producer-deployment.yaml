@@ -16,6 +16,9 @@ spec:
         - name: dynamic-load-producer
           imagePullPolicy: IfNotPresent
           image: dynamic-load-producer
+          env:
+            - name: TARGET
+              value: "frontend-demo:8080"
           resources:
             limits:
               cpu: "200m"

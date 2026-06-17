@@ -10,7 +10,7 @@ components:
 - ../../components/mqtt-broker
 - ../../components/monitoring
 - ../../components/dynamic-load-producer
-#- ../../components/frontend-demo-replicated
+- ../../components/dynamic-load-producer-replicated
 
 images:
   - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend
