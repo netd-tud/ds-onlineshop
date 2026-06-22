@@ -1,0 +1,40 @@
+{
+  "products": [
+    {
+      "id": "OLJCESPC7Z",
+      "stock": 20
+    },
+    {
+      "id": "66VCHSJNUP",
+      "stock": 13
+    },
+    {
+      "id": "1YMWWN1N4O",
+      "stock": 11
+    },
+    {
+      "id": "L9ECAV7KIM",
+      "stock": 361
+    },
+    {
+      "id": "2ZYFJ3GM2N",
+      "stock": 42
+    },
+    {
+      "id": "0PUK6V6EV0",
+      "stock": 40
+    },
+    {
+      "id": "LS4PSXUNUM",
+      "stock": 2
+    },
+    {
+      "id": "9SIQT8TOJO",
+      "stock": 30
+    },
+    {
+      "id": "6E92ZMYYFZ",
+      "stock": 160
+    }
+  ]
+}

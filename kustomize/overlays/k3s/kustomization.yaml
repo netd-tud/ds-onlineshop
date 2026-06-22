@@ -21,6 +21,8 @@ images:
     newTag: latest
   - name: ratingservice
     newTag: latest
+  - name: inventory
+    newTag: latest
 
 patches:
   - patch: |-
@@ -44,3 +46,10 @@ patches:
     target:
       kind: Deployment
       name: ratingservice
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+    target:
+      kind: Deployment
+      name: inventoryservice
