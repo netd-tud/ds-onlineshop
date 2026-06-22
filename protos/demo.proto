@@ -260,3 +260,23 @@ message Ad {
     // short advertisement text to display.
     string text = 2;
 }
+
+// ------------Inventory service------------------
+
+service InventoryService {
+  rpc ListInventory(Empty) returns (ListInventoryResponse) {}
+  rpc GetInventoryProduct(GetInventoryProductRequest) returns (InventoryProduct) {}
+}
+
+message InventoryProduct {
+  string id = 1;
+  int64 stock = 7;
+}
+
+message ListInventoryResponse {
+  repeated InventoryProduct products = 1;
+}
+
+message GetInventoryProductRequest {
+  string id = 1;
+}
