@@ -21,23 +21,21 @@ get_requests_per_minute() {
     echo $(( (percentage * max_requests_per_minute) / 100 ))
 }
 
-TARGET_HOST="${TARGET:-frontend-demo:8080}"
+TARGET_HOST="${TARGET:-frontend-demo}"
 METRIC_NAME="load_producer_target_requests_per_minute"
 
-if [[ "$TARGET_HOST" == *"replicated"* ]]; then
-    METRIC_NAME="${METRIC_NAME}_replicated"
-fi
 echo "Starting load generator targeting: $TARGET_HOST"
 
 # Main loop
 while true; do
     start_second=$(date +%s)
     requests_per_minute=$(get_requests_per_minute)
+    echo "Requests per minute: $requests_per_minute"
 
     echo "$METRIC_NAME $requests_per_minute" | \
-          curl --data-binary @- http://prometheus:9091/metrics/job/dynamic-load-producer
+          curl --data-binary @- http://prometheus:9091/metrics/job/dynamic-load-producer/host/"$TARGET_HOST"
 
-    curl -s -o /dev/null -X GET --connect-timeout 2 "http://${TARGET_HOST}/heavyLoad?iters=$requests_per_minute"
+    curl -s -o /dev/null -X GET --connect-timeout 2 "http://${TARGET_HOST}:8080/heavyLoad?iters=$requests_per_minute"
     end_second=$(date +%s)
     elapsed=$(( end_second - start_second ))
     sleep_time=$(( 60 - elapsed ))

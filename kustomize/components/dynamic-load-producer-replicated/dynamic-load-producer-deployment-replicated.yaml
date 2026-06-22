@@ -18,7 +18,7 @@ spec:
           image: dynamic-load-producer
           env:
             - name: TARGET
-              value: "frontend-demo-replicated:8080"
+              value: "frontend-demo-replicated"
           resources:
             limits:
               cpu: "200m"
