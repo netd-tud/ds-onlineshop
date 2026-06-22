@@ -11,7 +11,8 @@ get_requests_per_minute() {
         06|07) percentage=40 ;;              # 06:00 - 07:59
         08|09) percentage=50 ;;              # 08:00 - 09:59
         10|11) percentage=90 ;;              # 10:00 - 11:59
-        12|13|14) percentage=110 ;;          # 12:00 - 14:59
+        12|13) percentage=110 ;;             # 12:00 - 13:59
+        14) percentage=250 ;;                # 14:00 - 14:59
         15|16) percentage=90 ;;              # 15:00 - 16:59
         17|18) percentage=75 ;;              # 17:00 - 18:59
         19|20) percentage=40 ;;              # 19:00 - 20:59
