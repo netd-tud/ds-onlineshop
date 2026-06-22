@@ -226,14 +226,12 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Ratings *Ratings
 	}{p, price, nil}
 
-	ratingAddr := os.Getenv("RATING_SERVICE_ADDR")
-	if ratingAddr != "" {
-		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", ratingAddr, p.GetId()))
+	if fe.ratingSvcAddr != "" {
+		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", fe.ratingSvcAddr, p.GetId()))
 		log.Println("Response: %s", resp)
 		if err == nil {
 			var ratings Ratings
 			defer resp.Body.Close()
-			//var allRatings map[string]Rating
 			if err := json.NewDecoder(resp.Body).Decode(&ratings); err == nil {
 				log.Println("Ratings: %s", ratings)
 				product.Ratings = &ratings
