@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/microservices-demo/src/frontend
+module github.com/turt1z/microservices-demo/src/frontend
 
 go 1.25.0
 

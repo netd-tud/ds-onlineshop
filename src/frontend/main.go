@@ -88,6 +88,9 @@ type frontendServer struct {
 	shoppingAssistantSvcAddr string
 
 	ratingSvcAddr string
+
+	inventorySvcAddr string
+	inventorySvcConn *grpc.ClientConn
 }
 
 func main() {
@@ -140,6 +143,7 @@ func main() {
 	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
 	mustMapEnv(&svc.shoppingAssistantSvcAddr, "SHOPPING_ASSISTANT_SERVICE_ADDR")
 	svc.ratingSvcAddr = os.Getenv("RATING_SERVICE_ADDR")
+	svc.inventorySvcAddr = os.Getenv("INVENTORY_SERVICE_ADDR")
 
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -148,6 +152,9 @@ func main() {
 	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 	mustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
+	if svc.inventorySvcAddr != "" {
+		mustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+	}
 
 	r := mux.NewRouter()
 	r.HandleFunc(baseUrl+"/heavyLoad", svc.heavyLoadHandler).Methods(http.MethodGet)

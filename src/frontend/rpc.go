@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
+	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
 
 	"github.com/pkg/errors"
 )
@@ -124,4 +124,15 @@ func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad
 		ContextKeys: ctxKeys,
 	})
 	return resp.GetAds(), errors.Wrap(err, "failed to get ads")
+}
+
+func (fe *frontendServer) getStock(ctx context.Context, productID string) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
+	defer cancel()
+
+	resp, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).GetInventoryProduct(ctx,
+		&pb.GetInventoryProductRequest{
+			Id: productID,
+		})
+	return resp.GetStock(), errors.Wrapf(err, "failed to get stock for product #%s", productID)
 }

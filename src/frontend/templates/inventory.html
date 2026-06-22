@@ -1,0 +1,72 @@
+{{ define "inventoryStockProduct" }}
+{{ if ge $.product.Stock 0 }}
+<div class="product-stock">
+  {{ if eq $.product.Stock 0 }}
+  <span class="stock-badge stock-badge--empty">
+    <span class="stock-badge__dot"></span>
+    Out of stock
+  </span>
+  {{ else if lt $.product.Stock 5 }}
+  <span class="stock-badge stock-badge--low">
+    <span class="stock-badge__dot"></span>
+    Only {{ $.product.Stock }} left
+  </span>
+  {{ else }}
+  <span class="stock-badge stock-badge--available">
+    <span class="stock-badge__dot"></span>
+    {{ $.product.Stock }} available
+  </span>
+  {{ end }}
+</div>
+
+<style>
+  .product-stock {
+    display: inline;
+    align-items: center;
+  }
+
+  .stock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .stock-badge__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .stock-badge--available {
+    color: #166534;
+    background-color: #dcfce7;
+  }
+  .stock-badge--available .stock-badge__dot {
+    background-color: #16a34a;
+  }
+
+  .stock-badge--low {
+    color: #9a3412;
+    background-color: #ffedd5;
+  }
+  .stock-badge--low .stock-badge__dot {
+    background-color: #ea580c;
+  }
+
+  .stock-badge--empty {
+    color: #991b1b;
+    background-color: #fee2e2;
+  }
+  .stock-badge--empty .stock-badge__dot {
+    background-color: #dc2626;
+  }
+</style>
+{{ end }}
+{{ end }}

@@ -34,9 +34,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
-	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/money"
-	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/validator"
+	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
+	"github.com/turt1z/microservices-demo/src/frontend/money"
+	"github.com/turt1z/microservices-demo/src/frontend/validator"
 )
 
 type platformDetails struct {
@@ -224,7 +224,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Item    *pb.Product
 		Price   *pb.Money
 		Ratings *Ratings
-	}{p, price, nil}
+		Stock   int64
+	}{p, price, nil, -1}
 
 	if fe.ratingSvcAddr != "" {
 		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", fe.ratingSvcAddr, p.GetId()))
@@ -238,6 +239,16 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 			}
 		} else {
 			log.WithField("error", err).Warn("failed to connect to ratingservice")
+		}
+	}
+
+	if fe.inventorySvcAddr != "" {
+		stock, err := fe.getStock(r.Context(), p.GetId())
+		if err != nil {
+			log.WithField("error", err).Warn("failed to get stock from inventory service")
+		} else {
+			log.WithField("stock", stock).Debug("got stock from inventory service")
+			product.Stock = stock
 		}
 	}
 

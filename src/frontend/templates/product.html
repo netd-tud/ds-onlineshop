@@ -67,7 +67,10 @@
               </select>
               <img src="{{ $.baseUrl }}/static/icons/Hipster_DownArrow.svg" alt="">
             </div>
-            <button type="submit" class="cymbal-button-primary">Add To Cart</button>
+            <div class="product-action-row" style=" display: inline; align-items: center; gap: 6px; margin-top: 15px; width: 100%; ">
+              <button type="submit" class="cymbal-button-primary">Add To Cart</button>
+              {{ template "inventoryStockProduct" . }}
+            </div>
           </form>
         </div>
       </div>
