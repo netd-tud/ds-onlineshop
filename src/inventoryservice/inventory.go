@@ -53,6 +53,23 @@ func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *pb.Cha
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
+func (p *inventory) SetInventoryProductStock(ctx context.Context, req *pb.SetInventoryProductStockRequest) (*pb.SetInventoryProductStockRequestResponse, error) {
+	inventory := p.parseInventory()
+	for _, product := range inventory {
+		if req.GetId() == product.GetId() {
+			product.Stock = req.GetNewStock()
+			return &pb.SetInventoryProductStockRequestResponse{Product: product}, nil
+		}
+	}
+	// create product if non existent
+	product := &pb.InventoryProduct{
+		Id:    req.GetId(),
+		Stock: req.GetNewStock(),
+	}
+	p.inventory.Products = append(p.parseInventory(), product)
+	return &pb.SetInventoryProductStockRequestResponse{Product: product}, nil
+}
+
 func (p *inventory) parseInventory() []*pb.InventoryProduct {
 	if len(p.inventory.Products) == 0 {
 		err := loadInventory(&p.inventory)

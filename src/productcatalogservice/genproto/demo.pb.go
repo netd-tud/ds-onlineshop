@@ -2067,7 +2067,7 @@ func (x *ChangeInventoryProductStockResponse) GetProduct() *InventoryProduct {
 type SetInventoryProductStockRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Newstock      int64                  `protobuf:"varint,2,opt,name=newstock,proto3" json:"newstock,omitempty"`
+	NewStock      int64                  `protobuf:"varint,2,opt,name=new_stock,json=newStock,proto3" json:"new_stock,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2109,9 +2109,9 @@ func (x *SetInventoryProductStockRequest) GetId() string {
 	return ""
 }
 
-func (x *SetInventoryProductStockRequest) GetNewstock() int64 {
+func (x *SetInventoryProductStockRequest) GetNewStock() int64 {
 	if x != nil {
-		return x.Newstock
+		return x.NewStock
 	}
 	return 0
 }
@@ -2291,10 +2291,10 @@ const file_demo_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05delta\x18\x02 \x01(\x03R\x05delta\"^\n" +
 	"#ChangeInventoryProductStockResponse\x127\n" +
-	"\aproduct\x18\x01 \x01(\v2\x1d.hipstershop.InventoryProductR\aproduct\"M\n" +
+	"\aproduct\x18\x01 \x01(\v2\x1d.hipstershop.InventoryProductR\aproduct\"N\n" +
 	"\x1fSetInventoryProductStockRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
-	"\bnewstock\x18\x02 \x01(\x03R\bnewstock\"b\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
+	"\tnew_stock\x18\x02 \x01(\x03R\bnewStock\"b\n" +
 	"'SetInventoryProductStockRequestResponse\x127\n" +
 	"\aproduct\x18\x01 \x01(\v2\x1d.hipstershop.InventoryProductR\aproduct2\xca\x01\n" +
 	"\vCartService\x12<\n" +
