@@ -61,7 +61,7 @@ func run(port string) string {
 	svc := &inventory{}
 	err = loadInventory(&svc.inventory)
 	if err != nil {
-		log.Fatalf("could not parse product catalog: %v", err)
+		log.Fatalf("could not parse inventory: %v", err)
 	}
 
 	pb.RegisterInventoryServiceServer(srv, svc)
