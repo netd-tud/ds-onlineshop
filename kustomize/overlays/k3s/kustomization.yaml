@@ -11,6 +11,7 @@ components:
 - ../../components/monitoring
 - ../../components/dynamic-load-producer
 - ../../components/dynamic-load-producer-replicated
+- ../../components/studentmanagement-wrapper
 
 images:
   - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend
@@ -22,6 +23,8 @@ images:
   - name: ratingservice
     newTag: latest
   - name: inventory
+    newTag: latest
+  - name: studentmanagement-wrapper
     newTag: latest
 
 patches:

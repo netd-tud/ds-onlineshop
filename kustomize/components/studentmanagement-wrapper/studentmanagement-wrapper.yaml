@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: studentmanagement-wrapper
+  labels:
+    app: studentmanagement-wrapper
+spec:
+  selector:
+    matchLabels:
+      app: studentmanagement-wrapper
+  template:
+    metadata:
+      labels:
+        app: studentmanagement-wrapper
+    spec:
+      serviceAccountName: studentmanagement-wrapper
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: server
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+          image: studentmanagement-wrapper
+          ports:
+            - name: http
+              containerPort: 50000
+          env:
+            - name: PORT
+              value: "50000"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalogservice:3550"
+            - name: INVENTORY_CATALOG_SERVICE_ADDR
+              value: "inventoryservice:50002"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 180Mi
+            limits:
+              cpu: 300m
+              memory: 300Mi
+          readinessProbe:
+            grpc:
+              port: 50000
+          livenessProbe:
+            grpc:
+              port: 50000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: studentmanagement-wrapper
+  labels:
+    app: studentmanagement-wrapper
+spec:
+  type: ClusterIP
+  selector:
+    app: studentmanagement-wrapper
+  ports:
+    - name: http
+      port: 50000
+      targetPort: 50000
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: studentmanagement-wrapper
