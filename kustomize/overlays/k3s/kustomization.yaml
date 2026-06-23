@@ -26,6 +26,9 @@ images:
     newTag: latest
   - name: studentmanagement-wrapper
     newTag: latest
+  - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/productcatalogservice
+    newName: productcatalogservice
+    newTag: latest
 
 patches:
   - patch: |-
@@ -56,3 +59,10 @@ patches:
     target:
       kind: Deployment
       name: inventoryservice
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+    target:
+      kind: Deployment
+      name: productcatalogservice
