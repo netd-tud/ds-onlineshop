@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package hipstershop;
 
-option go_package = "github.com/GoogleCloudPlatform/microservices-demo/hipstershop";
+option go_package = "github.com/turt1z/microservices-demo/proto/demo";
 
 // -----------------Cart service-----------------
 
@@ -69,9 +69,10 @@ message ListRecommendationsResponse {
 // ---------------Product Catalog----------------
 
 service ProductCatalogService {
-    rpc ListProducts(Empty) returns (ListProductsResponse) {}
-    rpc GetProduct(GetProductRequest) returns (Product) {}
-    rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+   rpc ListProducts(Empty) returns (ListProductsResponse) {}
+   rpc GetProduct(GetProductRequest) returns (Product) {}
+   rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+   rpc CreateNewProduct(CreateNewProductRequest) returns (CreateNewProductResponse) {}
 }
 
 message Product {
@@ -101,6 +102,18 @@ message SearchProductsRequest {
 message SearchProductsResponse {
     repeated Product results = 1;
 }
+
+message CreateNewProductRequest {
+    string name = 1;
+    string description = 2;
+    Money price_usd = 3;
+    repeated string categories = 4;
+}
+
+message CreateNewProductResponse {
+    string product_id = 1;
+}
+
 
 // ---------------Shipping Service----------
 
@@ -264,19 +277,39 @@ message Ad {
 // ------------Inventory service------------------
 
 service InventoryService {
-  rpc ListInventory(Empty) returns (ListInventoryResponse) {}
-  rpc GetInventoryProduct(GetInventoryProductRequest) returns (InventoryProduct) {}
+    rpc ListInventory(Empty) returns (ListInventoryResponse) {}
+    rpc GetInventoryProduct(GetInventoryProductRequest) returns (InventoryProduct) {}
+    rpc ChangeInventoryProductStock(ChangeInventoryProductStockRequest) returns (ChangeInventoryProductStockResponse) {}
+    rpc SetInventoryProductStock(SetInventoryProductStockRequest) returns (SetInventoryProductStockRequestResponse) {}
 }
 
 message InventoryProduct {
-  string id = 1;
-  int64 stock = 7;
+    string id = 1;
+    int64 stock = 2;
 }
 
 message ListInventoryResponse {
-  repeated InventoryProduct products = 1;
+    repeated InventoryProduct products = 1;
 }
 
 message GetInventoryProductRequest {
-  string id = 1;
+    string id = 1;
+}
+
+message ChangeInventoryProductStockRequest {
+    string id = 1;
+    int64 delta = 2;
+}
+
+message ChangeInventoryProductStockResponse {
+    InventoryProduct product = 1;
+}
+
+message SetInventoryProductStockRequest {
+    string id = 1;
+    int64 newstock = 2;
+}
+
+message SetInventoryProductStockRequestResponse {
+    InventoryProduct product = 1;
 }
