@@ -111,7 +111,7 @@ message CreateNewProductRequest {
 }
 
 message CreateNewProductResponse {
-    string product_id = 1;
+    Product product = 1;
 }
 
 

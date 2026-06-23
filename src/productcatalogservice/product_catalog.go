@@ -16,6 +16,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"strings"
 	"time"
 
@@ -69,6 +71,30 @@ func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProdu
 	}
 
 	return &pb.SearchProductsResponse{Results: ps}, nil
+}
+
+func (p *productCatalog) CreateNewProduct(ctx context.Context, req *pb.CreateNewProductRequest) (*pb.CreateNewProductResponse, error) {
+	newId, _ := generateID(10)
+	product := &pb.Product{
+		Id:          newId,
+		Name:        req.Name,
+		Description: req.Description,
+		Picture:     "",
+		PriceUsd:    req.PriceUsd,
+		Categories:  req.Categories,
+	}
+	p.catalog.Products = append(p.parseCatalog(), product)
+	return &pb.CreateNewProductResponse{Product: product}, nil
+}
+
+func generateID(length int) (string, error) {
+	// 6 bytes → 8 base64url chars, scale accordingly
+	numBytes := (length*6)/8 + 1
+	b := make([]byte, numBytes)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b)[:length], nil
 }
 
 func (p *productCatalog) parseCatalog() []*pb.Product {
