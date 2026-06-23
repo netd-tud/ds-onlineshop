@@ -67,11 +67,11 @@ func main() {
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	mustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
 
-	run(srvPort)
+	run(srvPort, svc)
 	select {}
 }
 
-func run(port string) string {
+func run(port string, svc *productManagement) string {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatal(err)
@@ -84,8 +84,6 @@ func run(port string) string {
 	var srv *grpc.Server
 	srv = grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()))
-
-	svc := &productManagement{}
 
 	pb.RegisterProductManagementServer(srv, svc)
 	healthcheck := health.NewServer()
