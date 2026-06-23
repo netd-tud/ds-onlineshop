@@ -37,6 +37,22 @@ func (p *inventory) GetInventoryProduct(ctx context.Context, req *pb.GetInventor
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
+func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *pb.ChangeInventoryProductStockRequest) (*pb.ChangeInventoryProductStockResponse, error) {
+	inventory := p.parseInventory()
+	for _, product := range inventory {
+		if req.Id == product.Id {
+			newStock := product.Stock + req.Delta
+			if newStock >= 0 {
+				product.Stock = newStock
+				return &pb.ChangeInventoryProductStockResponse{Product: product}, nil
+			} else {
+				return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", req.Id)
+			}
+		}
+	}
+	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+}
+
 func (p *inventory) parseInventory() []*pb.InventoryProduct {
 	if len(p.inventory.Products) == 0 {
 		err := loadInventory(&p.inventory)
