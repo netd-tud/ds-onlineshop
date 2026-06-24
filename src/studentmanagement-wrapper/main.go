@@ -21,9 +21,6 @@ import (
 
 const (
 	wrapperPort = "50000"
-
-	defaultInventoryAddr      = "inventoryservice:50002"
-	defaultProductCatalogAddr = "productcatalogservice:3550"
 )
 
 type productManagement struct {
@@ -32,6 +29,8 @@ type productManagement struct {
 
 	inventorySvcAddr string
 	inventorySvcConn *grpc.ClientConn
+
+	mqttBrokerAddr string
 
 	pb.UnimplementedProductManagementServer
 }
@@ -62,13 +61,14 @@ func main() {
 
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	mustMapEnv(&svc.inventorySvcAddr, "INVENTORY_CATALOG_SERVICE_ADDR")
+	mustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
 
 	ctx := context.Background()
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	mustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
 
 	run(srvPort, svc)
-	select {}
+	setupMqttServer(svc)
 }
 
 func run(port string, svc *productManagement) string {
