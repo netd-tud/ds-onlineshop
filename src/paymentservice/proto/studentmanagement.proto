@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package student.management;
+
+option go_package = "github.com/turt1z/microservices-demo/proto/demo";
+
+import "demo.proto";
+
+// ------------Product management wrapper for students------------------
+
+service ProductManagement {
+
+  rpc UpdateProductStock (hipstershop.ChangeInventoryProductStockRequest) returns (hipstershop.InventoryProduct);
+
+  rpc CreateNewProduct (CreateStudentProductRequest) returns (CreateStudentProductResponse);
+}
+
+message CreateStudentProductRequest {
+  string name = 1;
+  string description = 2;
+  hipstershop.Money price_usd = 3;
+  repeated string categories = 4;
+  int64 initial_stock = 5;
+}
+
+message CreateStudentProductResponse {
+  hipstershop.Product product = 1;
+}

@@ -18,7 +18,7 @@
 // - protoc             v7.35.1
 // source: demo.proto
 
-package hipstershop
+package demo
 
 import (
 	context "context"
@@ -313,9 +313,10 @@ var RecommendationService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ProductCatalogService_ListProducts_FullMethodName   = "/hipstershop.ProductCatalogService/ListProducts"
-	ProductCatalogService_GetProduct_FullMethodName     = "/hipstershop.ProductCatalogService/GetProduct"
-	ProductCatalogService_SearchProducts_FullMethodName = "/hipstershop.ProductCatalogService/SearchProducts"
+	ProductCatalogService_ListProducts_FullMethodName     = "/hipstershop.ProductCatalogService/ListProducts"
+	ProductCatalogService_GetProduct_FullMethodName       = "/hipstershop.ProductCatalogService/GetProduct"
+	ProductCatalogService_SearchProducts_FullMethodName   = "/hipstershop.ProductCatalogService/SearchProducts"
+	ProductCatalogService_CreateNewProduct_FullMethodName = "/hipstershop.ProductCatalogService/CreateNewProduct"
 )
 
 // ProductCatalogServiceClient is the client API for ProductCatalogService service.
@@ -325,6 +326,7 @@ type ProductCatalogServiceClient interface {
 	ListProducts(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListProductsResponse, error)
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
 	SearchProducts(ctx context.Context, in *SearchProductsRequest, opts ...grpc.CallOption) (*SearchProductsResponse, error)
+	CreateNewProduct(ctx context.Context, in *CreateNewProductRequest, opts ...grpc.CallOption) (*CreateNewProductResponse, error)
 }
 
 type productCatalogServiceClient struct {
@@ -365,6 +367,16 @@ func (c *productCatalogServiceClient) SearchProducts(ctx context.Context, in *Se
 	return out, nil
 }
 
+func (c *productCatalogServiceClient) CreateNewProduct(ctx context.Context, in *CreateNewProductRequest, opts ...grpc.CallOption) (*CreateNewProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateNewProductResponse)
+	err := c.cc.Invoke(ctx, ProductCatalogService_CreateNewProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductCatalogServiceServer is the server API for ProductCatalogService service.
 // All implementations must embed UnimplementedProductCatalogServiceServer
 // for forward compatibility.
@@ -372,6 +384,7 @@ type ProductCatalogServiceServer interface {
 	ListProducts(context.Context, *Empty) (*ListProductsResponse, error)
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
 	SearchProducts(context.Context, *SearchProductsRequest) (*SearchProductsResponse, error)
+	CreateNewProduct(context.Context, *CreateNewProductRequest) (*CreateNewProductResponse, error)
 	mustEmbedUnimplementedProductCatalogServiceServer()
 }
 
@@ -390,6 +403,9 @@ func (UnimplementedProductCatalogServiceServer) GetProduct(context.Context, *Get
 }
 func (UnimplementedProductCatalogServiceServer) SearchProducts(context.Context, *SearchProductsRequest) (*SearchProductsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchProducts not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) CreateNewProduct(context.Context, *CreateNewProductRequest) (*CreateNewProductResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateNewProduct not implemented")
 }
 func (UnimplementedProductCatalogServiceServer) mustEmbedUnimplementedProductCatalogServiceServer() {}
 func (UnimplementedProductCatalogServiceServer) testEmbeddedByValue()                               {}
@@ -466,6 +482,24 @@ func _ProductCatalogService_SearchProducts_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductCatalogService_CreateNewProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateNewProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).CreateNewProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_CreateNewProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).CreateNewProduct(ctx, req.(*CreateNewProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductCatalogService_ServiceDesc is the grpc.ServiceDesc for ProductCatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -484,6 +518,10 @@ var ProductCatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchProducts",
 			Handler:    _ProductCatalogService_SearchProducts_Handler,
+		},
+		{
+			MethodName: "CreateNewProduct",
+			Handler:    _ProductCatalogService_CreateNewProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1179,8 +1217,10 @@ var AdService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	InventoryService_ListInventory_FullMethodName       = "/hipstershop.InventoryService/ListInventory"
-	InventoryService_GetInventoryProduct_FullMethodName = "/hipstershop.InventoryService/GetInventoryProduct"
+	InventoryService_ListInventory_FullMethodName               = "/hipstershop.InventoryService/ListInventory"
+	InventoryService_GetInventoryProduct_FullMethodName         = "/hipstershop.InventoryService/GetInventoryProduct"
+	InventoryService_ChangeInventoryProductStock_FullMethodName = "/hipstershop.InventoryService/ChangeInventoryProductStock"
+	InventoryService_SetInventoryProductStock_FullMethodName    = "/hipstershop.InventoryService/SetInventoryProductStock"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -1189,6 +1229,8 @@ const (
 type InventoryServiceClient interface {
 	ListInventory(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListInventoryResponse, error)
 	GetInventoryProduct(ctx context.Context, in *GetInventoryProductRequest, opts ...grpc.CallOption) (*InventoryProduct, error)
+	ChangeInventoryProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*ChangeInventoryProductStockResponse, error)
+	SetInventoryProductStock(ctx context.Context, in *SetInventoryProductStockRequest, opts ...grpc.CallOption) (*SetInventoryProductStockRequestResponse, error)
 }
 
 type inventoryServiceClient struct {
@@ -1219,12 +1261,34 @@ func (c *inventoryServiceClient) GetInventoryProduct(ctx context.Context, in *Ge
 	return out, nil
 }
 
+func (c *inventoryServiceClient) ChangeInventoryProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*ChangeInventoryProductStockResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeInventoryProductStockResponse)
+	err := c.cc.Invoke(ctx, InventoryService_ChangeInventoryProductStock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) SetInventoryProductStock(ctx context.Context, in *SetInventoryProductStockRequest, opts ...grpc.CallOption) (*SetInventoryProductStockRequestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetInventoryProductStockRequestResponse)
+	err := c.cc.Invoke(ctx, InventoryService_SetInventoryProductStock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InventoryServiceServer is the server API for InventoryService service.
 // All implementations must embed UnimplementedInventoryServiceServer
 // for forward compatibility.
 type InventoryServiceServer interface {
 	ListInventory(context.Context, *Empty) (*ListInventoryResponse, error)
 	GetInventoryProduct(context.Context, *GetInventoryProductRequest) (*InventoryProduct, error)
+	ChangeInventoryProductStock(context.Context, *ChangeInventoryProductStockRequest) (*ChangeInventoryProductStockResponse, error)
+	SetInventoryProductStock(context.Context, *SetInventoryProductStockRequest) (*SetInventoryProductStockRequestResponse, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
@@ -1240,6 +1304,12 @@ func (UnimplementedInventoryServiceServer) ListInventory(context.Context, *Empty
 }
 func (UnimplementedInventoryServiceServer) GetInventoryProduct(context.Context, *GetInventoryProductRequest) (*InventoryProduct, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetInventoryProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) ChangeInventoryProductStock(context.Context, *ChangeInventoryProductStockRequest) (*ChangeInventoryProductStockResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangeInventoryProductStock not implemented")
+}
+func (UnimplementedInventoryServiceServer) SetInventoryProductStock(context.Context, *SetInventoryProductStockRequest) (*SetInventoryProductStockRequestResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetInventoryProductStock not implemented")
 }
 func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
 func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
@@ -1298,6 +1368,42 @@ func _InventoryService_GetInventoryProduct_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_ChangeInventoryProductStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeInventoryProductStockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).ChangeInventoryProductStock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_ChangeInventoryProductStock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).ChangeInventoryProductStock(ctx, req.(*ChangeInventoryProductStockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InventoryService_SetInventoryProductStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetInventoryProductStockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).SetInventoryProductStock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_SetInventoryProductStock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).SetInventoryProductStock(ctx, req.(*SetInventoryProductStockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1312,6 +1418,14 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetInventoryProduct",
 			Handler:    _InventoryService_GetInventoryProduct_Handler,
+		},
+		{
+			MethodName: "ChangeInventoryProductStock",
+			Handler:    _InventoryService_ChangeInventoryProductStock_Handler,
+		},
+		{
+			MethodName: "SetInventoryProductStock",
+			Handler:    _InventoryService_SetInventoryProductStock_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
