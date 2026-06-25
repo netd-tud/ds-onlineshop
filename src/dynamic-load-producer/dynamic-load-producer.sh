@@ -28,16 +28,25 @@ echo "Starting load generator targeting: $TARGET_HOST"
 
 # Main loop
 while true; do
-    start_second=$(date +%s)
+    start_minute_epoch=$(date +%s)
     requests_per_minute=$(get_requests_per_minute)
-    echo "Requests per minute: $requests_per_minute"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Target Total RPM: $requests_per_minute"
 
     echo "$METRIC_NAME $requests_per_minute" | \
-          curl --data-binary @- http://prometheus:9091/metrics/job/dynamic-load-producer/host/"$TARGET_HOST"
+          curl -s --data-binary @- http://prometheus:9091/metrics/job/dynamic-load-producer/host/"$TARGET_HOST"
 
-    curl -s -o /dev/null -X GET --connect-timeout 2 "http://${TARGET_HOST}:8080/heavyLoad?iters=$requests_per_minute"
-    end_second=$(date +%s)
-    elapsed=$(( end_second - start_second ))
+    CONCURRENCY=10
+    ITER_PER_REQ=$(( requests_per_minute / CONCURRENCY ))
+
+    for i in $(seq 1 $CONCURRENCY); do
+        curl -s -o /dev/null -X GET --connect-timeout 2 \
+          "http://${TARGET_HOST}:8080/heavyLoad?iters=${ITER_PER_REQ}" &
+    done
+
+    wait
+
+    end_minute_epoch=$(date +%s)
+    elapsed=$(( end_minute_epoch - start_minute_epoch ))
     sleep_time=$(( 60 - elapsed ))
     if [ $sleep_time -gt 0 ]; then
         sleep $sleep_time

@@ -43,6 +43,9 @@ spec:
               httpHeaders:
                 - name: "Cookie"
                   value: "shop_session-id=x-readiness-probe"
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 5
           livenessProbe:
             initialDelaySeconds: 10
             httpGet:
