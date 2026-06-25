@@ -41,6 +41,8 @@ spec:
               value: "productcatalogservice:3550"
             - name: INVENTORY_CATALOG_SERVICE_ADDR
               value: "inventoryservice:50002"
+            - name: MQTT_BROKER_ADDR
+              value: "mqtt-broker:1883"
           resources:
             requests:
               cpu: 200m
