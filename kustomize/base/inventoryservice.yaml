@@ -29,7 +29,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: inventoryservice
+          image: ghcr.io/turt1z/microservices-demo/inventoryservice:latest
           ports:
             - containerPort: 50002
           env:

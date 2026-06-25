@@ -24,7 +24,6 @@ spec:
         runAsUser: 1000
       containers:
         - name: server
-          imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -32,7 +31,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: frontend
+          image: ghcr.io/turt1z/microservices-demo/frontend:latest
           ports:
             - containerPort: 8080
           readinessProbe:

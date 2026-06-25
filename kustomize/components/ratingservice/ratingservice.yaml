@@ -29,7 +29,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: ratingservice
+          image: ghcr.io/turt1z/microservices-demo/ratingservice:latest
           ports:
             - name: http
               containerPort: 50001

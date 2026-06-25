@@ -15,27 +15,14 @@
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 images:
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/adservice
-  newName: CONTAINER_IMAGES_REGISTRY/adservice
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/cartservice
-  newName: CONTAINER_IMAGES_REGISTRY/cartservice
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/checkoutservice
-  newName: CONTAINER_IMAGES_REGISTRY/checkoutservice
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/currencyservice
-  newName: CONTAINER_IMAGES_REGISTRY/currencyservice
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice
-  newName: CONTAINER_IMAGES_REGISTRY/emailservice
 - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend
-  newName: CONTAINER_IMAGES_REGISTRY/frontend
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/loadgenerator
-  newName: CONTAINER_IMAGES_REGISTRY/loadgenerator
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/paymentservice
-  newName: CONTAINER_IMAGES_REGISTRY/paymentservice
+  newName: ghcr.io/turt1z/microservices-demo/frontend
+  newTag: latest
+- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice
+  newName: ghcr.io/turt1z/microservices-demo/emailservice
+  newTag: latest
 - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/productcatalogservice
-  newName: CONTAINER_IMAGES_REGISTRY/productcatalogservice
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice
-  newName: CONTAINER_IMAGES_REGISTRY/recommendationservice
-- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/shippingservice
-  newName: CONTAINER_IMAGES_REGISTRY/shippingservice
-- name: redis
-  newName: CONTAINER_IMAGES_REGISTRY/redis
+  newName: ghcr.io/turt1z/microservices-demo/productcatalogservice
+  newTag: latest
+
+

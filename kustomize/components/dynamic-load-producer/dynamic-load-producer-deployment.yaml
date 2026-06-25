@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
         - name: dynamic-load-producer
-          imagePullPolicy: IfNotPresent
-          image: dynamic-load-producer
+          image: ghcr.io/turt1z/microservices-demo/dynamic-load-producer:latest
           env:
             - name: TARGET
               value: "frontend-demo"
