@@ -9,24 +9,24 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (pm *warehouseManagement) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+func (wm *warehouseManagement) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
 }
 
-func (pm *warehouseManagement) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
+func (wm *warehouseManagement) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
-func (pm *warehouseManagement) UpdateProductStock(ctx context.Context, req *pb.ChangeInventoryProductStockRequest) (*pb.InventoryProduct, error) {
-	resp, err := pb.NewInventoryServiceClient(pm.inventorySvcConn).ChangeInventoryProductStock(ctx, req)
+func (wm *warehouseManagement) UpdateProductStock(ctx context.Context, req *pb.ChangeInventoryProductStockRequest) (*pb.InventoryProduct, error) {
+	resp, err := pb.NewInventoryServiceClient(wm.inventorySvcConn).ChangeInventoryProductStock(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	return resp.Product, nil
 }
 
-func (pm *warehouseManagement) CreateNewProduct(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
-	catalogResp, err := pb.NewProductCatalogServiceClient(pm.productCatalogSvcConn).CreateNewProduct(ctx, &pb.CreateNewProductRequest{
+func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
+	catalogResp, err := pb.NewProductCatalogServiceClient(wm.productCatalogSvcConn).CreateNewProduct(ctx, &pb.CreateNewProductRequest{
 		Name:        req.Name,
 		Description: req.Description,
 		PriceUsd:    req.PriceUsd,
@@ -36,7 +36,7 @@ func (pm *warehouseManagement) CreateNewProduct(ctx context.Context, req *pb.Cre
 		return nil, status.Errorf(codes.Internal, "failed to create product in catalog: %v", err)
 	}
 
-	_, err = pb.NewInventoryServiceClient(pm.inventorySvcConn).SetInventoryProductStock(ctx, &pb.SetInventoryProductStockRequest{
+	_, err = pb.NewInventoryServiceClient(wm.inventorySvcConn).SetInventoryProductStock(ctx, &pb.SetInventoryProductStockRequest{
 		Id:       catalogResp.Product.Id,
 		NewStock: req.InitialStock,
 	})
