@@ -18,6 +18,6 @@
 
 # protos are loaded dynamically for node, simply copies over the proto.
 mkdir -p proto
-cp -r ../../protos/* ./proto
+cp ../../protos/demo.proto src/main/proto
 
 # [END gke_currencyservice_genproto]

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	pb "github.com/turt1z/microservices-demo/src/studentmanagement/genproto"
+	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
@@ -25,7 +25,7 @@ func (pm *productManagement) UpdateProductStock(ctx context.Context, req *pb.Cha
 	return resp.Product, nil
 }
 
-func (pm *productManagement) CreateNewProduct(ctx context.Context, req *pb.CreateStudentProductRequest) (*pb.CreateStudentProductResponse, error) {
+func (pm *productManagement) CreateNewProduct(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
 	catalogResp, err := pb.NewProductCatalogServiceClient(pm.productCatalogSvcConn).CreateNewProduct(ctx, &pb.CreateNewProductRequest{
 		Name:        req.Name,
 		Description: req.Description,
@@ -44,5 +44,5 @@ func (pm *productManagement) CreateNewProduct(ctx context.Context, req *pb.Creat
 		return nil, status.Errorf(codes.Internal, "failed to set initial stock: %v", err)
 	}
 
-	return &pb.CreateStudentProductResponse{Product: catalogResp.Product}, nil
+	return &pb.CreateWarehouseProductResponse{Product: catalogResp.Product}, nil
 }

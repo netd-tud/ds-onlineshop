@@ -11,7 +11,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	pb "github.com/turt1z/microservices-demo/src/studentmanagement/genproto"
+	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
 )
 
 // MQTT Structural Mappings

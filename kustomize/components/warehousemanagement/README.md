@@ -5,7 +5,7 @@ This component adds a wrapper, which allows for operations on products which con
 From the `kustomize/` folder at the root level of this repository, execute this command:
 
 ```bash
-kustomize edit add component components/studentmanagement-wrapper
+kustomize edit add component components/warehousemanagement-wrapper
 ```
 
 This will update the `kustomize/kustomization.yaml` file which could be similar to:
@@ -16,7 +16,7 @@ kind: Kustomization
 resources:
 - base
 components:
-- components/studentmanagement-wrapper
+- components/warehousemanagement
 ```
 
 You can locally render these manifests by running `kubectl kustomize .` as well as deploying them by running `kubectl apply -k .`.

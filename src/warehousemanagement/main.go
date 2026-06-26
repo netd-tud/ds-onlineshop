@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	pb "github.com/turt1z/microservices-demo/src/studentmanagement/genproto"
+	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
