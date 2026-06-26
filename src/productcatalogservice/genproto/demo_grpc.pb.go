@@ -1222,6 +1222,7 @@ const (
 	InventoryService_ChangeInventoryProductStock_FullMethodName = "/hipstershop.InventoryService/ChangeInventoryProductStock"
 	InventoryService_SetInventoryProductStock_FullMethodName    = "/hipstershop.InventoryService/SetInventoryProductStock"
 	InventoryService_CreateNewInventoryProduct_FullMethodName   = "/hipstershop.InventoryService/CreateNewInventoryProduct"
+	InventoryService_DeleteInventoryProduct_FullMethodName      = "/hipstershop.InventoryService/DeleteInventoryProduct"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -1233,6 +1234,7 @@ type InventoryServiceClient interface {
 	ChangeInventoryProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*ChangeInventoryProductStockResponse, error)
 	SetInventoryProductStock(ctx context.Context, in *SetInventoryProductStockRequest, opts ...grpc.CallOption) (*SetInventoryProductStockRequestResponse, error)
 	CreateNewInventoryProduct(ctx context.Context, in *CreateNewInventoryProductRequest, opts ...grpc.CallOption) (*CreateNewInventoryProductResponse, error)
+	DeleteInventoryProduct(ctx context.Context, in *DeleteInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductRequest, error)
 }
 
 type inventoryServiceClient struct {
@@ -1293,6 +1295,16 @@ func (c *inventoryServiceClient) CreateNewInventoryProduct(ctx context.Context, 
 	return out, nil
 }
 
+func (c *inventoryServiceClient) DeleteInventoryProduct(ctx context.Context, in *DeleteInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteInventoryProductRequest)
+	err := c.cc.Invoke(ctx, InventoryService_DeleteInventoryProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InventoryServiceServer is the server API for InventoryService service.
 // All implementations must embed UnimplementedInventoryServiceServer
 // for forward compatibility.
@@ -1302,6 +1314,7 @@ type InventoryServiceServer interface {
 	ChangeInventoryProductStock(context.Context, *ChangeInventoryProductStockRequest) (*ChangeInventoryProductStockResponse, error)
 	SetInventoryProductStock(context.Context, *SetInventoryProductStockRequest) (*SetInventoryProductStockRequestResponse, error)
 	CreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*CreateNewInventoryProductResponse, error)
+	DeleteInventoryProduct(context.Context, *DeleteInventoryProductRequest) (*DeleteInventoryProductRequest, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
@@ -1326,6 +1339,9 @@ func (UnimplementedInventoryServiceServer) SetInventoryProductStock(context.Cont
 }
 func (UnimplementedInventoryServiceServer) CreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*CreateNewInventoryProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateNewInventoryProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) DeleteInventoryProduct(context.Context, *DeleteInventoryProductRequest) (*DeleteInventoryProductRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteInventoryProduct not implemented")
 }
 func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
 func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
@@ -1438,6 +1454,24 @@ func _InventoryService_CreateNewInventoryProduct_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_DeleteInventoryProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteInventoryProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).DeleteInventoryProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_DeleteInventoryProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).DeleteInventoryProduct(ctx, req.(*DeleteInventoryProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1464,6 +1498,10 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateNewInventoryProduct",
 			Handler:    _InventoryService_CreateNewInventoryProduct_Handler,
+		},
+		{
+			MethodName: "DeleteInventoryProduct",
+			Handler:    _InventoryService_DeleteInventoryProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

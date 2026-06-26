@@ -282,6 +282,7 @@ service InventoryService {
     rpc ChangeInventoryProductStock(ChangeInventoryProductStockRequest) returns (ChangeInventoryProductStockResponse) {}
     rpc SetInventoryProductStock(SetInventoryProductStockRequest) returns (SetInventoryProductStockRequestResponse) {}
     rpc CreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (CreateNewInventoryProductResponse) {}
+    rpc DeleteInventoryProduct(DeleteInventoryProductRequest) returns (DeleteInventoryProductRequest) {}
 }
 
 message InventoryProduct {
@@ -321,5 +322,13 @@ message CreateNewInventoryProductRequest {
 }
 
 message CreateNewInventoryProductResponse {
+    InventoryProduct product = 1;
+}
+
+message DeleteInventoryProductRequest {
+    string id = 1;
+}
+
+message DeleteInventoryProductResponse {
     InventoryProduct product = 1;
 }

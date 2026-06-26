@@ -79,6 +79,17 @@ func (p *inventory) CreateNewInventoryProduct(ctx context.Context, req *pb.Creat
 	return &pb.CreateNewInventoryProductResponse{Product: product}, nil
 }
 
+func (p *inventory) DeleteInventoryProduct(ctx context.Context, req *pb.DeleteInventoryProductRequest) (*pb.DeleteInventoryProductResponse, error) {
+	inventory := p.parseInventory()
+	for i, product := range inventory {
+		if req.GetId() == product.GetId() {
+			p.inventory.Products = append(inventory[:i], inventory[i+1:]...)
+			return &pb.DeleteInventoryProductResponse{Product: product}, nil
+		}
+	}
+	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+}
+
 func (p *inventory) parseInventory() []*pb.InventoryProduct {
 	if len(p.inventory.Products) == 0 {
 		err := loadInventory(&p.inventory)
