@@ -11,7 +11,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	pb "github.com/turt1z/microservices-demo/src/studentmanagement/genproto"
+	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
 )
 
 // MQTT Structural Mappings
@@ -68,7 +68,7 @@ func processMsg(ctx context.Context, input <-chan mqtt.Message) chan mqtt.Messag
 	return out
 }
 
-func setupMqttServer(svc *productManagement) {
+func setupMqttServer(svc *warehouseManagement) {
 	createTopic := "inventory/create-item"
 	updateTopic := "inventory/update-product-stock"
 
@@ -102,7 +102,7 @@ func setupMqttServer(svc *productManagement) {
 					continue
 				}
 
-				grpcReq := &pb.CreateStudentProductRequest{
+				grpcReq := &pb.CreateWarehouseProductRequest{
 					Name:        payload.Name,
 					Description: payload.Description,
 					PriceUsd: &pb.Money{

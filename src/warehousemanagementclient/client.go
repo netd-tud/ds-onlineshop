@@ -48,12 +48,12 @@ func main() {
 	}
 	defer conn.Close()
 
-	grpcClient := pb.NewProductManagementClient(conn)
+	grpcClient := pb.NewWarehouseManagementClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	log.Println("--- Calling CreateNewProduct via gRPC ---")
-	createRes, err := grpcClient.CreateNewProduct(ctx, &pb.CreateStudentProductRequest{
+	createRes, err := grpcClient.CreateNewProduct(ctx, &pb.CreateWarehouseProductRequest{
 		Name:        "Hat",
 		Description: "A high-quality piece of clothing.",
 		PriceUsd: &pb.Money{

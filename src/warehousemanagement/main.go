@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	pb "github.com/turt1z/microservices-demo/src/studentmanagement/genproto"
+	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -23,7 +23,7 @@ const (
 	wrapperPort = "50000"
 )
 
-type productManagement struct {
+type warehouseManagement struct {
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
 
@@ -32,7 +32,7 @@ type productManagement struct {
 
 	mqttBrokerAddr string
 
-	pb.UnimplementedProductManagementServer
+	pb.UnimplementedWarehouseManagementServer
 }
 
 var log *logrus.Logger
@@ -52,7 +52,7 @@ func init() {
 }
 
 func main() {
-	svc := new(productManagement)
+	svc := new(warehouseManagement)
 
 	srvPort := wrapperPort
 	if os.Getenv("PORT") != "" {
@@ -71,7 +71,7 @@ func main() {
 	setupMqttServer(svc)
 }
 
-func run(port string, svc *productManagement) string {
+func run(port string, svc *warehouseManagement) string {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatal(err)
@@ -85,7 +85,7 @@ func run(port string, svc *productManagement) string {
 	srv = grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()))
 
-	pb.RegisterProductManagementServer(srv, svc)
+	pb.RegisterWarehouseManagementServer(srv, svc)
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthcheck)
 	go srv.Serve(listener)

@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/studentmanagement
+module github.com/turt1z/microservices-demo/src/warehousemanagement
 
 go 1.26.4
 

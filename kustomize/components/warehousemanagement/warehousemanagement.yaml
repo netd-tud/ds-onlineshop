@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: studentmanagement-wrapper
+  name: warehousemanagement
   labels:
-    app: studentmanagement-wrapper
+    app: warehousemanagement
 spec:
   selector:
     matchLabels:
-      app: studentmanagement-wrapper
+      app: warehousemanagement
   template:
     metadata:
       labels:
-        app: studentmanagement-wrapper
+        app: warehousemanagement
     spec:
-      serviceAccountName: studentmanagement-wrapper
+      serviceAccountName: warehousemanagement
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -30,7 +30,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: ghcr.io/turt1z/microservices-demo/studentmanagement-wrapper:latest
+          image: ghcr.io/turt1z/microservices-demo/warehousemanagement:latest
           ports:
             - name: http
               containerPort: 50000
@@ -60,13 +60,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: studentmanagement-wrapper
+  name: warehousemanagement
   labels:
-    app: studentmanagement-wrapper
+    app: warehousemanagement
 spec:
   type: ClusterIP
   selector:
-    app: studentmanagement-wrapper
+    app: warehousemanagement
   ports:
     - name: http
       port: 50000
@@ -75,17 +75,17 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: studentmanagement-wrapper
+  name: warehousemanagement
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: student-management-nodeport
+  name: warehouse-management-nodeport
   namespace: default
 spec:
   type: NodePort
   selector:
-    app: studentmanagement-wrapper
+    app: warehousemanagement
   ports:
     - protocol: TCP
       port: 50000

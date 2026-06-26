@@ -13,7 +13,7 @@ components:
 - ../../components/monitoring
 - ../../components/dynamic-load-producer
 - ../../components/dynamic-load-producer-replicated
-- ../../components/studentmanagement-wrapper
+- ../../components/warehousemanagement
 
 patches:
   - target:

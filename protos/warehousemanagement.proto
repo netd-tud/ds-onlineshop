@@ -1,21 +1,21 @@
 syntax = "proto3";
 
-package student.management;
+package warehouse.management;
 
 option go_package = "github.com/turt1z/microservices-demo/proto/demo";
 
 import "demo.proto";
 
-// ------------Product management wrapper for students------------------
+// ------------Warehouse management wrapper for students------------------
 
-service ProductManagement {
+service WarehouseManagement {
 
   rpc UpdateProductStock (hipstershop.ChangeInventoryProductStockRequest) returns (hipstershop.InventoryProduct);
 
-  rpc CreateNewProduct (CreateStudentProductRequest) returns (CreateStudentProductResponse);
+  rpc CreateNewProduct (CreateWarehouseProductRequest) returns (CreateWarehouseProductResponse);
 }
 
-message CreateStudentProductRequest {
+message CreateWarehouseProductRequest {
   string name = 1;
   string description = 2;
   hipstershop.Money price_usd = 3;
@@ -23,6 +23,6 @@ message CreateStudentProductRequest {
   int64 initial_stock = 5;
 }
 
-message CreateStudentProductResponse {
+message CreateWarehouseProductResponse {
   hipstershop.Product product = 1;
 }
