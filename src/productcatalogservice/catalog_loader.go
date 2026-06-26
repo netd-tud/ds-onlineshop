@@ -25,9 +25,9 @@ import (
 	"cloud.google.com/go/alloydbconn"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/productcatalogservice/genproto"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/jackc/pgx/v5/pgxpool"
+	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
 )
 
 func loadCatalog(catalog *pb.ListProductsResponse) error {

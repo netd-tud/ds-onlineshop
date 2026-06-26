@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/productcatalogservice/genproto"
+	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
@@ -85,6 +85,17 @@ func (p *productCatalog) CreateNewProduct(ctx context.Context, req *pb.CreateNew
 	}
 	p.catalog.Products = append(p.parseCatalog(), product)
 	return &pb.CreateNewProductResponse{Product: product}, nil
+}
+
+func (p *productCatalog) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*pb.DeleteProductResponse, error) {
+	catalog := p.parseCatalog()
+	for i, product := range catalog {
+		if req.GetId() == product.GetId() {
+			p.catalog.Products = append(catalog[:i], catalog[i+1:]...)
+			return &pb.DeleteProductResponse{Product: product}, nil
+		}
+	}
+	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
 func generateID(length int) (string, error) {

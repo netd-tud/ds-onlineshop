@@ -69,10 +69,11 @@ message ListRecommendationsResponse {
 // ---------------Product Catalog----------------
 
 service ProductCatalogService {
-   rpc ListProducts(Empty) returns (ListProductsResponse) {}
-   rpc GetProduct(GetProductRequest) returns (Product) {}
-   rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
-   rpc CreateNewProduct(CreateNewProductRequest) returns (CreateNewProductResponse) {}
+    rpc ListProducts(Empty) returns (ListProductsResponse) {}
+    rpc GetProduct(GetProductRequest) returns (Product) {}
+    rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+    rpc CreateNewProduct(CreateNewProductRequest) returns (CreateNewProductResponse) {}
+    rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse) {}
 }
 
 message Product {
@@ -111,6 +112,14 @@ message CreateNewProductRequest {
 }
 
 message CreateNewProductResponse {
+    Product product = 1;
+}
+
+message DeleteProductRequest {
+    string id = 1;
+}
+
+message DeleteProductResponse {
     Product product = 1;
 }
 
