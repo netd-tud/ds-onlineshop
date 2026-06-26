@@ -2160,6 +2160,102 @@ func (x *SetInventoryProductStockRequestResponse) GetProduct() *InventoryProduct
 	return nil
 }
 
+type CreateNewInventoryProductRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	InitialStock  int64                  `protobuf:"varint,2,opt,name=initial_stock,json=initialStock,proto3" json:"initial_stock,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateNewInventoryProductRequest) Reset() {
+	*x = CreateNewInventoryProductRequest{}
+	mi := &file_demo_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateNewInventoryProductRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateNewInventoryProductRequest) ProtoMessage() {}
+
+func (x *CreateNewInventoryProductRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateNewInventoryProductRequest.ProtoReflect.Descriptor instead.
+func (*CreateNewInventoryProductRequest) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *CreateNewInventoryProductRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CreateNewInventoryProductRequest) GetInitialStock() int64 {
+	if x != nil {
+		return x.InitialStock
+	}
+	return 0
+}
+
+type CreateNewInventoryProductResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Product       *InventoryProduct      `protobuf:"bytes,1,opt,name=product,proto3" json:"product,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateNewInventoryProductResponse) Reset() {
+	*x = CreateNewInventoryProductResponse{}
+	mi := &file_demo_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateNewInventoryProductResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateNewInventoryProductResponse) ProtoMessage() {}
+
+func (x *CreateNewInventoryProductResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_demo_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateNewInventoryProductResponse.ProtoReflect.Descriptor instead.
+func (*CreateNewInventoryProductResponse) Descriptor() ([]byte, []int) {
+	return file_demo_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *CreateNewInventoryProductResponse) GetProduct() *InventoryProduct {
+	if x != nil {
+		return x.Product
+	}
+	return nil
+}
+
 var File_demo_proto protoreflect.FileDescriptor
 
 const file_demo_proto_rawDesc = "" +
@@ -2296,6 +2392,11 @@ const file_demo_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tnew_stock\x18\x02 \x01(\x03R\bnewStock\"b\n" +
 	"'SetInventoryProductStockRequestResponse\x127\n" +
+	"\aproduct\x18\x01 \x01(\v2\x1d.hipstershop.InventoryProductR\aproduct\"W\n" +
+	" CreateNewInventoryProductRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12#\n" +
+	"\rinitial_stock\x18\x02 \x01(\x03R\finitialStock\"\\\n" +
+	"!CreateNewInventoryProductResponse\x127\n" +
 	"\aproduct\x18\x01 \x01(\v2\x1d.hipstershop.InventoryProductR\aproduct2\xca\x01\n" +
 	"\vCartService\x12<\n" +
 	"\aAddItem\x12\x1b.hipstershop.AddItemRequest\x1a\x12.hipstershop.Empty\"\x00\x12;\n" +
@@ -2323,12 +2424,13 @@ const file_demo_proto_rawDesc = "" +
 	"\n" +
 	"PlaceOrder\x12\x1e.hipstershop.PlaceOrderRequest\x1a\x1f.hipstershop.PlaceOrderResponse\"\x002H\n" +
 	"\tAdService\x12;\n" +
-	"\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x002\xc6\x03\n" +
+	"\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x002\xc4\x04\n" +
 	"\x10InventoryService\x12I\n" +
 	"\rListInventory\x12\x12.hipstershop.Empty\x1a\".hipstershop.ListInventoryResponse\"\x00\x12_\n" +
 	"\x13GetInventoryProduct\x12'.hipstershop.GetInventoryProductRequest\x1a\x1d.hipstershop.InventoryProduct\"\x00\x12\x82\x01\n" +
 	"\x1bChangeInventoryProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a0.hipstershop.ChangeInventoryProductStockResponse\"\x00\x12\x80\x01\n" +
-	"\x18SetInventoryProductStock\x12,.hipstershop.SetInventoryProductStockRequest\x1a4.hipstershop.SetInventoryProductStockRequestResponse\"\x00B1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3"
+	"\x18SetInventoryProductStock\x12,.hipstershop.SetInventoryProductStockRequest\x1a4.hipstershop.SetInventoryProductStockRequestResponse\"\x00\x12|\n" +
+	"\x19CreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a..hipstershop.CreateNewInventoryProductResponse\"\x00B1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -2342,7 +2444,7 @@ func file_demo_proto_rawDescGZIP() []byte {
 	return file_demo_proto_rawDescData
 }
 
-var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
+var file_demo_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
 var file_demo_proto_goTypes = []any{
 	(*CartItem)(nil),                                // 0: hipstershop.CartItem
 	(*AddItemRequest)(nil),                          // 1: hipstershop.AddItemRequest
@@ -2385,6 +2487,8 @@ var file_demo_proto_goTypes = []any{
 	(*ChangeInventoryProductStockResponse)(nil),     // 38: hipstershop.ChangeInventoryProductStockResponse
 	(*SetInventoryProductStockRequest)(nil),         // 39: hipstershop.SetInventoryProductStockRequest
 	(*SetInventoryProductStockRequestResponse)(nil), // 40: hipstershop.SetInventoryProductStockRequestResponse
+	(*CreateNewInventoryProductRequest)(nil),        // 41: hipstershop.CreateNewInventoryProductRequest
+	(*CreateNewInventoryProductResponse)(nil),       // 42: hipstershop.CreateNewInventoryProductResponse
 }
 var file_demo_proto_depIdxs = []int32{
 	0,  // 0: hipstershop.AddItemRequest.item:type_name -> hipstershop.CartItem
@@ -2415,51 +2519,54 @@ var file_demo_proto_depIdxs = []int32{
 	34, // 25: hipstershop.ListInventoryResponse.products:type_name -> hipstershop.InventoryProduct
 	34, // 26: hipstershop.ChangeInventoryProductStockResponse.product:type_name -> hipstershop.InventoryProduct
 	34, // 27: hipstershop.SetInventoryProductStockRequestResponse.product:type_name -> hipstershop.InventoryProduct
-	1,  // 28: hipstershop.CartService.AddItem:input_type -> hipstershop.AddItemRequest
-	3,  // 29: hipstershop.CartService.GetCart:input_type -> hipstershop.GetCartRequest
-	2,  // 30: hipstershop.CartService.EmptyCart:input_type -> hipstershop.EmptyCartRequest
-	6,  // 31: hipstershop.RecommendationService.ListRecommendations:input_type -> hipstershop.ListRecommendationsRequest
-	5,  // 32: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
-	10, // 33: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
-	11, // 34: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
-	13, // 35: hipstershop.ProductCatalogService.CreateNewProduct:input_type -> hipstershop.CreateNewProductRequest
-	15, // 36: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
-	17, // 37: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
-	5,  // 38: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
-	22, // 39: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
-	24, // 40: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
-	28, // 41: hipstershop.EmailService.SendOrderConfirmation:input_type -> hipstershop.SendOrderConfirmationRequest
-	29, // 42: hipstershop.CheckoutService.PlaceOrder:input_type -> hipstershop.PlaceOrderRequest
-	31, // 43: hipstershop.AdService.GetAds:input_type -> hipstershop.AdRequest
-	5,  // 44: hipstershop.InventoryService.ListInventory:input_type -> hipstershop.Empty
-	36, // 45: hipstershop.InventoryService.GetInventoryProduct:input_type -> hipstershop.GetInventoryProductRequest
-	37, // 46: hipstershop.InventoryService.ChangeInventoryProductStock:input_type -> hipstershop.ChangeInventoryProductStockRequest
-	39, // 47: hipstershop.InventoryService.SetInventoryProductStock:input_type -> hipstershop.SetInventoryProductStockRequest
-	5,  // 48: hipstershop.CartService.AddItem:output_type -> hipstershop.Empty
-	4,  // 49: hipstershop.CartService.GetCart:output_type -> hipstershop.Cart
-	5,  // 50: hipstershop.CartService.EmptyCart:output_type -> hipstershop.Empty
-	7,  // 51: hipstershop.RecommendationService.ListRecommendations:output_type -> hipstershop.ListRecommendationsResponse
-	9,  // 52: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
-	8,  // 53: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
-	12, // 54: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
-	14, // 55: hipstershop.ProductCatalogService.CreateNewProduct:output_type -> hipstershop.CreateNewProductResponse
-	16, // 56: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
-	18, // 57: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
-	21, // 58: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
-	20, // 59: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
-	25, // 60: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
-	5,  // 61: hipstershop.EmailService.SendOrderConfirmation:output_type -> hipstershop.Empty
-	30, // 62: hipstershop.CheckoutService.PlaceOrder:output_type -> hipstershop.PlaceOrderResponse
-	32, // 63: hipstershop.AdService.GetAds:output_type -> hipstershop.AdResponse
-	35, // 64: hipstershop.InventoryService.ListInventory:output_type -> hipstershop.ListInventoryResponse
-	34, // 65: hipstershop.InventoryService.GetInventoryProduct:output_type -> hipstershop.InventoryProduct
-	38, // 66: hipstershop.InventoryService.ChangeInventoryProductStock:output_type -> hipstershop.ChangeInventoryProductStockResponse
-	40, // 67: hipstershop.InventoryService.SetInventoryProductStock:output_type -> hipstershop.SetInventoryProductStockRequestResponse
-	48, // [48:68] is the sub-list for method output_type
-	28, // [28:48] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	34, // 28: hipstershop.CreateNewInventoryProductResponse.product:type_name -> hipstershop.InventoryProduct
+	1,  // 29: hipstershop.CartService.AddItem:input_type -> hipstershop.AddItemRequest
+	3,  // 30: hipstershop.CartService.GetCart:input_type -> hipstershop.GetCartRequest
+	2,  // 31: hipstershop.CartService.EmptyCart:input_type -> hipstershop.EmptyCartRequest
+	6,  // 32: hipstershop.RecommendationService.ListRecommendations:input_type -> hipstershop.ListRecommendationsRequest
+	5,  // 33: hipstershop.ProductCatalogService.ListProducts:input_type -> hipstershop.Empty
+	10, // 34: hipstershop.ProductCatalogService.GetProduct:input_type -> hipstershop.GetProductRequest
+	11, // 35: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
+	13, // 36: hipstershop.ProductCatalogService.CreateNewProduct:input_type -> hipstershop.CreateNewProductRequest
+	15, // 37: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
+	17, // 38: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
+	5,  // 39: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
+	22, // 40: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
+	24, // 41: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
+	28, // 42: hipstershop.EmailService.SendOrderConfirmation:input_type -> hipstershop.SendOrderConfirmationRequest
+	29, // 43: hipstershop.CheckoutService.PlaceOrder:input_type -> hipstershop.PlaceOrderRequest
+	31, // 44: hipstershop.AdService.GetAds:input_type -> hipstershop.AdRequest
+	5,  // 45: hipstershop.InventoryService.ListInventory:input_type -> hipstershop.Empty
+	36, // 46: hipstershop.InventoryService.GetInventoryProduct:input_type -> hipstershop.GetInventoryProductRequest
+	37, // 47: hipstershop.InventoryService.ChangeInventoryProductStock:input_type -> hipstershop.ChangeInventoryProductStockRequest
+	39, // 48: hipstershop.InventoryService.SetInventoryProductStock:input_type -> hipstershop.SetInventoryProductStockRequest
+	41, // 49: hipstershop.InventoryService.CreateNewInventoryProduct:input_type -> hipstershop.CreateNewInventoryProductRequest
+	5,  // 50: hipstershop.CartService.AddItem:output_type -> hipstershop.Empty
+	4,  // 51: hipstershop.CartService.GetCart:output_type -> hipstershop.Cart
+	5,  // 52: hipstershop.CartService.EmptyCart:output_type -> hipstershop.Empty
+	7,  // 53: hipstershop.RecommendationService.ListRecommendations:output_type -> hipstershop.ListRecommendationsResponse
+	9,  // 54: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
+	8,  // 55: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
+	12, // 56: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
+	14, // 57: hipstershop.ProductCatalogService.CreateNewProduct:output_type -> hipstershop.CreateNewProductResponse
+	16, // 58: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
+	18, // 59: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
+	21, // 60: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
+	20, // 61: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
+	25, // 62: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
+	5,  // 63: hipstershop.EmailService.SendOrderConfirmation:output_type -> hipstershop.Empty
+	30, // 64: hipstershop.CheckoutService.PlaceOrder:output_type -> hipstershop.PlaceOrderResponse
+	32, // 65: hipstershop.AdService.GetAds:output_type -> hipstershop.AdResponse
+	35, // 66: hipstershop.InventoryService.ListInventory:output_type -> hipstershop.ListInventoryResponse
+	34, // 67: hipstershop.InventoryService.GetInventoryProduct:output_type -> hipstershop.InventoryProduct
+	38, // 68: hipstershop.InventoryService.ChangeInventoryProductStock:output_type -> hipstershop.ChangeInventoryProductStockResponse
+	40, // 69: hipstershop.InventoryService.SetInventoryProductStock:output_type -> hipstershop.SetInventoryProductStockRequestResponse
+	42, // 70: hipstershop.InventoryService.CreateNewInventoryProduct:output_type -> hipstershop.CreateNewInventoryProductResponse
+	50, // [50:71] is the sub-list for method output_type
+	29, // [29:50] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_demo_proto_init() }
@@ -2473,7 +2580,7 @@ func file_demo_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_demo_proto_rawDesc), len(file_demo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   41,
+			NumMessages:   43,
 			NumExtensions: 0,
 			NumServices:   10,
 		},

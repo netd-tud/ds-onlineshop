@@ -70,6 +70,15 @@ func (p *inventory) SetInventoryProductStock(ctx context.Context, req *pb.SetInv
 	return &pb.SetInventoryProductStockRequestResponse{Product: product}, nil
 }
 
+func (p *inventory) CreateNewInventoryProduct(ctx context.Context, req *pb.CreateNewInventoryProductRequest) (*pb.CreateNewInventoryProductResponse, error) {
+	product := &pb.InventoryProduct{
+		Id:    req.GetId(),
+		Stock: req.GetInitialStock(),
+	}
+	p.inventory.Products = append(p.parseInventory(), product)
+	return &pb.CreateNewInventoryProductResponse{Product: product}, nil
+}
+
 func (p *inventory) parseInventory() []*pb.InventoryProduct {
 	if len(p.inventory.Products) == 0 {
 		err := loadInventory(&p.inventory)
