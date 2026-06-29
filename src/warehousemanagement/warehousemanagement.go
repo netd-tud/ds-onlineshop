@@ -35,6 +35,7 @@ func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *pb.Cre
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create product in catalog: %v", err)
 	}
+	log.Infof("created product in catalog: %s", catalogResp.Product.Id)
 
 	_, err = pb.NewInventoryServiceClient(wm.inventorySvcConn).SetInventoryProductStock(ctx, &pb.SetInventoryProductStockRequest{
 		Id:       catalogResp.Product.Id,
@@ -46,7 +47,7 @@ func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *pb.Cre
 		log.Error("failed to set initial stock: %v, rolling back catalog creation")
 		_, delErr := pb.NewProductCatalogServiceClient(wm.productCatalogSvcConn).DeleteProduct(ctx, &pb.DeleteProductRequest{Id: catalogResp.Product.Id})
 		if delErr != nil {
-			log.Error("failed to rollback catalog creation: %v. Manual intervention needed", delErr)
+			return nil, status.Errorf(codes.Internal, "failed to set initial stock: %v, failed to rollback catalog creation for product: %s, manual intervention needed", err, catalogResp.Product.Id)
 		}
 		return nil, status.Errorf(codes.Internal, "failed to set initial stock: %v, rolled back catalog creation for product: %s", err, catalogResp.Product.Id)
 	}
