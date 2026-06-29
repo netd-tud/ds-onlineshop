@@ -40,8 +40,15 @@ func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *pb.Cre
 		Id:       catalogResp.Product.Id,
 		NewStock: req.InitialStock,
 	})
+
+	// naive/manual compensation if inventory is not reachable; rolling back product catalog creation
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to set initial stock: %v", err)
+		log.Error("failed to set initial stock: %v, rolling back catalog creation")
+		_, delErr := pb.NewProductCatalogServiceClient(wm.productCatalogSvcConn).DeleteProduct(ctx, &pb.DeleteProductRequest{Id: catalogResp.Product.Id})
+		if delErr != nil {
+			log.Error("failed to rollback catalog creation: %v. Manual intervention needed", delErr)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to set initial stock: %v, rolled back catalog creation for product: %s", err, catalogResp.Product.Id)
 	}
 
 	return &pb.CreateWarehouseProductResponse{Product: catalogResp.Product}, nil
