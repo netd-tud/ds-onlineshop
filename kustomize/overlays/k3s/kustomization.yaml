@@ -22,7 +22,7 @@ patches:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
-        name: all-deployments
+        name: unused
       spec:
         template:
           spec:
