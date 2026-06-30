@@ -30,6 +30,9 @@ type warehouseManagement struct {
 	inventorySvcAddr string
 	inventorySvcConn *grpc.ClientConn
 
+	dtmSvcAddr string
+	dtmSvcConn *grpc.ClientConn
+
 	mqttBrokerAddr string
 
 	pb.UnimplementedWarehouseManagementServer
@@ -62,10 +65,12 @@ func main() {
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	mustMapEnv(&svc.inventorySvcAddr, "INVENTORY_CATALOG_SERVICE_ADDR")
 	mustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
+	mustMapEnv(&svc.dtmSvcAddr, "DTM_SERVICE_ADDR")
 
 	ctx := context.Background()
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	mustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+	mustConnGRPC(ctx, &svc.dtmSvcConn, svc.dtmSvcAddr)
 
 	run(srvPort, svc)
 	setupMqttServer(svc)
