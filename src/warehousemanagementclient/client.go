@@ -53,7 +53,7 @@ func main() {
 	defer cancel()
 
 	log.Println("--- Calling CreateNewProduct via gRPC ---")
-	createRes, err := grpcClient.CreateNewProduct(ctx, &pb.CreateWarehouseProductRequest{
+	createRes, err := grpcClient.CreateNewProductWithDTM(ctx, &pb.CreateWarehouseProductRequest{
 		Name:        "Hat",
 		Description: "A high-quality piece of clothing.",
 		PriceUsd: &pb.Money{

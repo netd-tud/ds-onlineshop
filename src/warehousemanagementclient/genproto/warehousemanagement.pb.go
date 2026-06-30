@@ -156,10 +156,11 @@ const file_warehousemanagement_proto_rawDesc = "" +
 	"categories\x12#\n" +
 	"\rinitial_stock\x18\x05 \x01(\x03R\finitialStock\"P\n" +
 	"\x1eCreateWarehouseProductResponse\x12.\n" +
-	"\aproduct\x18\x01 \x01(\v2\x14.hipstershop.ProductR\aproduct2\xfa\x01\n" +
+	"\aproduct\x18\x01 \x01(\v2\x14.hipstershop.ProductR\aproduct2\x81\x03\n" +
 	"\x13WarehouseManagement\x12d\n" +
 	"\x12UpdateProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a\x1d.hipstershop.InventoryProduct\x12}\n" +
-	"\x10CreateNewProduct\x123.warehouse.management.CreateWarehouseProductRequest\x1a4.warehouse.management.CreateWarehouseProductResponseB1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3"
+	"\x10CreateNewProduct\x123.warehouse.management.CreateWarehouseProductRequest\x1a4.warehouse.management.CreateWarehouseProductResponse\x12\x84\x01\n" +
+	"\x17CreateNewProductWithDTM\x123.warehouse.management.CreateWarehouseProductRequest\x1a4.warehouse.management.CreateWarehouseProductResponseB1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3"
 
 var (
 	file_warehousemanagement_proto_rawDescOnce sync.Once
@@ -187,10 +188,12 @@ var file_warehousemanagement_proto_depIdxs = []int32{
 	3, // 1: warehouse.management.CreateWarehouseProductResponse.product:type_name -> hipstershop.Product
 	4, // 2: warehouse.management.WarehouseManagement.UpdateProductStock:input_type -> hipstershop.ChangeInventoryProductStockRequest
 	0, // 3: warehouse.management.WarehouseManagement.CreateNewProduct:input_type -> warehouse.management.CreateWarehouseProductRequest
-	5, // 4: warehouse.management.WarehouseManagement.UpdateProductStock:output_type -> hipstershop.InventoryProduct
-	1, // 5: warehouse.management.WarehouseManagement.CreateNewProduct:output_type -> warehouse.management.CreateWarehouseProductResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
+	0, // 4: warehouse.management.WarehouseManagement.CreateNewProductWithDTM:input_type -> warehouse.management.CreateWarehouseProductRequest
+	5, // 5: warehouse.management.WarehouseManagement.UpdateProductStock:output_type -> hipstershop.InventoryProduct
+	1, // 6: warehouse.management.WarehouseManagement.CreateNewProduct:output_type -> warehouse.management.CreateWarehouseProductResponse
+	1, // 7: warehouse.management.WarehouseManagement.CreateNewProductWithDTM:output_type -> warehouse.management.CreateWarehouseProductResponse
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name

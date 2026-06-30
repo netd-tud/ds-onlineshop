@@ -679,6 +679,7 @@ type CreateNewProductRequest struct {
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	PriceUsd      *Money                 `protobuf:"bytes,3,opt,name=price_usd,json=priceUsd,proto3" json:"price_usd,omitempty"`
 	Categories    []string               `protobuf:"bytes,4,rep,name=categories,proto3" json:"categories,omitempty"`
+	Id            string                 `protobuf:"bytes,5,opt,name=id,proto3" json:"id,omitempty"` // used only in DTM-SAGA context. Normally products should be created without providing an ID.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -739,6 +740,13 @@ func (x *CreateNewProductRequest) GetCategories() []string {
 		return x.Categories
 	}
 	return nil
+}
+
+func (x *CreateNewProductRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 type CreateNewProductResponse struct {
@@ -2476,14 +2484,15 @@ const file_demo_proto_rawDesc = "" +
 	"\x15SearchProductsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\"H\n" +
 	"\x16SearchProductsResponse\x12.\n" +
-	"\aresults\x18\x01 \x03(\v2\x14.hipstershop.ProductR\aresults\"\xa0\x01\n" +
+	"\aresults\x18\x01 \x03(\v2\x14.hipstershop.ProductR\aresults\"\xb0\x01\n" +
 	"\x17CreateNewProductRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12/\n" +
 	"\tprice_usd\x18\x03 \x01(\v2\x12.hipstershop.MoneyR\bpriceUsd\x12\x1e\n" +
 	"\n" +
 	"categories\x18\x04 \x03(\tR\n" +
-	"categories\"J\n" +
+	"categories\x12\x0e\n" +
+	"\x02id\x18\x05 \x01(\tR\x02id\"J\n" +
 	"\x18CreateNewProductResponse\x12.\n" +
 	"\aproduct\x18\x01 \x01(\v2\x14.hipstershop.ProductR\aproduct\"&\n" +
 	"\x14DeleteProductRequest\x12\x0e\n" +
@@ -2587,14 +2596,15 @@ const file_demo_proto_rawDesc = "" +
 	"\aGetCart\x12\x1b.hipstershop.GetCartRequest\x1a\x11.hipstershop.Cart\"\x00\x12@\n" +
 	"\tEmptyCart\x12\x1d.hipstershop.EmptyCartRequest\x1a\x12.hipstershop.Empty\"\x002\x83\x01\n" +
 	"\x15RecommendationService\x12j\n" +
-	"\x13ListRecommendations\x12'.hipstershop.ListRecommendationsRequest\x1a(.hipstershop.ListRecommendationsResponse\"\x002\xc0\x03\n" +
+	"\x13ListRecommendations\x12'.hipstershop.ListRecommendationsRequest\x1a(.hipstershop.ListRecommendationsResponse\"\x002\xaa\x04\n" +
 	"\x15ProductCatalogService\x12G\n" +
 	"\fListProducts\x12\x12.hipstershop.Empty\x1a!.hipstershop.ListProductsResponse\"\x00\x12D\n" +
 	"\n" +
 	"GetProduct\x12\x1e.hipstershop.GetProductRequest\x1a\x14.hipstershop.Product\"\x00\x12[\n" +
 	"\x0eSearchProducts\x12\".hipstershop.SearchProductsRequest\x1a#.hipstershop.SearchProductsResponse\"\x00\x12a\n" +
 	"\x10CreateNewProduct\x12$.hipstershop.CreateNewProductRequest\x1a%.hipstershop.CreateNewProductResponse\"\x00\x12X\n" +
-	"\rDeleteProduct\x12!.hipstershop.DeleteProductRequest\x1a\".hipstershop.DeleteProductResponse\"\x002\xaa\x01\n" +
+	"\rDeleteProduct\x12!.hipstershop.DeleteProductRequest\x1a\".hipstershop.DeleteProductResponse\"\x00\x12h\n" +
+	"\x1aCompensateCreateNewProduct\x12$.hipstershop.CreateNewProductRequest\x1a\".hipstershop.DeleteProductResponse\"\x002\xaa\x01\n" +
 	"\x0fShippingService\x12I\n" +
 	"\bGetQuote\x12\x1c.hipstershop.GetQuoteRequest\x1a\x1d.hipstershop.GetQuoteResponse\"\x00\x12L\n" +
 	"\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse\"\x002\xb7\x01\n" +
@@ -2609,14 +2619,15 @@ const file_demo_proto_rawDesc = "" +
 	"\n" +
 	"PlaceOrder\x12\x1e.hipstershop.PlaceOrderRequest\x1a\x1f.hipstershop.PlaceOrderResponse\"\x002H\n" +
 	"\tAdService\x12;\n" +
-	"\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x002\xb8\x05\n" +
+	"\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x002\xbf\x06\n" +
 	"\x10InventoryService\x12I\n" +
 	"\rListInventory\x12\x12.hipstershop.Empty\x1a\".hipstershop.ListInventoryResponse\"\x00\x12_\n" +
 	"\x13GetInventoryProduct\x12'.hipstershop.GetInventoryProductRequest\x1a\x1d.hipstershop.InventoryProduct\"\x00\x12\x82\x01\n" +
 	"\x1bChangeInventoryProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a0.hipstershop.ChangeInventoryProductStockResponse\"\x00\x12\x80\x01\n" +
 	"\x18SetInventoryProductStock\x12,.hipstershop.SetInventoryProductStockRequest\x1a4.hipstershop.SetInventoryProductStockRequestResponse\"\x00\x12|\n" +
-	"\x19CreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a..hipstershop.CreateNewInventoryProductResponse\"\x00\x12r\n" +
-	"\x16DeleteInventoryProduct\x12*.hipstershop.DeleteInventoryProductRequest\x1a*.hipstershop.DeleteInventoryProductRequest\"\x00B1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3"
+	"\x19CreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a..hipstershop.CreateNewInventoryProductResponse\"\x00\x12s\n" +
+	"\x16DeleteInventoryProduct\x12*.hipstershop.DeleteInventoryProductRequest\x1a+.hipstershop.DeleteInventoryProductResponse\"\x00\x12\x83\x01\n" +
+	"#CompensateCreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a+.hipstershop.DeleteInventoryProductResponse\"\x00B1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -2721,45 +2732,49 @@ var file_demo_proto_depIdxs = []int32{
 	11, // 37: hipstershop.ProductCatalogService.SearchProducts:input_type -> hipstershop.SearchProductsRequest
 	13, // 38: hipstershop.ProductCatalogService.CreateNewProduct:input_type -> hipstershop.CreateNewProductRequest
 	15, // 39: hipstershop.ProductCatalogService.DeleteProduct:input_type -> hipstershop.DeleteProductRequest
-	17, // 40: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
-	19, // 41: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
-	5,  // 42: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
-	24, // 43: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
-	26, // 44: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
-	30, // 45: hipstershop.EmailService.SendOrderConfirmation:input_type -> hipstershop.SendOrderConfirmationRequest
-	31, // 46: hipstershop.CheckoutService.PlaceOrder:input_type -> hipstershop.PlaceOrderRequest
-	33, // 47: hipstershop.AdService.GetAds:input_type -> hipstershop.AdRequest
-	5,  // 48: hipstershop.InventoryService.ListInventory:input_type -> hipstershop.Empty
-	38, // 49: hipstershop.InventoryService.GetInventoryProduct:input_type -> hipstershop.GetInventoryProductRequest
-	39, // 50: hipstershop.InventoryService.ChangeInventoryProductStock:input_type -> hipstershop.ChangeInventoryProductStockRequest
-	41, // 51: hipstershop.InventoryService.SetInventoryProductStock:input_type -> hipstershop.SetInventoryProductStockRequest
-	43, // 52: hipstershop.InventoryService.CreateNewInventoryProduct:input_type -> hipstershop.CreateNewInventoryProductRequest
-	45, // 53: hipstershop.InventoryService.DeleteInventoryProduct:input_type -> hipstershop.DeleteInventoryProductRequest
-	5,  // 54: hipstershop.CartService.AddItem:output_type -> hipstershop.Empty
-	4,  // 55: hipstershop.CartService.GetCart:output_type -> hipstershop.Cart
-	5,  // 56: hipstershop.CartService.EmptyCart:output_type -> hipstershop.Empty
-	7,  // 57: hipstershop.RecommendationService.ListRecommendations:output_type -> hipstershop.ListRecommendationsResponse
-	9,  // 58: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
-	8,  // 59: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
-	12, // 60: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
-	14, // 61: hipstershop.ProductCatalogService.CreateNewProduct:output_type -> hipstershop.CreateNewProductResponse
-	16, // 62: hipstershop.ProductCatalogService.DeleteProduct:output_type -> hipstershop.DeleteProductResponse
-	18, // 63: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
-	20, // 64: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
-	23, // 65: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
-	22, // 66: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
-	27, // 67: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
-	5,  // 68: hipstershop.EmailService.SendOrderConfirmation:output_type -> hipstershop.Empty
-	32, // 69: hipstershop.CheckoutService.PlaceOrder:output_type -> hipstershop.PlaceOrderResponse
-	34, // 70: hipstershop.AdService.GetAds:output_type -> hipstershop.AdResponse
-	37, // 71: hipstershop.InventoryService.ListInventory:output_type -> hipstershop.ListInventoryResponse
-	36, // 72: hipstershop.InventoryService.GetInventoryProduct:output_type -> hipstershop.InventoryProduct
-	40, // 73: hipstershop.InventoryService.ChangeInventoryProductStock:output_type -> hipstershop.ChangeInventoryProductStockResponse
-	42, // 74: hipstershop.InventoryService.SetInventoryProductStock:output_type -> hipstershop.SetInventoryProductStockRequestResponse
-	44, // 75: hipstershop.InventoryService.CreateNewInventoryProduct:output_type -> hipstershop.CreateNewInventoryProductResponse
-	45, // 76: hipstershop.InventoryService.DeleteInventoryProduct:output_type -> hipstershop.DeleteInventoryProductRequest
-	54, // [54:77] is the sub-list for method output_type
-	31, // [31:54] is the sub-list for method input_type
+	13, // 40: hipstershop.ProductCatalogService.CompensateCreateNewProduct:input_type -> hipstershop.CreateNewProductRequest
+	17, // 41: hipstershop.ShippingService.GetQuote:input_type -> hipstershop.GetQuoteRequest
+	19, // 42: hipstershop.ShippingService.ShipOrder:input_type -> hipstershop.ShipOrderRequest
+	5,  // 43: hipstershop.CurrencyService.GetSupportedCurrencies:input_type -> hipstershop.Empty
+	24, // 44: hipstershop.CurrencyService.Convert:input_type -> hipstershop.CurrencyConversionRequest
+	26, // 45: hipstershop.PaymentService.Charge:input_type -> hipstershop.ChargeRequest
+	30, // 46: hipstershop.EmailService.SendOrderConfirmation:input_type -> hipstershop.SendOrderConfirmationRequest
+	31, // 47: hipstershop.CheckoutService.PlaceOrder:input_type -> hipstershop.PlaceOrderRequest
+	33, // 48: hipstershop.AdService.GetAds:input_type -> hipstershop.AdRequest
+	5,  // 49: hipstershop.InventoryService.ListInventory:input_type -> hipstershop.Empty
+	38, // 50: hipstershop.InventoryService.GetInventoryProduct:input_type -> hipstershop.GetInventoryProductRequest
+	39, // 51: hipstershop.InventoryService.ChangeInventoryProductStock:input_type -> hipstershop.ChangeInventoryProductStockRequest
+	41, // 52: hipstershop.InventoryService.SetInventoryProductStock:input_type -> hipstershop.SetInventoryProductStockRequest
+	43, // 53: hipstershop.InventoryService.CreateNewInventoryProduct:input_type -> hipstershop.CreateNewInventoryProductRequest
+	45, // 54: hipstershop.InventoryService.DeleteInventoryProduct:input_type -> hipstershop.DeleteInventoryProductRequest
+	43, // 55: hipstershop.InventoryService.CompensateCreateNewInventoryProduct:input_type -> hipstershop.CreateNewInventoryProductRequest
+	5,  // 56: hipstershop.CartService.AddItem:output_type -> hipstershop.Empty
+	4,  // 57: hipstershop.CartService.GetCart:output_type -> hipstershop.Cart
+	5,  // 58: hipstershop.CartService.EmptyCart:output_type -> hipstershop.Empty
+	7,  // 59: hipstershop.RecommendationService.ListRecommendations:output_type -> hipstershop.ListRecommendationsResponse
+	9,  // 60: hipstershop.ProductCatalogService.ListProducts:output_type -> hipstershop.ListProductsResponse
+	8,  // 61: hipstershop.ProductCatalogService.GetProduct:output_type -> hipstershop.Product
+	12, // 62: hipstershop.ProductCatalogService.SearchProducts:output_type -> hipstershop.SearchProductsResponse
+	14, // 63: hipstershop.ProductCatalogService.CreateNewProduct:output_type -> hipstershop.CreateNewProductResponse
+	16, // 64: hipstershop.ProductCatalogService.DeleteProduct:output_type -> hipstershop.DeleteProductResponse
+	16, // 65: hipstershop.ProductCatalogService.CompensateCreateNewProduct:output_type -> hipstershop.DeleteProductResponse
+	18, // 66: hipstershop.ShippingService.GetQuote:output_type -> hipstershop.GetQuoteResponse
+	20, // 67: hipstershop.ShippingService.ShipOrder:output_type -> hipstershop.ShipOrderResponse
+	23, // 68: hipstershop.CurrencyService.GetSupportedCurrencies:output_type -> hipstershop.GetSupportedCurrenciesResponse
+	22, // 69: hipstershop.CurrencyService.Convert:output_type -> hipstershop.Money
+	27, // 70: hipstershop.PaymentService.Charge:output_type -> hipstershop.ChargeResponse
+	5,  // 71: hipstershop.EmailService.SendOrderConfirmation:output_type -> hipstershop.Empty
+	32, // 72: hipstershop.CheckoutService.PlaceOrder:output_type -> hipstershop.PlaceOrderResponse
+	34, // 73: hipstershop.AdService.GetAds:output_type -> hipstershop.AdResponse
+	37, // 74: hipstershop.InventoryService.ListInventory:output_type -> hipstershop.ListInventoryResponse
+	36, // 75: hipstershop.InventoryService.GetInventoryProduct:output_type -> hipstershop.InventoryProduct
+	40, // 76: hipstershop.InventoryService.ChangeInventoryProductStock:output_type -> hipstershop.ChangeInventoryProductStockResponse
+	42, // 77: hipstershop.InventoryService.SetInventoryProductStock:output_type -> hipstershop.SetInventoryProductStockRequestResponse
+	44, // 78: hipstershop.InventoryService.CreateNewInventoryProduct:output_type -> hipstershop.CreateNewInventoryProductResponse
+	46, // 79: hipstershop.InventoryService.DeleteInventoryProduct:output_type -> hipstershop.DeleteInventoryProductResponse
+	46, // 80: hipstershop.InventoryService.CompensateCreateNewInventoryProduct:output_type -> hipstershop.DeleteInventoryProductResponse
+	56, // [56:81] is the sub-list for method output_type
+	31, // [31:56] is the sub-list for method input_type
 	31, // [31:31] is the sub-list for extension type_name
 	31, // [31:31] is the sub-list for extension extendee
 	0,  // [0:31] is the sub-list for field type_name

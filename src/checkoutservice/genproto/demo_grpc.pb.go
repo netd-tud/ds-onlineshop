@@ -313,11 +313,12 @@ var RecommendationService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ProductCatalogService_ListProducts_FullMethodName     = "/hipstershop.ProductCatalogService/ListProducts"
-	ProductCatalogService_GetProduct_FullMethodName       = "/hipstershop.ProductCatalogService/GetProduct"
-	ProductCatalogService_SearchProducts_FullMethodName   = "/hipstershop.ProductCatalogService/SearchProducts"
-	ProductCatalogService_CreateNewProduct_FullMethodName = "/hipstershop.ProductCatalogService/CreateNewProduct"
-	ProductCatalogService_DeleteProduct_FullMethodName    = "/hipstershop.ProductCatalogService/DeleteProduct"
+	ProductCatalogService_ListProducts_FullMethodName               = "/hipstershop.ProductCatalogService/ListProducts"
+	ProductCatalogService_GetProduct_FullMethodName                 = "/hipstershop.ProductCatalogService/GetProduct"
+	ProductCatalogService_SearchProducts_FullMethodName             = "/hipstershop.ProductCatalogService/SearchProducts"
+	ProductCatalogService_CreateNewProduct_FullMethodName           = "/hipstershop.ProductCatalogService/CreateNewProduct"
+	ProductCatalogService_DeleteProduct_FullMethodName              = "/hipstershop.ProductCatalogService/DeleteProduct"
+	ProductCatalogService_CompensateCreateNewProduct_FullMethodName = "/hipstershop.ProductCatalogService/CompensateCreateNewProduct"
 )
 
 // ProductCatalogServiceClient is the client API for ProductCatalogService service.
@@ -329,6 +330,9 @@ type ProductCatalogServiceClient interface {
 	SearchProducts(ctx context.Context, in *SearchProductsRequest, opts ...grpc.CallOption) (*SearchProductsResponse, error)
 	CreateNewProduct(ctx context.Context, in *CreateNewProductRequest, opts ...grpc.CallOption) (*CreateNewProductResponse, error)
 	DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error)
+	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+	// because DTM resends the original action's request bytes when invoking the compensating transaction.
+	CompensateCreateNewProduct(ctx context.Context, in *CreateNewProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error)
 }
 
 type productCatalogServiceClient struct {
@@ -389,6 +393,16 @@ func (c *productCatalogServiceClient) DeleteProduct(ctx context.Context, in *Del
 	return out, nil
 }
 
+func (c *productCatalogServiceClient) CompensateCreateNewProduct(ctx context.Context, in *CreateNewProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteProductResponse)
+	err := c.cc.Invoke(ctx, ProductCatalogService_CompensateCreateNewProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductCatalogServiceServer is the server API for ProductCatalogService service.
 // All implementations must embed UnimplementedProductCatalogServiceServer
 // for forward compatibility.
@@ -398,6 +412,9 @@ type ProductCatalogServiceServer interface {
 	SearchProducts(context.Context, *SearchProductsRequest) (*SearchProductsResponse, error)
 	CreateNewProduct(context.Context, *CreateNewProductRequest) (*CreateNewProductResponse, error)
 	DeleteProduct(context.Context, *DeleteProductRequest) (*DeleteProductResponse, error)
+	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+	// because DTM resends the original action's request bytes when invoking the compensating transaction.
+	CompensateCreateNewProduct(context.Context, *CreateNewProductRequest) (*DeleteProductResponse, error)
 	mustEmbedUnimplementedProductCatalogServiceServer()
 }
 
@@ -422,6 +439,9 @@ func (UnimplementedProductCatalogServiceServer) CreateNewProduct(context.Context
 }
 func (UnimplementedProductCatalogServiceServer) DeleteProduct(context.Context, *DeleteProductRequest) (*DeleteProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteProduct not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) CompensateCreateNewProduct(context.Context, *CreateNewProductRequest) (*DeleteProductResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CompensateCreateNewProduct not implemented")
 }
 func (UnimplementedProductCatalogServiceServer) mustEmbedUnimplementedProductCatalogServiceServer() {}
 func (UnimplementedProductCatalogServiceServer) testEmbeddedByValue()                               {}
@@ -534,6 +554,24 @@ func _ProductCatalogService_DeleteProduct_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductCatalogService_CompensateCreateNewProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateNewProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).CompensateCreateNewProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_CompensateCreateNewProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).CompensateCreateNewProduct(ctx, req.(*CreateNewProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductCatalogService_ServiceDesc is the grpc.ServiceDesc for ProductCatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -560,6 +598,10 @@ var ProductCatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProduct",
 			Handler:    _ProductCatalogService_DeleteProduct_Handler,
+		},
+		{
+			MethodName: "CompensateCreateNewProduct",
+			Handler:    _ProductCatalogService_CompensateCreateNewProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1255,12 +1297,13 @@ var AdService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	InventoryService_ListInventory_FullMethodName               = "/hipstershop.InventoryService/ListInventory"
-	InventoryService_GetInventoryProduct_FullMethodName         = "/hipstershop.InventoryService/GetInventoryProduct"
-	InventoryService_ChangeInventoryProductStock_FullMethodName = "/hipstershop.InventoryService/ChangeInventoryProductStock"
-	InventoryService_SetInventoryProductStock_FullMethodName    = "/hipstershop.InventoryService/SetInventoryProductStock"
-	InventoryService_CreateNewInventoryProduct_FullMethodName   = "/hipstershop.InventoryService/CreateNewInventoryProduct"
-	InventoryService_DeleteInventoryProduct_FullMethodName      = "/hipstershop.InventoryService/DeleteInventoryProduct"
+	InventoryService_ListInventory_FullMethodName                       = "/hipstershop.InventoryService/ListInventory"
+	InventoryService_GetInventoryProduct_FullMethodName                 = "/hipstershop.InventoryService/GetInventoryProduct"
+	InventoryService_ChangeInventoryProductStock_FullMethodName         = "/hipstershop.InventoryService/ChangeInventoryProductStock"
+	InventoryService_SetInventoryProductStock_FullMethodName            = "/hipstershop.InventoryService/SetInventoryProductStock"
+	InventoryService_CreateNewInventoryProduct_FullMethodName           = "/hipstershop.InventoryService/CreateNewInventoryProduct"
+	InventoryService_DeleteInventoryProduct_FullMethodName              = "/hipstershop.InventoryService/DeleteInventoryProduct"
+	InventoryService_CompensateCreateNewInventoryProduct_FullMethodName = "/hipstershop.InventoryService/CompensateCreateNewInventoryProduct"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -1272,7 +1315,10 @@ type InventoryServiceClient interface {
 	ChangeInventoryProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*ChangeInventoryProductStockResponse, error)
 	SetInventoryProductStock(ctx context.Context, in *SetInventoryProductStockRequest, opts ...grpc.CallOption) (*SetInventoryProductStockRequestResponse, error)
 	CreateNewInventoryProduct(ctx context.Context, in *CreateNewInventoryProductRequest, opts ...grpc.CallOption) (*CreateNewInventoryProductResponse, error)
-	DeleteInventoryProduct(ctx context.Context, in *DeleteInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductRequest, error)
+	DeleteInventoryProduct(ctx context.Context, in *DeleteInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductResponse, error)
+	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+	// because DTM resends the original action's request bytes when invoking the compensating transaction.
+	CompensateCreateNewInventoryProduct(ctx context.Context, in *CreateNewInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductResponse, error)
 }
 
 type inventoryServiceClient struct {
@@ -1333,10 +1379,20 @@ func (c *inventoryServiceClient) CreateNewInventoryProduct(ctx context.Context, 
 	return out, nil
 }
 
-func (c *inventoryServiceClient) DeleteInventoryProduct(ctx context.Context, in *DeleteInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductRequest, error) {
+func (c *inventoryServiceClient) DeleteInventoryProduct(ctx context.Context, in *DeleteInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteInventoryProductRequest)
+	out := new(DeleteInventoryProductResponse)
 	err := c.cc.Invoke(ctx, InventoryService_DeleteInventoryProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) CompensateCreateNewInventoryProduct(ctx context.Context, in *CreateNewInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteInventoryProductResponse)
+	err := c.cc.Invoke(ctx, InventoryService_CompensateCreateNewInventoryProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1352,7 +1408,10 @@ type InventoryServiceServer interface {
 	ChangeInventoryProductStock(context.Context, *ChangeInventoryProductStockRequest) (*ChangeInventoryProductStockResponse, error)
 	SetInventoryProductStock(context.Context, *SetInventoryProductStockRequest) (*SetInventoryProductStockRequestResponse, error)
 	CreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*CreateNewInventoryProductResponse, error)
-	DeleteInventoryProduct(context.Context, *DeleteInventoryProductRequest) (*DeleteInventoryProductRequest, error)
+	DeleteInventoryProduct(context.Context, *DeleteInventoryProductRequest) (*DeleteInventoryProductResponse, error)
+	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+	// because DTM resends the original action's request bytes when invoking the compensating transaction.
+	CompensateCreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*DeleteInventoryProductResponse, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
@@ -1378,8 +1437,11 @@ func (UnimplementedInventoryServiceServer) SetInventoryProductStock(context.Cont
 func (UnimplementedInventoryServiceServer) CreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*CreateNewInventoryProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateNewInventoryProduct not implemented")
 }
-func (UnimplementedInventoryServiceServer) DeleteInventoryProduct(context.Context, *DeleteInventoryProductRequest) (*DeleteInventoryProductRequest, error) {
+func (UnimplementedInventoryServiceServer) DeleteInventoryProduct(context.Context, *DeleteInventoryProductRequest) (*DeleteInventoryProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteInventoryProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) CompensateCreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*DeleteInventoryProductResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CompensateCreateNewInventoryProduct not implemented")
 }
 func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
 func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
@@ -1510,6 +1572,24 @@ func _InventoryService_DeleteInventoryProduct_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_CompensateCreateNewInventoryProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateNewInventoryProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).CompensateCreateNewInventoryProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_CompensateCreateNewInventoryProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).CompensateCreateNewInventoryProduct(ctx, req.(*CreateNewInventoryProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1540,6 +1620,10 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteInventoryProduct",
 			Handler:    _InventoryService_DeleteInventoryProduct_Handler,
+		},
+		{
+			MethodName: "CompensateCreateNewInventoryProduct",
+			Handler:    _InventoryService_CompensateCreateNewInventoryProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

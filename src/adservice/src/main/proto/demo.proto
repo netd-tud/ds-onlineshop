@@ -74,6 +74,10 @@ service ProductCatalogService {
     rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
     rpc CreateNewProduct(CreateNewProductRequest) returns (CreateNewProductResponse) {}
     rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse) {}
+
+    // SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+    // because DTM resends the original action's request bytes when invoking the compensating transaction.
+    rpc CompensateCreateNewProduct(CreateNewProductRequest) returns (DeleteProductResponse) {}
 }
 
 message Product {
@@ -109,6 +113,8 @@ message CreateNewProductRequest {
     string description = 2;
     Money price_usd = 3;
     repeated string categories = 4;
+
+    string id = 5; // used only in DTM-SAGA context. Normally products should be created without providing an ID.
 }
 
 message CreateNewProductResponse {
@@ -291,7 +297,12 @@ service InventoryService {
     rpc ChangeInventoryProductStock(ChangeInventoryProductStockRequest) returns (ChangeInventoryProductStockResponse) {}
     rpc SetInventoryProductStock(SetInventoryProductStockRequest) returns (SetInventoryProductStockRequestResponse) {}
     rpc CreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (CreateNewInventoryProductResponse) {}
-    rpc DeleteInventoryProduct(DeleteInventoryProductRequest) returns (DeleteInventoryProductRequest) {}
+    rpc DeleteInventoryProduct(DeleteInventoryProductRequest) returns (DeleteInventoryProductResponse) {}
+
+
+    // SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+    // because DTM resends the original action's request bytes when invoking the compensating transaction.
+    rpc CompensateCreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (DeleteInventoryProductResponse) {}
 }
 
 message InventoryProduct {
