@@ -74,9 +74,12 @@ func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProdu
 }
 
 func (p *productCatalog) CreateNewProduct(ctx context.Context, req *pb.CreateNewProductRequest) (*pb.CreateNewProductResponse, error) {
-	newId, _ := generateID(10)
+	if req.Id == "" {
+		newId, _ := generateID(10)
+		req.Id = newId
+	}
 	product := &pb.Product{
-		Id:          newId,
+		Id:          req.Id,
 		Name:        req.Name,
 		Description: req.Description,
 		Picture:     "",
@@ -84,6 +87,7 @@ func (p *productCatalog) CreateNewProduct(ctx context.Context, req *pb.CreateNew
 		Categories:  req.Categories,
 	}
 	p.catalog.Products = append(p.parseCatalog(), product)
+	log.Infof("Product created: %s", product.Id)
 	return &pb.CreateNewProductResponse{Product: product}, nil
 }
 
@@ -92,10 +96,20 @@ func (p *productCatalog) DeleteProduct(ctx context.Context, req *pb.DeleteProduc
 	for i, product := range catalog {
 		if req.GetId() == product.GetId() {
 			p.catalog.Products = append(catalog[:i], catalog[i+1:]...)
+			log.Infof("Product deleted: %s", product.Id)
 			return &pb.DeleteProductResponse{Product: product}, nil
 		}
 	}
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+}
+
+func (p *productCatalog) CompensateCreateNewProduct(ctx context.Context, req *pb.CreateNewProductRequest) (*pb.DeleteProductResponse, error) {
+	res, err := p.DeleteProduct(ctx, &pb.DeleteProductRequest{Id: req.GetId()})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to compensate create product: %v", err)
+	}
+	log.Infof("Create Product compensated: %s", req.GetId())
+	return res, nil
 }
 
 func generateID(length int) (string, error) {
