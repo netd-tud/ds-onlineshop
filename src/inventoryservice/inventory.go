@@ -67,6 +67,7 @@ func (p *inventory) SetInventoryProductStock(ctx context.Context, req *pb.SetInv
 		Stock: req.GetNewStock(),
 	}
 	p.inventory.Products = append(p.parseInventory(), product)
+	log.Infof("Inventory product updated: %s", product.Id)
 	return &pb.SetInventoryProductStockRequestResponse{Product: product}, nil
 }
 
@@ -76,6 +77,7 @@ func (p *inventory) CreateNewInventoryProduct(ctx context.Context, req *pb.Creat
 		Stock: req.GetInitialStock(),
 	}
 	p.inventory.Products = append(p.parseInventory(), product)
+	log.Infof("Inventory product created: %s", product.Id)
 	return &pb.CreateNewInventoryProductResponse{Product: product}, nil
 }
 
@@ -84,10 +86,20 @@ func (p *inventory) DeleteInventoryProduct(ctx context.Context, req *pb.DeleteIn
 	for i, product := range inventory {
 		if req.GetId() == product.GetId() {
 			p.inventory.Products = append(inventory[:i], inventory[i+1:]...)
+			log.Infof("Inventory product deleted: %s", product.Id)
 			return &pb.DeleteInventoryProductResponse{Product: product}, nil
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+	return &pb.DeleteInventoryProductResponse{}, nil
+}
+
+func (p *inventory) CompensateCreateNewInventoryProduct(ctx context.Context, req *pb.CreateNewInventoryProductRequest) (*pb.DeleteInventoryProductResponse, error) {
+	res, err := p.DeleteInventoryProduct(ctx, &pb.DeleteInventoryProductRequest{Id: req.GetId()})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to compensate create inventory product: %v", err)
+	}
+	log.Infof("Create Inventory product compensated: %s", req.GetId())
+	return res, nil
 }
 
 func (p *inventory) parseInventory() []*pb.InventoryProduct {
