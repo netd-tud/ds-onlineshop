@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	pb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto"
 	"google.golang.org/grpc/codes"
@@ -72,6 +74,17 @@ func (p *inventory) SetInventoryProductStock(ctx context.Context, req *pb.SetInv
 }
 
 func (p *inventory) CreateNewInventoryProduct(ctx context.Context, req *pb.CreateNewInventoryProductRequest) (*pb.CreateNewInventoryProductResponse, error) {
+	// Simulate inventory failure if enabled
+	configPath := "/var/behavior-config/FAIL_INVENTORY"
+
+	configValue, _ := getConfigValue(configPath)
+	if configValue != "" {
+		if configValue == "true" {
+			log.Warn("DEMO MODE ACTIVE: Returning gRPC Aborted code!")
+			return nil, status.Error(codes.Aborted, "inventory allocation failed permanently")
+		}
+	}
+
 	product := &pb.InventoryProduct{
 		Id:    req.GetId(),
 		Stock: req.GetInitialStock(),
@@ -79,6 +92,23 @@ func (p *inventory) CreateNewInventoryProduct(ctx context.Context, req *pb.Creat
 	p.inventory.Products = append(p.parseInventory(), product)
 	log.Infof("Inventory product created: %s", product.Id)
 	return &pb.CreateNewInventoryProductResponse{Product: product}, nil
+}
+
+func getConfigValue(configPath string) (string, error) {
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		log.Infof("Behavior file not found at %s, proceeding normally", configPath)
+		return "", status.Error(codes.NotFound, "file not found")
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		log.Errorf("Error reading file stream: %v", err)
+		return "", status.Error(codes.Internal, "failed to read behavior config")
+	}
+
+	configValue := strings.TrimSpace(string(data))
+	log.Infof("Config Value read : '%s'", configValue)
+	return configValue, nil
 }
 
 func (p *inventory) DeleteInventoryProduct(ctx context.Context, req *pb.DeleteInventoryProductRequest) (*pb.DeleteInventoryProductResponse, error) {

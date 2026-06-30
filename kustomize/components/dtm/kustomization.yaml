@@ -6,3 +6,26 @@ resources:
   - postgres.yaml
   - dtm-secret.yaml
   - dtm.yaml
+  - behavior-config.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: inventoryservice
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: inventoryservice
+      spec:
+        template:
+          spec:
+            containers:
+              - name: server
+                volumeMounts:
+                  - name: behavior-volume
+                    mountPath: /var/behavior-config
+            volumes:
+              - name: behavior-volume
+                configMap:
+                  name: service-behavior
