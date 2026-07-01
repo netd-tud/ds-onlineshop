@@ -35,6 +35,10 @@ spec:
           env:
             - name: PORT
               value: "50002"
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalogservice:3550"
+            - name: MQTT_BROKER_ADDR
+              value: "mqtt-broker:1883"
           readinessProbe:
             grpc:
               port: 50002
