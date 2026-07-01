@@ -31,3 +31,11 @@ spec:
                 name: prometheus
                 port:
                   number: 9090
+
+          - path: /dtm
+            pathType: Prefix
+            backend:
+              service:
+                name: dtm-svc
+                port:
+                  number: 36789

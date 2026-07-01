@@ -83,3 +83,19 @@ spec:
   selector:
     app: dtm
   type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dtm-nodeport
+  labels:
+    app: dtm
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 36798
+      targetPort: 36789
+      nodePort: 30789
+  selector:
+    app: dtm
