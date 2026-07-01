@@ -27,3 +27,4 @@ resources:
 - recommendationservice.yaml
 - shippingservice.yaml
 - inventoryservice.yaml
+- mqtt-broker.yaml
