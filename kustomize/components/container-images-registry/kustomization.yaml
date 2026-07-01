@@ -21,6 +21,9 @@ images:
 - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice
   newName: ghcr.io/turt1z/microservices-demo/emailservice
   newTag: latest
+- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/checkoutservice
+  newName: ghcr.io/turt1z/microservices-demo/checkoutservice
+  newTag: latest
 - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/productcatalogservice
   newName: ghcr.io/turt1z/microservices-demo/productcatalogservice
   newTag: latest

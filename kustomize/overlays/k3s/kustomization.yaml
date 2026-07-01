@@ -9,7 +9,7 @@ components:
 
 - ../../components/without-loadgenerator
 - ../../components/ratingservice
-#- ../../components/mqtt-broker
+- ../../components/email-via-mqtt
 - ../../components/monitoring
 - ../../components/dynamic-load-producer
 - ../../components/dynamic-load-producer-replicated

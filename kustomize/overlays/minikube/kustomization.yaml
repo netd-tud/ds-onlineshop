@@ -6,4 +6,4 @@ components:
  - ../../components/without-loadgenerator
  - ../../components/ratingservice
  - ../../components/local-dev-images
- - ../../components/mqtt-broker
+ - ../../components/email-via-mqtt
