@@ -1,0 +1,20 @@
+{
+  "action": "update",
+
+  "create_product": {
+    "name": "Hat",
+    "description": "A high-quality piece of clothing.",
+    "price_usd": {
+      "currency_code": "USD",
+      "units": 15,
+      "nanos": 990000000
+    },
+    "categories": ["clothing", "accessories"],
+    "initial_stock": 100
+  },
+
+  "update_stock": {
+    "id": "wHdh8OXzsu",
+    "delta": -85
+  }
+}
