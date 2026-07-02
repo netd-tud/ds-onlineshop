@@ -4,3 +4,4 @@ metadata:
   name: service-behavior
 data:
   FAIL_INVENTORY: "false" # Change to "true" to trigger a Saga rollback
+  NAIVE_ROLLBACK_CREATE: "true" # Change to "false" to disable naive rollback
