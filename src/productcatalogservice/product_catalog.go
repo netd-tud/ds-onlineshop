@@ -19,6 +19,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"strings"
+	"sync"
 	"time"
 
 	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
@@ -29,7 +30,9 @@ import (
 
 type productCatalog struct {
 	pb.UnimplementedProductCatalogServiceServer
-	catalog pb.ListProductsResponse
+	catalog   pb.ListProductsResponse
+	xaMu      sync.Mutex
+	xaPending map[string]*pb.Product
 }
 
 func (p *productCatalog) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {

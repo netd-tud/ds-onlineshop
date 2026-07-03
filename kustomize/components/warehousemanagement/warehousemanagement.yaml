@@ -41,6 +41,8 @@ spec:
               value: "productcatalogservice:3550"
             - name: INVENTORY_CATALOG_SERVICE_ADDR
               value: "inventoryservice:50002"
+            - name: WAREHOUSE_MANAGEMENT_SVC_ADDR
+              value: "warehousemanagement:50000"
             - name: DTM_SERVICE_ADDR
               value: "dtm-svc:36790"
             - name: MQTT_BROKER_ADDR

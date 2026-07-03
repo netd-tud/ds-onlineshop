@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -29,6 +30,9 @@ type inventory struct {
 		lowStock      int64
 		criticalStock int64
 	}
+
+	xaMu      sync.Mutex
+	xaPending map[string]*pb.InventoryProduct
 }
 
 func (p *inventory) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {

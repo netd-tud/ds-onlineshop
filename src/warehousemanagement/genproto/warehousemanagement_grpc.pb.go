@@ -22,6 +22,7 @@ const (
 	WarehouseManagement_UpdateProductStock_FullMethodName      = "/warehouse.management.WarehouseManagement/UpdateProductStock"
 	WarehouseManagement_CreateNewProduct_FullMethodName        = "/warehouse.management.WarehouseManagement/CreateNewProduct"
 	WarehouseManagement_CreateNewProductWithDTM_FullMethodName = "/warehouse.management.WarehouseManagement/CreateNewProductWithDTM"
+	WarehouseManagement_CreateNewProductWithXA_FullMethodName  = "/warehouse.management.WarehouseManagement/CreateNewProductWithXA"
 )
 
 // WarehouseManagementClient is the client API for WarehouseManagement service.
@@ -31,6 +32,7 @@ type WarehouseManagementClient interface {
 	UpdateProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*InventoryProduct, error)
 	CreateNewProduct(ctx context.Context, in *CreateWarehouseProductRequest, opts ...grpc.CallOption) (*CreateWarehouseProductResponse, error)
 	CreateNewProductWithDTM(ctx context.Context, in *CreateWarehouseProductRequest, opts ...grpc.CallOption) (*CreateWarehouseProductResponse, error)
+	CreateNewProductWithXA(ctx context.Context, in *CreateWarehouseProductRequest, opts ...grpc.CallOption) (*CreateWarehouseProductResponse, error)
 }
 
 type warehouseManagementClient struct {
@@ -71,6 +73,16 @@ func (c *warehouseManagementClient) CreateNewProductWithDTM(ctx context.Context,
 	return out, nil
 }
 
+func (c *warehouseManagementClient) CreateNewProductWithXA(ctx context.Context, in *CreateWarehouseProductRequest, opts ...grpc.CallOption) (*CreateWarehouseProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateWarehouseProductResponse)
+	err := c.cc.Invoke(ctx, WarehouseManagement_CreateNewProductWithXA_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WarehouseManagementServer is the server API for WarehouseManagement service.
 // All implementations must embed UnimplementedWarehouseManagementServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type WarehouseManagementServer interface {
 	UpdateProductStock(context.Context, *ChangeInventoryProductStockRequest) (*InventoryProduct, error)
 	CreateNewProduct(context.Context, *CreateWarehouseProductRequest) (*CreateWarehouseProductResponse, error)
 	CreateNewProductWithDTM(context.Context, *CreateWarehouseProductRequest) (*CreateWarehouseProductResponse, error)
+	CreateNewProductWithXA(context.Context, *CreateWarehouseProductRequest) (*CreateWarehouseProductResponse, error)
 	mustEmbedUnimplementedWarehouseManagementServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedWarehouseManagementServer) CreateNewProduct(context.Context, 
 }
 func (UnimplementedWarehouseManagementServer) CreateNewProductWithDTM(context.Context, *CreateWarehouseProductRequest) (*CreateWarehouseProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateNewProductWithDTM not implemented")
+}
+func (UnimplementedWarehouseManagementServer) CreateNewProductWithXA(context.Context, *CreateWarehouseProductRequest) (*CreateWarehouseProductResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateNewProductWithXA not implemented")
 }
 func (UnimplementedWarehouseManagementServer) mustEmbedUnimplementedWarehouseManagementServer() {}
 func (UnimplementedWarehouseManagementServer) testEmbeddedByValue()                             {}
@@ -172,6 +188,24 @@ func _WarehouseManagement_CreateNewProductWithDTM_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WarehouseManagement_CreateNewProductWithXA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateWarehouseProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WarehouseManagementServer).CreateNewProductWithXA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WarehouseManagement_CreateNewProductWithXA_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WarehouseManagementServer).CreateNewProductWithXA(ctx, req.(*CreateWarehouseProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WarehouseManagement_ServiceDesc is the grpc.ServiceDesc for WarehouseManagement service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +224,10 @@ var WarehouseManagement_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateNewProductWithDTM",
 			Handler:    _WarehouseManagement_CreateNewProductWithDTM_Handler,
+		},
+		{
+			MethodName: "CreateNewProductWithXA",
+			Handler:    _WarehouseManagement_CreateNewProductWithXA_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -78,6 +78,11 @@ service ProductCatalogService {
     // SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
     // because DTM resends the original action's request bytes when invoking the compensating transaction.
     rpc CompensateCreateNewProduct(CreateNewProductRequest) returns (DeleteProductResponse) {}
+
+    // XA
+    rpc XaPrepareCreateProduct(XaPrepareCreateProductRequest) returns (Empty) {}
+    rpc XaCommitCreateProduct(XaBranchRequest) returns (Empty) {}
+    rpc XaRollbackCreateProduct(XaBranchRequest) returns (Empty) {}
 }
 
 message Product {
@@ -128,6 +133,16 @@ message DeleteProductRequest {
 message DeleteProductResponse {
     Product product = 1;
 }
+
+message XaPrepareCreateProductRequest {
+    string gid = 1;
+    string id = 2;
+    string name = 3;
+    string description = 4;
+    Money price_usd = 5;
+    repeated string categories = 6;
+}
+
 
 
 // ---------------Shipping Service----------
@@ -303,6 +318,11 @@ service InventoryService {
     // SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
     // because DTM resends the original action's request bytes when invoking the compensating transaction.
     rpc CompensateCreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (DeleteInventoryProductResponse) {}
+
+    // XA
+    rpc XaPrepareCreateInventoryProduct(XaPrepareCreateInventoryProductRequest) returns (Empty) {}
+    rpc XaCommitCreateInventoryProduct(XaBranchRequest) returns (Empty) {}
+    rpc XaRollbackCreateInventoryProduct(XaBranchRequest) returns (Empty) {}
 }
 
 message InventoryProduct {
@@ -351,4 +371,16 @@ message DeleteInventoryProductRequest {
 
 message DeleteInventoryProductResponse {
     InventoryProduct product = 1;
+}
+
+message XaPrepareCreateInventoryProductRequest {
+    string gid = 1;
+    string id = 2;
+    int64 initial_stock = 3;
+}
+
+
+// shared by both productcatalog and inventory
+message XaBranchRequest {
+  string gid = 1;
 }

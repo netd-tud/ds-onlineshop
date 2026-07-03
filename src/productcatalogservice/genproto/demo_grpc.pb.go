@@ -319,6 +319,9 @@ const (
 	ProductCatalogService_CreateNewProduct_FullMethodName           = "/hipstershop.ProductCatalogService/CreateNewProduct"
 	ProductCatalogService_DeleteProduct_FullMethodName              = "/hipstershop.ProductCatalogService/DeleteProduct"
 	ProductCatalogService_CompensateCreateNewProduct_FullMethodName = "/hipstershop.ProductCatalogService/CompensateCreateNewProduct"
+	ProductCatalogService_XaPrepareCreateProduct_FullMethodName     = "/hipstershop.ProductCatalogService/XaPrepareCreateProduct"
+	ProductCatalogService_XaCommitCreateProduct_FullMethodName      = "/hipstershop.ProductCatalogService/XaCommitCreateProduct"
+	ProductCatalogService_XaRollbackCreateProduct_FullMethodName    = "/hipstershop.ProductCatalogService/XaRollbackCreateProduct"
 )
 
 // ProductCatalogServiceClient is the client API for ProductCatalogService service.
@@ -333,6 +336,10 @@ type ProductCatalogServiceClient interface {
 	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
 	// because DTM resends the original action's request bytes when invoking the compensating transaction.
 	CompensateCreateNewProduct(ctx context.Context, in *CreateNewProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error)
+	// XA
+	XaPrepareCreateProduct(ctx context.Context, in *XaPrepareCreateProductRequest, opts ...grpc.CallOption) (*Empty, error)
+	XaCommitCreateProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error)
+	XaRollbackCreateProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type productCatalogServiceClient struct {
@@ -403,6 +410,36 @@ func (c *productCatalogServiceClient) CompensateCreateNewProduct(ctx context.Con
 	return out, nil
 }
 
+func (c *productCatalogServiceClient) XaPrepareCreateProduct(ctx context.Context, in *XaPrepareCreateProductRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, ProductCatalogService_XaPrepareCreateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productCatalogServiceClient) XaCommitCreateProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, ProductCatalogService_XaCommitCreateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productCatalogServiceClient) XaRollbackCreateProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, ProductCatalogService_XaRollbackCreateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductCatalogServiceServer is the server API for ProductCatalogService service.
 // All implementations must embed UnimplementedProductCatalogServiceServer
 // for forward compatibility.
@@ -415,6 +452,10 @@ type ProductCatalogServiceServer interface {
 	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
 	// because DTM resends the original action's request bytes when invoking the compensating transaction.
 	CompensateCreateNewProduct(context.Context, *CreateNewProductRequest) (*DeleteProductResponse, error)
+	// XA
+	XaPrepareCreateProduct(context.Context, *XaPrepareCreateProductRequest) (*Empty, error)
+	XaCommitCreateProduct(context.Context, *XaBranchRequest) (*Empty, error)
+	XaRollbackCreateProduct(context.Context, *XaBranchRequest) (*Empty, error)
 	mustEmbedUnimplementedProductCatalogServiceServer()
 }
 
@@ -442,6 +483,15 @@ func (UnimplementedProductCatalogServiceServer) DeleteProduct(context.Context, *
 }
 func (UnimplementedProductCatalogServiceServer) CompensateCreateNewProduct(context.Context, *CreateNewProductRequest) (*DeleteProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CompensateCreateNewProduct not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) XaPrepareCreateProduct(context.Context, *XaPrepareCreateProductRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method XaPrepareCreateProduct not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) XaCommitCreateProduct(context.Context, *XaBranchRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method XaCommitCreateProduct not implemented")
+}
+func (UnimplementedProductCatalogServiceServer) XaRollbackCreateProduct(context.Context, *XaBranchRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method XaRollbackCreateProduct not implemented")
 }
 func (UnimplementedProductCatalogServiceServer) mustEmbedUnimplementedProductCatalogServiceServer() {}
 func (UnimplementedProductCatalogServiceServer) testEmbeddedByValue()                               {}
@@ -572,6 +622,60 @@ func _ProductCatalogService_CompensateCreateNewProduct_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductCatalogService_XaPrepareCreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(XaPrepareCreateProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).XaPrepareCreateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_XaPrepareCreateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).XaPrepareCreateProduct(ctx, req.(*XaPrepareCreateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductCatalogService_XaCommitCreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(XaBranchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).XaCommitCreateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_XaCommitCreateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).XaCommitCreateProduct(ctx, req.(*XaBranchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductCatalogService_XaRollbackCreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(XaBranchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductCatalogServiceServer).XaRollbackCreateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductCatalogService_XaRollbackCreateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductCatalogServiceServer).XaRollbackCreateProduct(ctx, req.(*XaBranchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductCatalogService_ServiceDesc is the grpc.ServiceDesc for ProductCatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -602,6 +706,18 @@ var ProductCatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompensateCreateNewProduct",
 			Handler:    _ProductCatalogService_CompensateCreateNewProduct_Handler,
+		},
+		{
+			MethodName: "XaPrepareCreateProduct",
+			Handler:    _ProductCatalogService_XaPrepareCreateProduct_Handler,
+		},
+		{
+			MethodName: "XaCommitCreateProduct",
+			Handler:    _ProductCatalogService_XaCommitCreateProduct_Handler,
+		},
+		{
+			MethodName: "XaRollbackCreateProduct",
+			Handler:    _ProductCatalogService_XaRollbackCreateProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1304,6 +1420,9 @@ const (
 	InventoryService_CreateNewInventoryProduct_FullMethodName           = "/hipstershop.InventoryService/CreateNewInventoryProduct"
 	InventoryService_DeleteInventoryProduct_FullMethodName              = "/hipstershop.InventoryService/DeleteInventoryProduct"
 	InventoryService_CompensateCreateNewInventoryProduct_FullMethodName = "/hipstershop.InventoryService/CompensateCreateNewInventoryProduct"
+	InventoryService_XaPrepareCreateInventoryProduct_FullMethodName     = "/hipstershop.InventoryService/XaPrepareCreateInventoryProduct"
+	InventoryService_XaCommitCreateInventoryProduct_FullMethodName      = "/hipstershop.InventoryService/XaCommitCreateInventoryProduct"
+	InventoryService_XaRollbackCreateInventoryProduct_FullMethodName    = "/hipstershop.InventoryService/XaRollbackCreateInventoryProduct"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -1319,6 +1438,10 @@ type InventoryServiceClient interface {
 	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
 	// because DTM resends the original action's request bytes when invoking the compensating transaction.
 	CompensateCreateNewInventoryProduct(ctx context.Context, in *CreateNewInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductResponse, error)
+	// XA
+	XaPrepareCreateInventoryProduct(ctx context.Context, in *XaPrepareCreateInventoryProductRequest, opts ...grpc.CallOption) (*Empty, error)
+	XaCommitCreateInventoryProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error)
+	XaRollbackCreateInventoryProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type inventoryServiceClient struct {
@@ -1399,6 +1522,36 @@ func (c *inventoryServiceClient) CompensateCreateNewInventoryProduct(ctx context
 	return out, nil
 }
 
+func (c *inventoryServiceClient) XaPrepareCreateInventoryProduct(ctx context.Context, in *XaPrepareCreateInventoryProductRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, InventoryService_XaPrepareCreateInventoryProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) XaCommitCreateInventoryProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, InventoryService_XaCommitCreateInventoryProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) XaRollbackCreateInventoryProduct(ctx context.Context, in *XaBranchRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, InventoryService_XaRollbackCreateInventoryProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InventoryServiceServer is the server API for InventoryService service.
 // All implementations must embed UnimplementedInventoryServiceServer
 // for forward compatibility.
@@ -1412,6 +1565,10 @@ type InventoryServiceServer interface {
 	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
 	// because DTM resends the original action's request bytes when invoking the compensating transaction.
 	CompensateCreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*DeleteInventoryProductResponse, error)
+	// XA
+	XaPrepareCreateInventoryProduct(context.Context, *XaPrepareCreateInventoryProductRequest) (*Empty, error)
+	XaCommitCreateInventoryProduct(context.Context, *XaBranchRequest) (*Empty, error)
+	XaRollbackCreateInventoryProduct(context.Context, *XaBranchRequest) (*Empty, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
@@ -1442,6 +1599,15 @@ func (UnimplementedInventoryServiceServer) DeleteInventoryProduct(context.Contex
 }
 func (UnimplementedInventoryServiceServer) CompensateCreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*DeleteInventoryProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CompensateCreateNewInventoryProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) XaPrepareCreateInventoryProduct(context.Context, *XaPrepareCreateInventoryProductRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method XaPrepareCreateInventoryProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) XaCommitCreateInventoryProduct(context.Context, *XaBranchRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method XaCommitCreateInventoryProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) XaRollbackCreateInventoryProduct(context.Context, *XaBranchRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method XaRollbackCreateInventoryProduct not implemented")
 }
 func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
 func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
@@ -1590,6 +1756,60 @@ func _InventoryService_CompensateCreateNewInventoryProduct_Handler(srv interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_XaPrepareCreateInventoryProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(XaPrepareCreateInventoryProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).XaPrepareCreateInventoryProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_XaPrepareCreateInventoryProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).XaPrepareCreateInventoryProduct(ctx, req.(*XaPrepareCreateInventoryProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InventoryService_XaCommitCreateInventoryProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(XaBranchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).XaCommitCreateInventoryProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_XaCommitCreateInventoryProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).XaCommitCreateInventoryProduct(ctx, req.(*XaBranchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InventoryService_XaRollbackCreateInventoryProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(XaBranchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).XaRollbackCreateInventoryProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_XaRollbackCreateInventoryProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).XaRollbackCreateInventoryProduct(ctx, req.(*XaBranchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1624,6 +1844,18 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompensateCreateNewInventoryProduct",
 			Handler:    _InventoryService_CompensateCreateNewInventoryProduct_Handler,
+		},
+		{
+			MethodName: "XaPrepareCreateInventoryProduct",
+			Handler:    _InventoryService_XaPrepareCreateInventoryProduct_Handler,
+		},
+		{
+			MethodName: "XaCommitCreateInventoryProduct",
+			Handler:    _InventoryService_XaCommitCreateInventoryProduct_Handler,
+		},
+		{
+			MethodName: "XaRollbackCreateInventoryProduct",
+			Handler:    _InventoryService_XaRollbackCreateInventoryProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
