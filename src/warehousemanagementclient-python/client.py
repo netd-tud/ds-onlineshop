@@ -43,7 +43,7 @@ def handle_create(stub, data):
     )
 
     try:
-        response = stub.CreateNewProductWithDTM(request, timeout=5)
+        response = stub.CreateNewProductWithXA(request, timeout=5)
         logging.info(f"gRPC: Product Created Successfully!")
         logging.info(f"ID: {response.product.id} | Name: {response.product.name}")
     except grpc.RpcError as e:

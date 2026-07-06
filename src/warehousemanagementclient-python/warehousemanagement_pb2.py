@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 import demo_pb2 as demo__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19warehousemanagement.proto\x12\x14warehouse.management\x1a\ndemo.proto\"\x94\x01\n\x1d\x43reateWarehouseProductRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12%\n\tprice_usd\x18\x03 \x01(\x0b\x32\x12.hipstershop.Money\x12\x12\n\ncategories\x18\x04 \x03(\t\x12\x15\n\rinitial_stock\x18\x05 \x01(\x03\"G\n\x1e\x43reateWarehouseProductResponse\x12%\n\x07product\x18\x01 \x01(\x0b\x32\x14.hipstershop.Product2\x81\x03\n\x13WarehouseManagement\x12\x64\n\x12UpdateProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a\x1d.hipstershop.InventoryProduct\x12}\n\x10\x43reateNewProduct\x12\x33.warehouse.management.CreateWarehouseProductRequest\x1a\x34.warehouse.management.CreateWarehouseProductResponse\x12\x84\x01\n\x17\x43reateNewProductWithDTM\x12\x33.warehouse.management.CreateWarehouseProductRequest\x1a\x34.warehouse.management.CreateWarehouseProductResponseB1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19warehousemanagement.proto\x12\x14warehouse.management\x1a\ndemo.proto\"\x94\x01\n\x1d\x43reateWarehouseProductRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12%\n\tprice_usd\x18\x03 \x01(\x0b\x32\x12.hipstershop.Money\x12\x12\n\ncategories\x18\x04 \x03(\t\x12\x15\n\rinitial_stock\x18\x05 \x01(\x03\"G\n\x1e\x43reateWarehouseProductResponse\x12%\n\x07product\x18\x01 \x01(\x0b\x32\x14.hipstershop.Product2\x87\x04\n\x13WarehouseManagement\x12\x64\n\x12UpdateProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a\x1d.hipstershop.InventoryProduct\x12}\n\x10\x43reateNewProduct\x12\x33.warehouse.management.CreateWarehouseProductRequest\x1a\x34.warehouse.management.CreateWarehouseProductResponse\x12\x84\x01\n\x17\x43reateNewProductWithDTM\x12\x33.warehouse.management.CreateWarehouseProductRequest\x1a\x34.warehouse.management.CreateWarehouseProductResponse\x12\x83\x01\n\x16\x43reateNewProductWithXA\x12\x33.warehouse.management.CreateWarehouseProductRequest\x1a\x34.warehouse.management.CreateWarehouseProductResponseB1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -38,5 +38,5 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_CREATEWAREHOUSEPRODUCTRESPONSE']._serialized_start=214
   _globals['_CREATEWAREHOUSEPRODUCTRESPONSE']._serialized_end=285
   _globals['_WAREHOUSEMANAGEMENT']._serialized_start=288
-  _globals['_WAREHOUSEMANAGEMENT']._serialized_end=673
+  _globals['_WAREHOUSEMANAGEMENT']._serialized_end=807
 # @@protoc_insertion_point(module_scope)

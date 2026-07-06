@@ -52,6 +52,11 @@ class WarehouseManagementStub:
                 request_serializer=warehousemanagement__pb2.CreateWarehouseProductRequest.SerializeToString,
                 response_deserializer=warehousemanagement__pb2.CreateWarehouseProductResponse.FromString,
                 _registered_method=True)
+        self.CreateNewProductWithXA = channel.unary_unary(
+                '/warehouse.management.WarehouseManagement/CreateNewProductWithXA',
+                request_serializer=warehousemanagement__pb2.CreateWarehouseProductRequest.SerializeToString,
+                response_deserializer=warehousemanagement__pb2.CreateWarehouseProductResponse.FromString,
+                _registered_method=True)
 
 
 class WarehouseManagementServicer:
@@ -77,6 +82,12 @@ class WarehouseManagementServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateNewProductWithXA(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_WarehouseManagementServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -92,6 +103,11 @@ def add_WarehouseManagementServicer_to_server(servicer, server):
             ),
             'CreateNewProductWithDTM': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateNewProductWithDTM,
+                    request_deserializer=warehousemanagement__pb2.CreateWarehouseProductRequest.FromString,
+                    response_serializer=warehousemanagement__pb2.CreateWarehouseProductResponse.SerializeToString,
+            ),
+            'CreateNewProductWithXA': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateNewProductWithXA,
                     request_deserializer=warehousemanagement__pb2.CreateWarehouseProductRequest.FromString,
                     response_serializer=warehousemanagement__pb2.CreateWarehouseProductResponse.SerializeToString,
             ),
@@ -177,6 +193,33 @@ class WarehouseManagement:
             request,
             target,
             '/warehouse.management.WarehouseManagement/CreateNewProductWithDTM',
+            warehousemanagement__pb2.CreateWarehouseProductRequest.SerializeToString,
+            warehousemanagement__pb2.CreateWarehouseProductResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateNewProductWithXA(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/warehouse.management.WarehouseManagement/CreateNewProductWithXA',
             warehousemanagement__pb2.CreateWarehouseProductRequest.SerializeToString,
             warehousemanagement__pb2.CreateWarehouseProductResponse.FromString,
             options,

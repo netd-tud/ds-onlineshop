@@ -308,6 +308,21 @@ class ProductCatalogServiceStub:
                 request_serializer=demo__pb2.CreateNewProductRequest.SerializeToString,
                 response_deserializer=demo__pb2.DeleteProductResponse.FromString,
                 _registered_method=True)
+        self.XaPrepareCreateProduct = channel.unary_unary(
+                '/hipstershop.ProductCatalogService/XaPrepareCreateProduct',
+                request_serializer=demo__pb2.XaPrepareCreateProductRequest.SerializeToString,
+                response_deserializer=demo__pb2.Empty.FromString,
+                _registered_method=True)
+        self.XaCommitCreateProduct = channel.unary_unary(
+                '/hipstershop.ProductCatalogService/XaCommitCreateProduct',
+                request_serializer=demo__pb2.XaBranchRequest.SerializeToString,
+                response_deserializer=demo__pb2.Empty.FromString,
+                _registered_method=True)
+        self.XaRollbackCreateProduct = channel.unary_unary(
+                '/hipstershop.ProductCatalogService/XaRollbackCreateProduct',
+                request_serializer=demo__pb2.XaBranchRequest.SerializeToString,
+                response_deserializer=demo__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class ProductCatalogServiceServicer:
@@ -353,6 +368,25 @@ class ProductCatalogServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def XaPrepareCreateProduct(self, request, context):
+        """XA
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def XaCommitCreateProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def XaRollbackCreateProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ProductCatalogServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -385,6 +419,21 @@ def add_ProductCatalogServiceServicer_to_server(servicer, server):
                     servicer.CompensateCreateNewProduct,
                     request_deserializer=demo__pb2.CreateNewProductRequest.FromString,
                     response_serializer=demo__pb2.DeleteProductResponse.SerializeToString,
+            ),
+            'XaPrepareCreateProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.XaPrepareCreateProduct,
+                    request_deserializer=demo__pb2.XaPrepareCreateProductRequest.FromString,
+                    response_serializer=demo__pb2.Empty.SerializeToString,
+            ),
+            'XaCommitCreateProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.XaCommitCreateProduct,
+                    request_deserializer=demo__pb2.XaBranchRequest.FromString,
+                    response_serializer=demo__pb2.Empty.SerializeToString,
+            ),
+            'XaRollbackCreateProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.XaRollbackCreateProduct,
+                    request_deserializer=demo__pb2.XaBranchRequest.FromString,
+                    response_serializer=demo__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -551,6 +600,87 @@ class ProductCatalogService:
             '/hipstershop.ProductCatalogService/CompensateCreateNewProduct',
             demo__pb2.CreateNewProductRequest.SerializeToString,
             demo__pb2.DeleteProductResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def XaPrepareCreateProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.ProductCatalogService/XaPrepareCreateProduct',
+            demo__pb2.XaPrepareCreateProductRequest.SerializeToString,
+            demo__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def XaCommitCreateProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.ProductCatalogService/XaCommitCreateProduct',
+            demo__pb2.XaBranchRequest.SerializeToString,
+            demo__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def XaRollbackCreateProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.ProductCatalogService/XaRollbackCreateProduct',
+            demo__pb2.XaBranchRequest.SerializeToString,
+            demo__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
@@ -1162,6 +1292,21 @@ class InventoryServiceStub:
                 request_serializer=demo__pb2.CreateNewInventoryProductRequest.SerializeToString,
                 response_deserializer=demo__pb2.DeleteInventoryProductResponse.FromString,
                 _registered_method=True)
+        self.XaPrepareCreateInventoryProduct = channel.unary_unary(
+                '/hipstershop.InventoryService/XaPrepareCreateInventoryProduct',
+                request_serializer=demo__pb2.XaPrepareCreateInventoryProductRequest.SerializeToString,
+                response_deserializer=demo__pb2.Empty.FromString,
+                _registered_method=True)
+        self.XaCommitCreateInventoryProduct = channel.unary_unary(
+                '/hipstershop.InventoryService/XaCommitCreateInventoryProduct',
+                request_serializer=demo__pb2.XaBranchRequest.SerializeToString,
+                response_deserializer=demo__pb2.Empty.FromString,
+                _registered_method=True)
+        self.XaRollbackCreateInventoryProduct = channel.unary_unary(
+                '/hipstershop.InventoryService/XaRollbackCreateInventoryProduct',
+                request_serializer=demo__pb2.XaBranchRequest.SerializeToString,
+                response_deserializer=demo__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class InventoryServiceServicer:
@@ -1213,6 +1358,25 @@ class InventoryServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def XaPrepareCreateInventoryProduct(self, request, context):
+        """XA
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def XaCommitCreateInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def XaRollbackCreateInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_InventoryServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -1250,6 +1414,21 @@ def add_InventoryServiceServicer_to_server(servicer, server):
                     servicer.CompensateCreateNewInventoryProduct,
                     request_deserializer=demo__pb2.CreateNewInventoryProductRequest.FromString,
                     response_serializer=demo__pb2.DeleteInventoryProductResponse.SerializeToString,
+            ),
+            'XaPrepareCreateInventoryProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.XaPrepareCreateInventoryProduct,
+                    request_deserializer=demo__pb2.XaPrepareCreateInventoryProductRequest.FromString,
+                    response_serializer=demo__pb2.Empty.SerializeToString,
+            ),
+            'XaCommitCreateInventoryProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.XaCommitCreateInventoryProduct,
+                    request_deserializer=demo__pb2.XaBranchRequest.FromString,
+                    response_serializer=demo__pb2.Empty.SerializeToString,
+            ),
+            'XaRollbackCreateInventoryProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.XaRollbackCreateInventoryProduct,
+                    request_deserializer=demo__pb2.XaBranchRequest.FromString,
+                    response_serializer=demo__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -1443,6 +1622,87 @@ class InventoryService:
             '/hipstershop.InventoryService/CompensateCreateNewInventoryProduct',
             demo__pb2.CreateNewInventoryProductRequest.SerializeToString,
             demo__pb2.DeleteInventoryProductResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def XaPrepareCreateInventoryProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.InventoryService/XaPrepareCreateInventoryProduct',
+            demo__pb2.XaPrepareCreateInventoryProductRequest.SerializeToString,
+            demo__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def XaCommitCreateInventoryProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.InventoryService/XaCommitCreateInventoryProduct',
+            demo__pb2.XaBranchRequest.SerializeToString,
+            demo__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def XaRollbackCreateInventoryProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.InventoryService/XaRollbackCreateInventoryProduct',
+            demo__pb2.XaBranchRequest.SerializeToString,
+            demo__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
