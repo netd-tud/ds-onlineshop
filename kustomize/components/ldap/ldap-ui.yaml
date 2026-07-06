@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ldap-ui
+  labels:
+    app: ldap-ui
+spec:
+  selector:
+    matchLabels:
+      app: ldap-ui
+  template:
+    metadata:
+      labels:
+        app: ldap-ui
+    spec:
+      serviceAccountName: ldap-ui
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: server
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - SETUID
+                - SETGID
+            privileged: false
+            readOnlyRootFilesystem: false
+          image: wheelybird/ldap-user-manager:v2.0
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: LDAP_URI
+              value: ldap://ldap:3890
+            - name: LDAP_BASE_DN
+              value: dc=theonlineshop,dc=com
+            - name: LDAP_REQUIRE_STARTTLS
+              value: "FALSE"
+            - name: LDAP_ADMINS_GROUP
+              value: admins
+            - name: LDAP_ADMIN_BIND_DN
+              value: cn=admin,dc=theonlineshop,dc=com
+            - name: LDAP_ADMIN_BIND_PWD
+              value: admin
+            - name: LDAP_IGNORE_CERT_ERRORS
+              value: "true"
+            - name: NO_HTTPS
+              value: "TRUE"
+            - name: PASSWORD_HASH
+              value: SSHA
+            - name: LDAP_USER_OU
+              value: people
+            - name: LDAP_GROUP_OU
+              value: groups
+            - name: SERVER_HOSTNAME
+              value: "ds-exercise-06.netd.cs.tu-dresden.de"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 180Mi
+            limits:
+              cpu: 300m
+              memory: 300Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldap-ui
+  labels:
+    app: ldap-ui
+spec:
+  type: ClusterIP
+  selector:
+    app: ldap-ui
+  ports:
+    - name: ui
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ldap-ui
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldap-ui-nodeport
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: ldap-ui
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30380
+
