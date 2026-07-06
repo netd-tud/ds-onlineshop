@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ldap
+  labels:
+    app: ldap
+spec:
+  selector:
+    matchLabels:
+      app: ldap
+  template:
+    metadata:
+      labels:
+        app: ldap
+    spec:
+      serviceAccountName: ldap
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: server
+          securityContext:
+            allowPrivilegeEscalation: true
+            privileged: false
+            readOnlyRootFilesystem: false
+          image: osixia/openldap:2.6.10-alpha
+          ports:
+            - name: ldap
+              containerPort: 3890
+            - name: ldaps
+              containerPort: 6360
+          env:
+            - name: OPENLDAP_BOOTSTRAP_ORGANIZATION
+              value: "The Online Shop"
+            - name: OPENLDAP_BOOTSTRAP_SUFFIX
+              value: "dc=theonlineshop,dc=com"
+            - name: OPENLDAP_BOOTSTRAP_DATA_ROOT_PASSWORD_HASHED
+              value: "{SSHA}f6OA6r0TDk/gw0aK7EicyeJfYp9c47ws" # admin
+          resources:
+            requests:
+              cpu: 200m
+              memory: 180Mi
+            limits:
+              cpu: 300m
+              memory: 300Mi
+          readinessProbe:
+            exec:
+              command: [ "ldapsearch", "-x", "-H", "ldap://localhost:3890", "-D", "cn=admin,dc=theonlineshop,dc=com", "-w", "admin", "-b", "dc=theonlineshop,dc=com" ]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: [ "ldapsearch", "-x", "-H", "ldap://localhost:3890", "-D", "cn=admin,dc=theonlineshop,dc=com", "-w", "admin", "-b", "dc=theonlineshop,dc=com" ]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - mountPath: /var/lib/openldap/openldap-data
+              name: ldap-storage
+              subPath: data
+            - mountPath: /etc/openldap/slapd.d
+              name: ldap-storage
+              subPath: config
+            - mountPath: /var/lib/openldap/openldap-backups
+              name: backups
+      volumes:
+        - name: ldap-storage
+          persistentVolumeClaim:
+            claimName: ldap-data-pvc
+        - name: backups
+          emptyDir: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ldap-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldap
+  labels:
+    app: ldap
+spec:
+  type: ClusterIP
+  selector:
+    app: ldap
+  ports:
+    - name: ldap
+      port: 3890
+      targetPort: 3890
+    - name: ldaps
+      port: 6360
+      targetPort: 6360
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ldap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldap-nodeport
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: ldap
+  ports:
+    - protocol: TCP
+      port: 3890
+      targetPort: 3890
+      nodePort: 30389
