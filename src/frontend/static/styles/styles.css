@@ -46,6 +46,16 @@ header > div:nth-child(2) > .container {
   max-width: none;
 }
 
+header .login-link {
+  position: relative;
+  display: block;
+  margin-left: 25px;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+}
+
 header .cart-link {
   position: relative;
   display: block;
