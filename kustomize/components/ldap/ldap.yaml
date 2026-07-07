@@ -5,6 +5,8 @@ metadata:
   labels:
     app: ldap
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: ldap
@@ -36,6 +38,8 @@ spec:
               value: "dc=theonlineshop,dc=com"
             - name: OPENLDAP_BOOTSTRAP_DATA_ROOT_PASSWORD_HASHED
               value: "{SSHA}f6OA6r0TDk/gw0aK7EicyeJfYp9c47ws" # admin
+            - name: OPENLDAP_BOOTSTRAP_LDIF_DATA_DIR
+              value: "/var/custom-ldif"
           resources:
             requests:
               cpu: 200m
@@ -58,18 +62,23 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/openldap/openldap-data
               name: ldap-storage
-              subPath: data
+              subPath: data-v16
             - mountPath: /etc/openldap/slapd.d
               name: ldap-storage
-              subPath: config
+              subPath: config-v16
             - mountPath: /var/lib/openldap/openldap-backups
               name: backups
+            - mountPath: /var/custom-ldif/custom
+              name: ldif-bootstrap-volume
       volumes:
         - name: ldap-storage
           persistentVolumeClaim:
             claimName: ldap-data-pvc
         - name: backups
           emptyDir: {}
+        - name: ldif-bootstrap-volume
+          configMap:
+            name: ldap-bootstrap-ldif
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

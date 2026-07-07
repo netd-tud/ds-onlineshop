@@ -3,3 +3,8 @@ kind: Component
 resources:
   - ldap.yaml
   - ldap-ui.yaml
+
+configMapGenerator:
+  - name: ldap-bootstrap-ldif
+    files:
+      - ldif/01-init.ldif
