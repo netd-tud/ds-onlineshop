@@ -1,4 +1,3 @@
-# # Adjust objects to fit application requirements
 # Create root
 dn: dc=theonlineshop,dc=com
 objectClass: top
@@ -18,74 +17,86 @@ objectClass: organizationalUnit
 objectClass: top
 ou: people
 
-# Create lastGID entry
-dn: cn=lastGID,dc=theonlineshop,dc=com
-objectClass: device
-objectClass: top
-description: Records the last GID used to create a Posix group
-cn: lastGID
-serialNumber: 2002
-
-# Create lastUID entry
-dn: cn=lastUID,dc=theonlineshop,dc=com
-objectClass: device
-objectClass: top
-description: Records the last UID used to create a Posix account
-cn: lastUID
-serialNumber: 2002
-
 # Create everybody group
 dn: cn=everybody,ou=groups,dc=theonlineshop,dc=com
 objectClass: top
 objectClass: groupOfUniqueNames
-objectClass: posixGroup
 cn: everybody
-gidNumber: 2001
 uniqueMember: uid=admin,ou=people,dc=theonlineshop,dc=com
-uniqueMember: uid=readonly,ou=people,dc=theonlineshop,dc=com
 
 # Create admins group
 dn: cn=admins,ou=groups,dc=theonlineshop,dc=com
 objectClass: top
 objectClass: groupOfUniqueNames
-objectClass: posixGroup
 cn: admins
-gidNumber: 2002
 uniqueMember: uid=admin,ou=people,dc=theonlineshop,dc=com
 
 # Create admin user
 dn: uid=admin,ou=people,dc=theonlineshop,dc=com
 objectClass: person
 objectClass: inetOrgPerson
-objectClass: posixAccount
 uid: admin
+cn: Admin
 givenName: Admin
 sn: Admin
-cn: Admin Admin
-displayName: Admin Admin
-uidNumber: 2001
-gidNumber: 2001
-loginShell: /bin/bash
-homeDirectory: /home/admin
 userPassword: {SSHA}kWfjw33WbgMUgcixU0uY1wTqKCRLF75U
 # ↑ password: admin
 mail: admin@mailbox.theonlineshop.de
 
-# Create readonly user
-dn: uid=readonly,ou=people,dc=theonlineshop,dc=com
+# Departments/permission groups
+dn: cn=inventory-clothing-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-clothing-view
+uniqueMember: uid=carolf,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-clothing-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-clothing-manage
+uniqueMember: uid=alicew,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=carolf,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-accessories-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-accessories-view
+uniqueMember: uid=bobs,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=carolf,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-accessories-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-accessories-manage
+uniqueMember: uid=bobs,ou=people,dc=theonlineshop,dc=com
+
+# Users
+dn: uid=alicew,ou=people,dc=theonlineshop,dc=com
 objectClass: person
 objectClass: inetOrgPerson
-objectClass: posixAccount
-uid: readonly
-givenName: Read
-sn: Only
-cn: Read Only
-displayName: Read Only
-uidNumber: 2002
-gidNumber: 2001
-loginShell: /bin/bash
-homeDirectory: /home/readonly
-userPassword: {SSHA}BBcafWF+E9nbe9CKCWg8RKTDfP36Lv6V
-# ↑ password: readonly
-mail: readonly@mailbox.theonlineshop.de
+uid: alicew
+cn: Alice Weber
+givenName: Alice
+sn: Weber
+userPassword: {SSHA}aHFNAnYwzJIWqCQO8xh1X1Hvm+QznCvw
+mail: alicew@mailbox.theonlineshop.de
 
+dn: uid=bobs,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: bobs
+cn: Bob Schmidt
+givenName: Bob
+sn: Schmidt
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+mail: bobs@mailbox.theonlineshop.de
+
+dn: uid=carolf,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: carolf
+cn: Carol Fischer
+givenName: Carol
+sn: Fischer
+userPassword: {SSHA}ffLXx7vXZBo5AEliGovD+IlrlHL7egKc
+mail: carolf@mailbox.theonlineshop.de

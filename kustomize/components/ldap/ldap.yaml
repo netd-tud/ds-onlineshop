@@ -40,6 +40,10 @@ spec:
               value: "{SSHA}f6OA6r0TDk/gw0aK7EicyeJfYp9c47ws" # admin
             - name: OPENLDAP_BOOTSTRAP_LDIF_DATA_DIR
               value: "/var/custom-ldif"
+#            - name: OPENLDAP_BOOTSTRAP_MEMBEROF
+#              value: "true"
+#            - name: OPENLDAP_BOOTSTRAP_MEMBEROF_MEMBER_AD
+#              value: "uniqueMember"
           resources:
             requests:
               cpu: 200m
@@ -62,10 +66,10 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/openldap/openldap-data
               name: ldap-storage
-              subPath: data-v16
+              subPath: data-v25
             - mountPath: /etc/openldap/slapd.d
               name: ldap-storage
-              subPath: config-v16
+              subPath: config-v25
             - mountPath: /var/lib/openldap/openldap-backups
               name: backups
             - mountPath: /var/custom-ldif/custom
