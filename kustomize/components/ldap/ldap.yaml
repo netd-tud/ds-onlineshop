@@ -40,10 +40,6 @@ spec:
               value: "{SSHA}f6OA6r0TDk/gw0aK7EicyeJfYp9c47ws" # admin
             - name: OPENLDAP_BOOTSTRAP_LDIF_DATA_DIR
               value: "/var/custom-ldif"
-#            - name: OPENLDAP_BOOTSTRAP_MEMBEROF
-#              value: "true"
-#            - name: OPENLDAP_BOOTSTRAP_MEMBEROF_MEMBER_AD
-#              value: "uniqueMember"
           resources:
             requests:
               cpu: 200m

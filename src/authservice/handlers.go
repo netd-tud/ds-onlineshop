@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
@@ -121,14 +120,10 @@ func (s *AuthServer) lookupUser(username string) (*UserDetails, error) {
 
 	userEntry := sr.Entries[0]
 
-	rawGroups := userEntry.GetAttributeValues("memberOf")
-	log.Infof("Found raw groups for user %s: %v", userEntry.DN, rawGroups)
-	var roles []string
-	for _, groupDN := range rawGroups {
-		parts := strings.Split(groupDN, ",")
-		if len(parts) > 0 && strings.HasPrefix(strings.ToLower(parts[0]), "cn=") {
-			roles = append(roles, strings.TrimPrefix(parts[0], "cn="))
-		}
+	roles, err := s.lookupGroups(userEntry.DN)
+	if err != nil {
+		log.Errorf("Group lookup failed: %v", err)
+		return nil, err
 	}
 
 	return &UserDetails{
@@ -152,4 +147,38 @@ func (s *AuthServer) verifyPassword(userDN string, password string) error {
 
 	log.Info("User authentication successful")
 	return nil
+}
+
+func (s *AuthServer) lookupGroups(userDN string) ([]string, error) {
+	l, err := ldap.DialURL(s.ldapURL)
+	if err != nil {
+		return nil, err
+	}
+	defer l.Close()
+
+	err = l.Bind(s.adminDN, s.adminPass)
+	if err != nil {
+		log.Errorf("Admin bind failed: %v", err)
+		return nil, fmt.Errorf("admin bind failed: %w", err)
+	}
+
+	searchRequest := ldap.NewSearchRequest(
+		"ou=groups,dc=theonlineshop,dc=com",
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		fmt.Sprintf("(uniqueMember=%s)", ldap.EscapeFilter(userDN)),
+		[]string{"cn"},
+		nil,
+	)
+
+	result, err := l.Search(searchRequest)
+	if err != nil {
+		log.Errorf("Group lookup failed: %v", err)
+		return nil, err
+	}
+	groups := make([]string, 0, len(result.Entries))
+	for _, entry := range result.Entries {
+		groups = append(groups, entry.GetAttributeValue("cn"))
+	}
+
+	return groups, nil
 }
