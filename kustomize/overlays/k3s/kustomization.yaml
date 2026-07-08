@@ -15,7 +15,7 @@ components:
 - ../../components/dynamic-load-producer-replicated
 - ../../components/warehousemanagement
 - ../../components/dtm
-- ../../components/ldap
+- ../../components/auth
 
 patches:
   - target:
