@@ -96,6 +96,49 @@ func computeHeavyLoad(iterations int) string {
 	return fmt.Sprintf("%x", hash)
 }
 
+func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	if r.Method == http.MethodGet {
+		log.Info("login page requested")
+		if err := templates.ExecuteTemplate(w, "login", injectCommonTemplateData(r, map[string]interface{}{})); err != nil {
+			log.Error(err)
+		}
+		return
+	}
+
+	// Handle POST
+	username := r.FormValue("uid")
+	password := r.FormValue("password")
+
+	log.WithField("username", username).Info("login attempt")
+	resp, err := pb.NewAuthServiceClient(fe.authSvcConn).Login(r.Context(), &pb.LoginRequest{
+		Username: username,
+		Password: password,
+	})
+
+	if err != nil {
+		log.WithError(err).Warn("login failed")
+		if err := templates.ExecuteTemplate(w, "login", injectCommonTemplateData(r, map[string]interface{}{
+			"error": "Invalid username or password",
+		})); err != nil {
+			log.Error(err)
+		}
+		return
+	}
+
+	log.WithField("username", username).Info("login successful")
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   cookieAuth,
+		Value:  resp.GetToken(),
+		MaxAge: cookieMaxAge,
+		Path:   "/",
+	})
+
+	w.Header().Set("Location", baseUrl+"/")
+	w.WriteHeader(http.StatusFound)
+}
+
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.WithField("currency", currentCurrency(r)).Info("home")

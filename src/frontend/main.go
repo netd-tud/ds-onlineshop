@@ -43,6 +43,7 @@ const (
 	cookiePrefix    = "shop_"
 	cookieSessionID = cookiePrefix + "session-id"
 	cookieCurrency  = cookiePrefix + "currency"
+	cookieAuth      = cookiePrefix + "auth"
 )
 
 var (
@@ -91,6 +92,9 @@ type frontendServer struct {
 
 	inventorySvcAddr string
 	inventorySvcConn *grpc.ClientConn
+
+	authSvcAddr string
+	authSvcConn *grpc.ClientConn
 }
 
 func main() {
@@ -144,6 +148,7 @@ func main() {
 	mustMapEnv(&svc.shoppingAssistantSvcAddr, "SHOPPING_ASSISTANT_SERVICE_ADDR")
 	svc.ratingSvcAddr = os.Getenv("RATING_SERVICE_ADDR")
 	svc.inventorySvcAddr = os.Getenv("INVENTORY_SERVICE_ADDR")
+	svc.authSvcAddr = os.Getenv("AUTH_SERVICE_ADDR")
 
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -154,6 +159,9 @@ func main() {
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 	if svc.inventorySvcAddr != "" {
 		mustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+	}
+	if svc.authSvcAddr != "" {
+		mustConnGRPC(ctx, &svc.authSvcConn, svc.authSvcAddr)
 	}
 
 	r := mux.NewRouter()
@@ -173,6 +181,7 @@ func main() {
 	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
 	r.HandleFunc(baseUrl+"/product-meta/{ids}", svc.getProductByID).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/bot", svc.chatBotHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodGet, http.MethodPost)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}     // add logging
