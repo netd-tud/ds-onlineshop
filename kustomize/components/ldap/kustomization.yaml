@@ -3,8 +3,17 @@ kind: Component
 resources:
   - ldap.yaml
   - ldap-ui.yaml
+  - authservice.yaml
 
 configMapGenerator:
   - name: ldap-bootstrap-ldif
     files:
       - ldif/01-init.ldif
+  - name: auth-public-key
+    files:
+      - certs/auth_public.pem
+
+secretGenerator:
+  - name: auth-private-key
+    files:
+      - certs/auth_private.pem
