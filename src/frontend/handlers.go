@@ -30,6 +30,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -96,6 +97,54 @@ func computeHeavyLoad(iterations int) string {
 	return fmt.Sprintf("%x", hash)
 }
 
+type UserClaims struct {
+	UserID   string   `json:"user_id"`
+	Username string   `json:"username"`
+	Roles    []string `json:"roles"`
+	jwt.RegisteredClaims
+}
+
+func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			log.Info("no auth cookie found, redirecting to login page")
+		} else {
+			log.WithError(err).Error("error retrieving auth cookie")
+		}
+		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		return
+	}
+
+	tokenString := cookie.Value
+	claims := &UserClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return fe.publicKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		log.WithError(err).Warn("stale or invalid token detected, clearing session")
+
+		http.SetCookie(w, &http.Cookie{
+			Name:   cookieAuth,
+			Value:  "",
+			MaxAge: -1,
+			Path:   "/",
+		})
+		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		return
+	}
+
+	log.WithField("username", claims.Username).Info("valid token confirmed, directing to account")
+	http.Redirect(w, r, baseUrl+"/account", http.StatusFound)
+}
+
 func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	if r.Method == http.MethodGet {
@@ -137,6 +186,43 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Location", baseUrl+"/")
 	w.WriteHeader(http.StatusFound)
+}
+
+func (fe *frontendServer) accountHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		log.Warn("unauthenticated access attempt to account page: missing cookie")
+		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		return
+	}
+
+	tokenString := cookie.Value
+	claims := &UserClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+		return fe.publicKey, nil
+	})
+
+	log.Infof("Claims: %s", claims)
+
+	if err != nil || !token.Valid {
+		log.WithError(err).Warn("invalid or expired token in cookie")
+		http.SetCookie(w, &http.Cookie{Name: cookieAuth, MaxAge: -1, Path: "/"})
+		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		return
+	}
+
+	templateData := map[string]interface{}{
+		"Username": claims.Username,
+		"UserID":   claims.UserID,
+		"Roles":    claims.Roles,
+	}
+
+	if err := templates.ExecuteTemplate(w, "account", injectCommonTemplateData(r, templateData)); err != nil {
+		log.Error(err)
+	}
 }
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {

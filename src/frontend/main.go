@@ -16,12 +16,14 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"cloud.google.com/go/profiler"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -95,6 +97,8 @@ type frontendServer struct {
 
 	authSvcAddr string
 	authSvcConn *grpc.ClientConn
+
+	publicKey *rsa.PublicKey
 }
 
 func main() {
@@ -138,6 +142,20 @@ func main() {
 		srvPort = os.Getenv("PORT")
 	}
 	addr := os.Getenv("LISTEN_ADDR")
+
+	var publicKeyPath string
+	mustMapEnv(&publicKeyPath, "AUTH_PUBLIC_KEY_PATH")
+
+	pubKeyBytes, err := os.ReadFile(publicKeyPath)
+	if err != nil {
+		log.Fatalf("failed to read public key: %v", err)
+	}
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(pubKeyBytes)
+	if err != nil {
+		log.Fatalf("failed to parse public key: %v", err)
+	}
+	svc.publicKey = publicKey
+
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
@@ -181,7 +199,9 @@ func main() {
 	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
 	r.HandleFunc(baseUrl+"/product-meta/{ids}", svc.getProductByID).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/bot", svc.chatBotHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/profile", svc.profileHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodGet, http.MethodPost)
+	r.HandleFunc(baseUrl+"/account", svc.accountHandler).Methods(http.MethodGet)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}     // add logging

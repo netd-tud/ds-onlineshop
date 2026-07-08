@@ -46,7 +46,7 @@ header > div:nth-child(2) > .container {
   max-width: none;
 }
 
-header .login-link {
+header .profile-link {
   position: relative;
   display: block;
   margin-left: 25px;

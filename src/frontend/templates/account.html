@@ -1,0 +1,32 @@
+{{ define "account" }}
+{{ template "header" . }}
+<div {{ with $.platform_css }} class="{{.}}" {{ end }}>
+  <span class="platform-flag">
+    {{$.platform_name}}
+  </span>
+</div>
+
+<main role="main">
+  <div class="container d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="col-md-6 col-lg-4">
+      <div class="card p-4 shadow-sm">
+        <h2 class="text-center mb-4">User Account</h2>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><strong>Username:</strong> {{ $.Username }}</li>
+          <li class="list-group-item"><strong>User ID:</strong> {{ $.UserID }}</li>
+          <li class="list-group-item">
+            <strong>Roles:</strong>
+            <div class="mt-2">
+              {{ range $.Roles }}
+              <span class="badge badge-secondary">{{ . }}</span>
+              {{ end }}
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+{{ template "footer" . }}
+{{ end }}
