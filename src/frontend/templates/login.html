@@ -1,0 +1,38 @@
+{{ define "login" }}
+{{ template "header" . }}
+<div {{ with $.platform_css }} class="{{.}}" {{ end }}>
+  <span class="platform-flag">
+    {{$.platform_name}}
+  </span>
+</div>
+
+<main role="main">
+  <div class="container d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="col-md-6 col-lg-4">
+      <div class="card p-4 shadow-sm">
+        <h2 class="text-center mb-4">Employee Login</h2>
+        <form method="POST" action="{{ $.baseUrl }}/login">
+          {{ if $.error }}
+          <div class="alert alert-danger" role="alert">
+            {{ $.error }}
+          </div>
+          {{ end }}
+          <div class="cymbal-form-field">
+            <label for="uid">User ID</label>
+            <input type="text" name="uid" id="uid" placeholder="User ID" required>
+          </div>
+          <div class="cymbal-form-field">
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" placeholder="••••••••" required>
+          </div>
+          <div class="text-center mt-4">
+            <button type="submit" class="cymbal-button-primary w-100">Login</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+{{ template "footer" . }}
+{{ end }}
