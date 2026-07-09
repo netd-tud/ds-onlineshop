@@ -25,11 +25,10 @@ import (
 	"cloud.google.com/go/profiler"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/status"
 
@@ -113,24 +112,24 @@ func main() {
 	}
 
 	svc := new(checkoutService)
-	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
-	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
-	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
-	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
-	mustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
-	mustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
 	svc.mqttBrokerAddr = os.Getenv("MQTT_BROKER_ADDR")
 	log.Infof("Broker Addr: %s", svc.mqttBrokerAddr)
 	if svc.mqttBrokerAddr != "" {
 		svc.mqttClient = svc.initializeMQTTClient()
 	}
 
-	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
-	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
-	mustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
-	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
-	mustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
-	mustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
+	shared.MustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
 
 	log.Infof("service config: %+v", svc)
 
@@ -171,8 +170,8 @@ func initTracing() {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
 
-	mustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
-	mustConnGRPC(ctx, &collectorConn, collectorAddr)
+	shared.MustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
+	shared.MustConnGRPC(ctx, &collectorConn, collectorAddr)
 
 	exporter, err := otlptracegrpc.New(
 		ctx,
@@ -207,26 +206,6 @@ func initProfiling(service, version string) {
 		time.Sleep(d)
 	}
 	log.Warn("could not initialize Stackdriver profiler after retrying, giving up")
-}
-
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		panic(fmt.Sprintf("environment variable %q not set", envKey))
-	}
-	*target = v
-}
-
-func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
-	var err error
-	_, cancel := context.WithTimeout(ctx, time.Second*3)
-	defer cancel()
-	*conn, err = grpc.NewClient(addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
-	if err != nil {
-		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
-	}
 }
 
 func (cs *checkoutService) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {

@@ -26,13 +26,11 @@ import (
 	"time"
 
 	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
-	auth "github.com/turt1z/microservices-demo/src/shared"
-	"google.golang.org/grpc/credentials/insecure"
+	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	"cloud.google.com/go/profiler"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -146,7 +144,7 @@ func run(port string) string {
 
 	srv = grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.UnaryInterceptor(auth.NewAuthInterceptor(pubKey, "/hipstershop.ProductCatalogService/ListProducts")),
+		grpc.UnaryInterceptor(shared.NewAuthInterceptor(pubKey, "/hipstershop.ProductCatalogService/ListProducts")),
 	)
 
 	svc := &productCatalog{}
@@ -175,8 +173,8 @@ func initTracing() error {
 
 	ctx := context.Background()
 
-	mustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
-	mustConnGRPC(ctx, &collectorConn, collectorAddr)
+	shared.MustMapEnv(&collectorAddr, "COLLECTOR_SERVICE_ADDR")
+	shared.MustConnGRPC(ctx, &collectorConn, collectorAddr)
 
 	exporter, err := otlptracegrpc.New(
 		ctx,
@@ -209,24 +207,4 @@ func initProfiling(service, version string) {
 		time.Sleep(d)
 	}
 	log.Warn("could not initialize Stackdriver profiler after retrying, giving up")
-}
-
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		panic(fmt.Sprintf("environment variable %q not set", envKey))
-	}
-	*target = v
-}
-
-func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
-	var err error
-	_, cancel := context.WithTimeout(ctx, time.Second*3)
-	defer cancel()
-	*conn, err = grpc.NewClient(addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
-	if err != nil {
-		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
-	}
 }

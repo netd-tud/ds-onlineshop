@@ -25,16 +25,14 @@ import (
 	"cloud.google.com/go/profiler"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	shared "github.com/turt1z/microservices-demo/src/shared"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -144,7 +142,7 @@ func main() {
 	addr := os.Getenv("LISTEN_ADDR")
 
 	var publicKeyPath string
-	mustMapEnv(&publicKeyPath, "AUTH_PUBLIC_KEY_PATH")
+	shared.MustMapEnv(&publicKeyPath, "AUTH_PUBLIC_KEY_PATH")
 
 	pubKeyBytes, err := os.ReadFile(publicKeyPath)
 	if err != nil {
@@ -156,30 +154,30 @@ func main() {
 	}
 	svc.publicKey = publicKey
 
-	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
-	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
-	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
-	mustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
-	mustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
-	mustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
-	mustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
-	mustMapEnv(&svc.shoppingAssistantSvcAddr, "SHOPPING_ASSISTANT_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.recommendationSvcAddr, "RECOMMENDATION_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.checkoutSvcAddr, "CHECKOUT_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.shippingSvcAddr, "SHIPPING_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.adSvcAddr, "AD_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.shoppingAssistantSvcAddr, "SHOPPING_ASSISTANT_SERVICE_ADDR")
 	svc.ratingSvcAddr = os.Getenv("RATING_SERVICE_ADDR")
 	svc.inventorySvcAddr = os.Getenv("INVENTORY_SERVICE_ADDR")
 	svc.authSvcAddr = os.Getenv("AUTH_SERVICE_ADDR")
 
-	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
-	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
-	mustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
-	mustConnGRPC(ctx, &svc.recommendationSvcConn, svc.recommendationSvcAddr)
-	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
-	mustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
-	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
+	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.recommendationSvcConn, svc.recommendationSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 	if svc.inventorySvcAddr != "" {
-		mustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+		shared.MustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
 	}
 	if svc.authSvcAddr != "" {
-		mustConnGRPC(ctx, &svc.authSvcConn, svc.authSvcAddr)
+		shared.MustConnGRPC(ctx, &svc.authSvcConn, svc.authSvcAddr)
 	}
 
 	r := mux.NewRouter()
@@ -216,8 +214,8 @@ func initStats(log logrus.FieldLogger) {
 }
 
 func initTracing(log logrus.FieldLogger, ctx context.Context, svc *frontendServer) (*sdktrace.TracerProvider, error) {
-	mustMapEnv(&svc.collectorAddr, "COLLECTOR_SERVICE_ADDR")
-	mustConnGRPC(ctx, &svc.collectorConn, svc.collectorAddr)
+	shared.MustMapEnv(&svc.collectorAddr, "COLLECTOR_SERVICE_ADDR")
+	shared.MustConnGRPC(ctx, &svc.collectorConn, svc.collectorAddr)
 	exporter, err := otlptracegrpc.New(
 		ctx,
 		otlptracegrpc.WithGRPCConn(svc.collectorConn))
@@ -253,24 +251,4 @@ func initProfiling(log logrus.FieldLogger, service, version string) {
 		time.Sleep(d)
 	}
 	log.Warn("warning: could not initialize Stackdriver profiler after retrying, giving up")
-}
-
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		panic(fmt.Sprintf("environment variable %q not set", envKey))
-	}
-	*target = v
-}
-
-func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
-	var err error
-	_, cancel := context.WithTimeout(ctx, time.Second*3)
-	defer cancel()
-	*conn, err = grpc.NewClient(addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
-	if err != nil {
-		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
-	}
 }

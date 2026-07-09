@@ -10,6 +10,7 @@ import (
 	"github.com/dtm-labs/client/workflow"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	shared "github.com/turt1z/microservices-demo/src/shared"
 	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -68,16 +69,16 @@ func main() {
 		srvPort = os.Getenv("PORT")
 	}
 
-	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
-	mustMapEnv(&svc.inventorySvcAddr, "INVENTORY_CATALOG_SERVICE_ADDR")
-	mustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
-	mustMapEnv(&svc.dtmSvcAddr, "DTM_SERVICE_ADDR")
-	mustMapEnv(&svc.ownAddr, "WAREHOUSE_MANAGEMENT_SVC_ADDR")
+	shared.MustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.inventorySvcAddr, "INVENTORY_CATALOG_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
+	shared.MustMapEnv(&svc.dtmSvcAddr, "DTM_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.ownAddr, "WAREHOUSE_MANAGEMENT_SVC_ADDR")
 
 	ctx := context.Background()
-	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
-	mustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
-	mustConnGRPC(ctx, &svc.dtmSvcConn, svc.dtmSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+	shared.MustConnGRPC(ctx, &svc.dtmSvcConn, svc.dtmSvcAddr)
 	mustConnGRPC(ctx, &svc.xaProductCatalogConn, svc.productCatalogSvcAddr, grpc.WithUnaryInterceptor(workflow.Interceptor))
 	mustConnGRPC(ctx, &svc.xaInventoryConn, svc.inventorySvcAddr, grpc.WithUnaryInterceptor(workflow.Interceptor))
 
@@ -111,14 +112,6 @@ func run(port string, svc *warehouseManagement) string {
 		log.Fatal(errors.Wrap(err, "workflow: failed to register xa-create-product"))
 	}
 	return listener.Addr().String()
-}
-
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		panic(fmt.Sprintf("environment variable %q not set", envKey))
-	}
-	*target = v
 }
 
 func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string, extraOpts ...grpc.DialOption) {
