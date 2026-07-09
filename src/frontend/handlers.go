@@ -320,7 +320,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	log.WithField("id", id).WithField("currency", currentCurrency(r)).
 		Debug("serving product page")
 
-	p, err := fe.getProduct(r.Context(), id)
+	cookie, _ := r.Cookie(cookieAuth)
+	p, err := fe.getProduct(r.Context(), id, cookie)
 	if err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve product"), http.StatusInternalServerError)
 		return
@@ -470,7 +471,8 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 	}
 	log.WithField("product", payload.ProductID).WithField("quantity", payload.Quantity).Debug("adding to cart")
 
-	p, err := fe.getProduct(r.Context(), payload.ProductID)
+	cookie, _ := r.Cookie(cookieAuth)
+	p, err := fe.getProduct(r.Context(), payload.ProductID, cookie)
 	if err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve product"), http.StatusInternalServerError)
 		return
@@ -530,7 +532,8 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	items := make([]cartItemView, len(cart))
 	totalPrice := pb.Money{CurrencyCode: currentCurrency(r)}
 	for i, item := range cart {
-		p, err := fe.getProduct(r.Context(), item.GetProductId())
+		cookie, _ := r.Cookie(cookieAuth)
+		p, err := fe.getProduct(r.Context(), item.GetProductId(), cookie)
 		if err != nil {
 			renderHTTPError(log, r, w, errors.Wrapf(err, "could not retrieve product #%s", item.GetProductId()), http.StatusInternalServerError)
 			return
@@ -681,7 +684,8 @@ func (fe *frontendServer) getProductByID(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	p, err := fe.getProduct(r.Context(), id)
+	cookie, _ := r.Cookie(cookieAuth)
+	p, err := fe.getProduct(r.Context(), id, cookie)
 	if err != nil {
 		return
 	}

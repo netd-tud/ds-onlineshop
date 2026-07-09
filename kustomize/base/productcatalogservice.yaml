@@ -51,6 +51,8 @@ spec:
           value: "3550"
         - name: DISABLE_PROFILER
           value: "1"
+        - name: AUTH_PUBLIC_KEY_PATH
+          value: "/etc/auth/auth_public.pem"
         readinessProbe:
           grpc:
             port: 3550
@@ -64,6 +66,14 @@ spec:
           limits:
             cpu: 200m
             memory: 128Mi
+        volumeMounts:
+          - name: public-key-volume
+            mountPath: "/etc/auth"
+            readOnly: true
+      volumes:
+        - name: public-key-volume
+          configMap:
+            name: auth-public-key
 ---
 apiVersion: v1
 kind: Service

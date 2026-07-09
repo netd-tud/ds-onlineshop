@@ -16,9 +16,11 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/pkg/errors"
 )
@@ -48,7 +50,13 @@ func (fe *frontendServer) getProducts(ctx context.Context) ([]*pb.Product, error
 	return resp.GetProducts(), err
 }
 
-func (fe *frontendServer) getProduct(ctx context.Context, id string) (*pb.Product, error) {
+func (fe *frontendServer) getProduct(ctx context.Context, id string, cookie *http.Cookie) (*pb.Product, error) {
+	tokenString := ""
+	if cookie != nil {
+		tokenString = cookie.Value
+	}
+
+	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+tokenString)
 	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
 		GetProduct(ctx, &pb.GetProductRequest{Id: id})
 	return resp, err
@@ -104,7 +112,7 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 	}
 	out := make([]*pb.Product, len(resp.GetProductIds()))
 	for i, v := range resp.GetProductIds() {
-		p, err := fe.getProduct(ctx, v)
+		p, err := fe.getProduct(ctx, v, nil)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get recommended product info (#%s)", v)
 		}

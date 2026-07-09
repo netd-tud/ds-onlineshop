@@ -26,6 +26,7 @@ import (
 	"time"
 
 	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
+	auth "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -126,13 +127,27 @@ func run(port string) string {
 		log.Fatal(err)
 	}
 
+	publicKeyPath := os.Getenv("AUTH_PUBLIC_KEY_PATH")
+	if publicKeyPath == "" {
+		publicKeyPath = "certs/auth_public.pem"
+	}
+
+	pubKey, err := os.ReadFile(publicKeyPath)
+	if err != nil {
+		log.Fatalf("failed to read public key from path %s: %v", publicKeyPath, err)
+	}
+
 	// Propagate trace context
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
 			propagation.TraceContext{}, propagation.Baggage{}))
+
 	var srv *grpc.Server
+
 	srv = grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler()))
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.UnaryInterceptor(auth.NewAuthInterceptor(pubKey, "/hipstershop.ProductCatalogService/ListProducts")),
+	)
 
 	svc := &productCatalog{}
 	err = loadCatalog(&svc.catalog)
