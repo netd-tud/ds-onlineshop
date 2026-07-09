@@ -132,10 +132,13 @@ func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request)
 		log.WithError(err).Warn("stale or invalid token detected, clearing session")
 
 		http.SetCookie(w, &http.Cookie{
-			Name:   cookieAuth,
-			Value:  "",
-			MaxAge: -1,
-			Path:   "/",
+			Name:     cookieAuth,
+			Value:    "",
+			MaxAge:   -1,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			// Secure: true,
 		})
 		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
 		return
@@ -178,10 +181,13 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	log.WithField("username", username).Info("login successful")
 
 	http.SetCookie(w, &http.Cookie{
-		Name:   cookieAuth,
-		Value:  resp.GetToken(),
-		MaxAge: cookieMaxAge,
-		Path:   "/",
+		Name:     cookieAuth,
+		Value:    resp.GetToken(),
+		MaxAge:   cookieMaxAge,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		// Secure: true,
 	})
 
 	w.Header().Set("Location", baseUrl+"/")
