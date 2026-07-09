@@ -90,7 +90,7 @@ func GetClaims(ctx context.Context) (*UserClaims, bool) {
 	return claims, ok
 }
 
-func mustMapEnv(target *string, envKey string) {
+func MustMapEnv(target *string, envKey string) {
 	v := os.Getenv(envKey)
 	if v == "" {
 		panic(fmt.Sprintf("environment variable %q not set", envKey))
@@ -98,7 +98,7 @@ func mustMapEnv(target *string, envKey string) {
 	*target = v
 }
 
-func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
+func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
 	_, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
