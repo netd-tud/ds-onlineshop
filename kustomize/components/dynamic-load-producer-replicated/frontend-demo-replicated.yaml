@@ -74,6 +74,10 @@ spec:
               value: "shoppingassistantservice:80"
             - name: ENABLE_PROFILER
               value: "0"
+            - name: AUTH_SERVICE_ADDR
+              value: "authservice:50050"
+            - name: AUTH_PUBLIC_KEY_PATH
+              value: "/etc/auth/auth_public.pem"
           resources:
             requests:
               cpu: 50m
@@ -81,6 +85,14 @@ spec:
             limits:
               cpu: 100m
               memory: 128Mi
+          volumeMounts:
+            - name: public-key-volume
+              mountPath: "/etc/auth"
+              readOnly: true
+      volumes:
+        - name: public-key-volume
+          configMap:
+            name: auth-public-key
 ---
 apiVersion: v1
 kind: Service
