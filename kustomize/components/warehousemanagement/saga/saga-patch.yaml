@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: warehousemanagement
+spec:
+  selector:
+    matchLabels:
+      app: warehousemanagement
+  template:
+    spec:
+      containers:
+        - name: server
+          env:
+            - name: SERVED_FUNCTION
+              value: "SAGA"

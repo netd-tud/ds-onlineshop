@@ -73,7 +73,7 @@ func (wm *warehouseManagement) registerXaCreateProductWorkflow() error {
 	})
 }
 
-func (wm *warehouseManagement) CreateNewProductWithXA(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
+func (wm *warehouseManagement) createNewProductXa(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
 	productID, _ := generateID(10)
 

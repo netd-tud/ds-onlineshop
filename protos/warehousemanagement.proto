@@ -13,8 +13,6 @@ service WarehouseManagement {
   rpc UpdateProductStock (hipstershop.ChangeInventoryProductStockRequest) returns (hipstershop.InventoryProduct);
 
   rpc CreateNewProduct (CreateWarehouseProductRequest) returns (CreateWarehouseProductResponse);
-  rpc CreateNewProductWithDTM (CreateWarehouseProductRequest) returns (CreateWarehouseProductResponse);
-  rpc CreateNewProductWithXA (CreateWarehouseProductRequest) returns (CreateWarehouseProductResponse);
 }
 
 message CreateWarehouseProductRequest {

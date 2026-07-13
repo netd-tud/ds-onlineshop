@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (wm *warehouseManagement) CreateNewProductWithDTM(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
+func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
 	productID, _ := generateID(10)
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
 

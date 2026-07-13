@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dtm-labs/client/workflow"
@@ -25,7 +26,17 @@ const (
 	wrapperPort = "50000"
 )
 
+type ServedFunction int
+
+const (
+	NAIVE ServedFunction = iota
+	SAGA
+	XA
+)
+
 type warehouseManagement struct {
+	servedFunction ServedFunction
+
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
 
@@ -74,6 +85,19 @@ func main() {
 	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
 	shared.MustMapEnv(&svc.dtmSvcAddr, "DTM_SERVICE_ADDR")
 	shared.MustMapEnv(&svc.ownAddr, "WAREHOUSE_MANAGEMENT_SVC_ADDR")
+
+	sf := strings.ToUpper(os.Getenv("SERVED_FUNCTION"))
+	switch sf {
+	case "SAGA":
+		log.Infof("Warehouse Management Service is running in SAGA mode")
+		svc.servedFunction = SAGA
+	case "XA":
+		log.Infof("Warehouse Management Service is running in XA mode")
+		svc.servedFunction = XA
+	default:
+		log.Infof("Warehouse Management Service is running in NAIVE mode")
+		svc.servedFunction = NAIVE
+	}
 
 	ctx := context.Background()
 	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)

@@ -28,6 +28,18 @@ func (wm *warehouseManagement) UpdateProductStock(ctx context.Context, req *pb.C
 }
 
 func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
+	switch wm.servedFunction {
+	case NAIVE:
+		return wm.createNewProductNaive(ctx, req)
+	case SAGA:
+		return wm.createNewProductSaga(ctx, req)
+	case XA:
+		return wm.createNewProductXa(ctx, req)
+	}
+	return nil, status.Errorf(codes.Unimplemented, "served function not implemented")
+}
+
+func (wm *warehouseManagement) createNewProductNaive(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
 	configPath := "/var/behavior-config/NAIVE_ROLLBACK_CREATE"
 	configValue, _ := getConfigValue(configPath)
 	log.Infof("Config Value for NAIVE_ROLLBACK_CREATE: %s", configValue)

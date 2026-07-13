@@ -47,6 +47,8 @@ spec:
               value: "dtm-svc:36790"
             - name: MQTT_BROKER_ADDR
               value: "mqtt-broker:1883"
+            - name: SERVED_FUNCTION
+              value: "NAIVE"
           resources:
             requests:
               cpu: 200m
