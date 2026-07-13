@@ -9,6 +9,10 @@ configMapGenerator:
   - name: ldap-bootstrap-ldif
     files:
       - ldif/01-init.ldif
+      - ldif/20-readonly.ldif
+  - name: ldap-acl-ldif
+    files:
+      - ldif/10-acl.ldif
   - name: auth-public-key
     files:
       - certs/auth_public.pem

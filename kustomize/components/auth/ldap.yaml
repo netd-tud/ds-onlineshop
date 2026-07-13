@@ -37,9 +37,11 @@ spec:
             - name: OPENLDAP_BOOTSTRAP_SUFFIX
               value: "dc=theonlineshop,dc=com"
             - name: OPENLDAP_BOOTSTRAP_DATA_ROOT_PASSWORD_HASHED
-              value: "{SSHA}f6OA6r0TDk/gw0aK7EicyeJfYp9c47ws" # admin
+              value: "{SSHA}EMyfzkAhoKGO+rLOMQO+NfsEFJWrupyB" # admin
             - name: OPENLDAP_BOOTSTRAP_LDIF_DATA_DIR
               value: "/var/custom-ldif"
+            - name: OPENLDAP_BOOTSTRAP_CONFIG_ROOT_PASSWORD_HASHED
+              value: "{SSHA}EMyfzkAhoKGO+rLOMQO+NfsEFJWrupyB" # admin
           resources:
             requests:
               cpu: 200m
@@ -62,14 +64,33 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/openldap/openldap-data
               name: ldap-storage
-              subPath: data-v25
+              subPath: data-v59
             - mountPath: /etc/openldap/slapd.d
               name: ldap-storage
-              subPath: config-v25
+              subPath: config-v59
             - mountPath: /var/lib/openldap/openldap-backups
               name: backups
             - mountPath: /var/custom-ldif/custom
               name: ldif-bootstrap-volume
+            - mountPath: /opt/acls
+              name: acl-ldif-volume
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - >
+                    c=0;
+                    while [ $c -lt 30 ]; do
+                      if ldapwhoami -x -D 'cn=admin,cn=config' -w 'admin' -H ldap://localhost:3890 >/dev/null 2>&1; then
+                        ldapmodify -x -D 'cn=admin,cn=config' -w 'admin' -H ldap://localhost:3890 -f /opt/acls/10-acl.ldif > /tmp/acl.log 2>&1;
+                        exit 0;
+                      fi;
+                      c=$((c+1));
+                      sleep 2;
+                    done;
+
       volumes:
         - name: ldap-storage
           persistentVolumeClaim:
@@ -79,6 +100,9 @@ spec:
         - name: ldif-bootstrap-volume
           configMap:
             name: ldap-bootstrap-ldif
+        - name: acl-ldif-volume
+          configMap:
+            name: ldap-acl-ldif
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

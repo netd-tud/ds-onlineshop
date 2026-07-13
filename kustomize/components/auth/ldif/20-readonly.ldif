@@ -1,0 +1,11 @@
+dn: ou=service-accounts,dc=theonlineshop,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: service-accounts
+
+dn: cn=readonly,ou=service-accounts,dc=theonlineshop,dc=com
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+objectClass: top
+cn: readonly
+userPassword: {SSHA}bz5Idk0x1Tkq6iAgzeOGJDVwKoRj5Vln
