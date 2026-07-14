@@ -1,20 +1,20 @@
 {{ define "inventoryStockProduct" }}
-{{ if ge $.product.Stock 0 }}
+{{ if ge .Stock 0 }}
 <div class="product-stock">
-  {{ if eq $.product.Stock 0 }}
+  {{ if eq .Stock 0 }}
   <span class="stock-badge stock-badge--empty">
     <span class="stock-badge__dot"></span>
     Out of stock
   </span>
-  {{ else if lt $.product.Stock 5 }}
+  {{ else if lt .Stock 5 }}
   <span class="stock-badge stock-badge--low">
     <span class="stock-badge__dot"></span>
-    Only {{ $.product.Stock }} left
+    Only {{ .Stock }} left
   </span>
   {{ else }}
   <span class="stock-badge stock-badge--available">
     <span class="stock-badge__dot"></span>
-    {{ $.product.Stock }} available
+    {{ .Stock }} available
   </span>
   {{ end }}
 </div>
