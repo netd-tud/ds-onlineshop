@@ -317,6 +317,32 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
 }
 
+func (fe *frontendServer) reorderHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	productId := r.FormValue("product_id")
+	quantity, err := strconv.ParseInt(r.FormValue("quantity"), 10, 64)
+	if err != nil {
+		log.WithError(err).Warn("invalid quantity value")
+		http.Redirect(w, r, baseUrl+"/inventory", http.StatusFound)
+		return
+	}
+
+	log.Infof("Reorder request for product %s with quantity %s", productId, quantity)
+
+	reorder, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).ChangeInventoryProductStock(r.Context(), &pb.ChangeInventoryProductStockRequest{
+		Id:    productId,
+		Delta: quantity,
+	})
+	if err != nil {
+		log.WithError(err).Warn("reorder failed")
+	}
+
+	log.Infof("Reorder response: %v", reorder)
+
+	http.Redirect(w, r, baseUrl+"/inventory", http.StatusFound)
+}
+
 func (fe *frontendServer) accountHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
