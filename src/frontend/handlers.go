@@ -26,6 +26,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,10 +35,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-
 	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
 	"github.com/turt1z/microservices-demo/src/frontend/money"
 	"github.com/turt1z/microservices-demo/src/frontend/validator"
+	auth "github.com/turt1z/microservices-demo/src/shared"
 )
 
 type platformDetails struct {
@@ -95,6 +96,128 @@ func computeHeavyLoad(iterations int) string {
 	}
 
 	return fmt.Sprintf("%x", hash)
+}
+
+type Product struct {
+	Item  *pb.Product
+	Stock int64
+}
+
+func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		log.Warn("unauthenticated access attempt to inventory page: missing cookie")
+		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		return
+	}
+
+	products, _ := fe.getProducts(r.Context())
+	inventoryProducts, _ := fe.listInventory(r.Context())
+
+	combinedMap := make(map[string]*Product, len(products)+len(inventoryProducts))
+	for _, product := range products {
+		combinedMap[product.GetId()] = &Product{Item: product, Stock: 0}
+	}
+	for _, inventoryProduct := range inventoryProducts {
+		if cp, ok := combinedMap[inventoryProduct.GetId()]; ok {
+			cp.Stock = inventoryProduct.GetStock()
+		} else {
+			log.Warn("Could not find catalog Product corresponding to inventory Product with ID: %s", inventoryProduct.GetId())
+		}
+	}
+
+	combinedList := make([]*Product, 0, len(combinedMap))
+	for _, cp := range combinedMap {
+		combinedList = append(combinedList, cp)
+	}
+
+	claims, token, err := fe.claimsFromCookie(cookie)
+
+	if err != nil || !token.Valid {
+		fe.invalidateCookie(w, r, cookieAuth, err)
+		return
+	}
+
+	log.Infof("Claims: %s", claims)
+
+	categories := claimsToCategories(claims)
+
+	log.Infof("User %s has access to categories: %v, combined inventory list has the following content: %v", claims.Username, categories, combinedList)
+
+	filtered := combinedList
+	if categories != nil {
+		tmp := make([]*Product, 0, len(combinedList))
+		for _, cp := range combinedList {
+			if cp == nil || cp.Item == nil {
+				continue
+			}
+			if slices.Contains(categories, "all") {
+				tmp = append(tmp, cp)
+				continue
+			}
+			for _, cat := range cp.Item.Categories {
+				if slices.Contains(categories, cat) {
+					tmp = append(tmp, cp)
+					break
+				}
+			}
+		}
+		filtered = tmp
+	}
+
+	log.Infof("User %s has access to categories: %v, filtered inventory list has the following content: %v", claims.Username, categories, filtered)
+
+	if err := templates.ExecuteTemplate(w, "reorder", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": false,
+		"products":      filtered,
+		"banner_color":  os.Getenv("BANNER_COLOR"),
+	})); err != nil {
+		log.Error(err)
+	}
+}
+
+func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*auth.UserClaims, *jwt.Token, error) {
+	tokenString := cookie.Value
+	claims := &auth.UserClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+		return fe.publicKey, nil
+	})
+	return claims, token, err
+}
+
+func claimsToCategories(claims *auth.UserClaims) []string {
+	log.Infof("User %s has the following roles: %v", claims.Username, claims.Roles)
+	var categories []string
+
+	for _, role := range claims.Roles {
+		switch role {
+		case "admin":
+			categories = append(categories, "all")
+		case "inventory-accessories-manage":
+			categories = append(categories, "accessories")
+		case "inventory-clothing-manage":
+			categories = append(categories, "clothing")
+		}
+	}
+
+	return categories
+}
+
+func (fe *frontendServer) invalidateCookie(w http.ResponseWriter, r *http.Request, cookieName string, err error) {
+	log.WithError(err).Warn("invalidating cookie")
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookieName,
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		// Secure: true,
+	})
+	http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
 }
 
 type UserClaims struct {
@@ -204,19 +327,12 @@ func (fe *frontendServer) accountHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tokenString := cookie.Value
-	claims := &UserClaims{}
-
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-		return fe.publicKey, nil
-	})
+	claims, token, err := fe.claimsFromCookie(cookie)
 
 	log.Infof("Claims: %s", claims)
 
 	if err != nil || !token.Valid {
-		log.WithError(err).Warn("invalid or expired token in cookie")
-		http.SetCookie(w, &http.Cookie{Name: cookieAuth, MaxAge: -1, Path: "/"})
-		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		fe.invalidateCookie(w, r, cookieAuth, err)
 		return
 	}
 

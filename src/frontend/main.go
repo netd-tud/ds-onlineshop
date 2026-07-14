@@ -200,6 +200,7 @@ func main() {
 	r.HandleFunc(baseUrl+"/profile", svc.profileHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodGet, http.MethodPost)
 	r.HandleFunc(baseUrl+"/account", svc.accountHandler).Methods(http.MethodGet)
+	r.HandleFunc(baseUrl+"/inventory", svc.inventoryHandler).Methods(http.MethodGet)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}     // add logging

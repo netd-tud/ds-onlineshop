@@ -46,6 +46,16 @@ header > div:nth-child(2) > .container {
   max-width: none;
 }
 
+header .inventory-link {
+  position: relative;
+  display: block;
+  margin-left: 25px;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+}
+
 header .profile-link {
   position: relative;
   display: block;
@@ -325,46 +335,54 @@ main {
   background-size: cover;
 }
 
-.hot-products-row h3 {
+.hot-products-row h3,
+.products-row h3 {
   margin-bottom: 32px;
   margin-top: 56px;
   font-size: 36px;
   font-weight: normal;
 }
 
-.hot-products-row {
+.hot-products-row,
+.products-row {
   padding-bottom: 70px;
   padding-left: 10%;
   padding-right: 10%;
 }
 
-.hot-product-card  {
+.hot-product-card,
+.product-card {
   margin-bottom: 52px;
   padding-left: 16px;
   padding-right: 16px;
 }
 
-.hot-product-card img {
+.hot-product-card img,
+.product-card img {
   width: 100%;
   height: auto;
   border-radius: 20% 0 20% 20%;
 }
 
-.hot-product-card-name {
+.hot-product-card-name,
+.product-card-name{
   margin-top: 8px;
   font-size: 18px;
 }
 
-.hot-product-card-price {
+.hot-product-card-price,
+.product-card-price {
   font-size: 14px;
 }
 
-.hot-product-card > a:first-child {
+.hot-product-card > a:first-child,
+.product-card > a:first-child {
   position: relative;
   display: block;
 }
 
-.hot-product-card-img-overlay {
+.hot-product-card-img-overlay,
+.product-card-img-overlay {
   position: absolute;
   height: 100%;
   width: 100%;
@@ -374,7 +392,8 @@ main {
   background-color: transparent;
 }
 
-.hot-product-card:hover .hot-product-card-img-overlay {
+.hot-product-card:hover .hot-product-card-img-overlay,
+.product-card:hover .product-card-img-overlay {
   background-color: rgba(71, 0, 29, 0.2);
 }
 
@@ -684,4 +703,25 @@ the rules below could be extracted.
   right: 25px;
   width: 10px;
   height: 5px;
+}
+
+.product-stock-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.reorder-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-input {
+  width: 80px;
 }

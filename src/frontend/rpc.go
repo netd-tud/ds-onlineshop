@@ -134,6 +134,21 @@ func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad
 	return resp.GetAds(), errors.Wrap(err, "failed to get ads")
 }
 
+func (fe *frontendServer) listInventory(ctx context.Context) ([]*pb.InventoryProduct, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
+	defer cancel()
+
+	resp, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).ListInventory(ctx, &pb.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get inventory")
+	}
+	inventory := make([]*pb.InventoryProduct, 0)
+	for _, item := range resp.Products {
+		inventory = append(inventory, item)
+	}
+	return inventory, nil
+}
+
 func (fe *frontendServer) getStock(ctx context.Context, productID string) (int64, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
 	defer cancel()
