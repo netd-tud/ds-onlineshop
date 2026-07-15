@@ -142,7 +142,7 @@ func main() {
 	addr := os.Getenv("LISTEN_ADDR")
 
 	var publicKeyPath string
-	shared.MustMapEnv(&publicKeyPath, "AUTH_PUBLIC_KEY_PATH")
+	shared.MustMapEnv(&publicKeyPath, "JWT_PUBLIC_KEY_PATH")
 
 	pubKeyBytes, err := os.ReadFile(publicKeyPath)
 	if err != nil {

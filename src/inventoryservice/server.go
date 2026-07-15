@@ -55,7 +55,7 @@ func run(port string) error {
 		log.Fatal(err)
 	}
 
-	publicKeyPath := os.Getenv("AUTH_PUBLIC_KEY_PATH")
+	publicKeyPath := os.Getenv("JWT_PUBLIC_KEY_PATH")
 	if publicKeyPath == "" {
 		publicKeyPath = "certs/auth_public.pem"
 	}

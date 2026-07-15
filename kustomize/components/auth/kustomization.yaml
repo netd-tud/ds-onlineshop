@@ -13,11 +13,36 @@ configMapGenerator:
   - name: ldap-acl-ldif
     files:
       - ldif/10-acl.ldif
-  - name: auth-public-key
+  - name: jwt-public-key
     files:
       - certs/auth_public.pem
 
 secretGenerator:
-  - name: auth-private-key
+  - name: jwt-private-key
     files:
       - certs/auth_private.pem
+
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: unused
+      spec:
+        template:
+          spec:
+            containers:
+              - name: server
+                env:
+                - name: JWT_PUBLIC_KEY_PATH
+                  value: "/etc/auth/auth_public.pem"
+                volumeMounts:
+                  - name: jwt-key-volume
+                    mountPath: "/etc/auth"
+                    readOnly: true
+            volumes:
+              - name: jwt-key-volume
+                configMap:
+                  name: jwt-public-key

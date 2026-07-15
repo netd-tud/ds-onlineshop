@@ -45,7 +45,7 @@ spec:
               value: "admin" # TODO: change to secret
             - name: LDAP_BASE_DN
               value: "dc=theonlineshop,dc=com"
-            - name: AUTH_PRIVATE_KEY_PATH
+            - name: JWT_PRIVATE_KEY_PATH
               value: "/etc/auth/auth_private.pem"
           resources:
             requests:
@@ -61,13 +61,13 @@ spec:
             grpc:
               port: 50050
           volumeMounts:
-            - name: private-key-volume
+            - name: jwt-key-volume
               mountPath: /etc/auth
               readOnly: true
       volumes:
-        - name: private-key-volume
+        - name: jwt-key-volume
           secret:
-            secretName: auth-private-key
+            secretName: jwt-private-key
             defaultMode: 0400
 ---
 apiVersion: v1

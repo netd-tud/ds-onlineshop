@@ -39,7 +39,7 @@ type UserClaims struct {
 
 func main() {
 	var privateKeyPath string
-	mustMapEnv(&privateKeyPath, "AUTH_PRIVATE_KEY_PATH")
+	mustMapEnv(&privateKeyPath, "JWT_PRIVATE_KEY_PATH")
 
 	privKeyBytes, err := os.ReadFile(privateKeyPath)
 	if err != nil {

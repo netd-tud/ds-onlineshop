@@ -39,8 +39,6 @@ spec:
               value: "productcatalogservice:3550"
             - name: MQTT_BROKER_ADDR
               value: "mqtt-broker:1883"
-            - name: AUTH_PUBLIC_KEY_PATH
-              value: "/etc/auth/auth_public.pem"
           readinessProbe:
             grpc:
               port: 50002
@@ -54,14 +52,6 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
-          volumeMounts:
-            - name: auth-key-volume
-              mountPath: "/etc/auth"
-              readOnly: true
-      volumes:
-        - name: auth-key-volume
-          configMap:
-            name: auth-public-key
 ---
 apiVersion: v1
 kind: Service
