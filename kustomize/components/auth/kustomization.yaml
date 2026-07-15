@@ -6,13 +6,6 @@ resources:
   - authservice.yaml
 
 configMapGenerator:
-  - name: ldap-bootstrap-ldif
-    files:
-      - ldif/01-init.ldif
-      - ldif/20-readonly.ldif
-  - name: ldap-acl-ldif
-    files:
-      - ldif/10-acl.ldif
   - name: jwt-public-key
     files:
       - certs/auth_public.pem
@@ -22,6 +15,7 @@ secretGenerator:
     files:
       - certs/auth_private.pem
 
+# inject public key into all deployments to decrypt jwt
 patches:
   - target:
       kind: Deployment

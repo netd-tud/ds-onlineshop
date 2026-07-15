@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: ldap-bootstrap-ldif
+    files:
+      - 01-init.ldif
+      - 20-readonly.ldif
+  - name: ldap-acl-ldif
+    files:
+      - 10-acl.ldif

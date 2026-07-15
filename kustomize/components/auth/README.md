@@ -1,6 +1,6 @@
 # Authentication & Directory Services Component
 
-This Kustomize component deploys a Identity and Access Management (IAM) stack.
+This Kustomize component deploys an Identity and Access Management (IAM) stack.
 It provisions an OpenLDAP server for identity storage, a Web Management UI, and a custom Go-Based Authentication Service
 that processes user credentials via a Search-and-Bind workflow and issues stateless
 JSON Web Tokens (JWT) for role-based access control.
