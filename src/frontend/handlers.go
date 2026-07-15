@@ -38,7 +38,7 @@ import (
 	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
 	"github.com/turt1z/microservices-demo/src/frontend/money"
 	"github.com/turt1z/microservices-demo/src/frontend/validator"
-	auth "github.com/turt1z/microservices-demo/src/shared"
+	shared "github.com/turt1z/microservices-demo/src/shared"
 )
 
 type platformDetails struct {
@@ -178,9 +178,9 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*auth.UserClaims, *jwt.Token, error) {
+func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*shared.UserClaims, *jwt.Token, error) {
 	tokenString := cookie.Value
-	claims := &auth.UserClaims{}
+	claims := &shared.UserClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return fe.publicKey, nil
@@ -188,7 +188,7 @@ func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*auth.UserClaim
 	return claims, token, err
 }
 
-func claimsToCategories(claims *auth.UserClaims) []string {
+func claimsToCategories(claims *shared.UserClaims) []string {
 	log.Infof("User %s has the following roles: %v", claims.Username, claims.Roles)
 	var categories []string
 
@@ -220,13 +220,6 @@ func (fe *frontendServer) invalidateCookie(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
 }
 
-type UserClaims struct {
-	UserID   string   `json:"user_id"`
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
-	jwt.RegisteredClaims
-}
-
 func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
@@ -242,7 +235,7 @@ func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	tokenString := cookie.Value
-	claims := &UserClaims{}
+	claims := shared.UserClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
