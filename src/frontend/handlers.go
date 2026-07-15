@@ -320,6 +320,15 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 func (fe *frontendServer) reorderHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		log.Warn("unauthenticated access attempt to reorder product: missing cookie")
+		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		return
+	}
+
+	_ = cookie
+
 	productId := r.FormValue("product_id")
 	quantity, err := strconv.ParseInt(r.FormValue("quantity"), 10, 64)
 	if err != nil {
@@ -330,15 +339,12 @@ func (fe *frontendServer) reorderHandler(w http.ResponseWriter, r *http.Request)
 
 	log.Infof("Reorder request for product %s with quantity %s", productId, quantity)
 
-	reorder, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).ChangeInventoryProductStock(r.Context(), &pb.ChangeInventoryProductStockRequest{
-		Id:    productId,
-		Delta: quantity,
-	})
+	resp, err := fe.reorderProduct(r.Context(), productId, quantity, cookie)
 	if err != nil {
 		log.WithError(err).Warn("reorder failed")
 	}
 
-	log.Infof("Reorder response: %v", reorder)
+	log.Infof("Reorder response: %v", resp)
 
 	http.Redirect(w, r, baseUrl+"/inventory", http.StatusFound)
 }

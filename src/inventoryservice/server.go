@@ -55,13 +55,33 @@ func run(port string) error {
 		log.Fatal(err)
 	}
 
+	publicKeyPath := os.Getenv("AUTH_PUBLIC_KEY_PATH")
+	if publicKeyPath == "" {
+		publicKeyPath = "certs/auth_public.pem"
+	}
+	pubKey, err := os.ReadFile(publicKeyPath)
+	if err != nil {
+		log.Fatalf("failed to read public key from path %s: %v", publicKeyPath, err)
+	}
+
 	// Propagate trace context
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
 			propagation.TraceContext{}, propagation.Baggage{}))
 	var srv *grpc.Server
 	srv = grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler()))
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.UnaryInterceptor(shared.NewAuthInterceptor(pubKey,
+			// TODO: remove here once token validation implemented for each function
+			"/hipstershop.InventoryService/ListInventory",
+			"/hipstershop.InventoryService/GetInventoryProduct",
+			//"/hipstershop.InventoryService/ChangeInventoryProductStock", already validated access right
+			"/hipstershop.InventoryService/SetInventoryProductStock",
+			"/hipstershop.InventoryService/CreateNewInventoryProduct",
+			"/hipstershop.InventoryService/DeleteInventoryProduct",
+			"/hipstershop.InventoryService/CompensateCreateNewInventoryProduct",
+		)),
+	)
 
 	svc := &inventory{
 		thresholds: struct {

@@ -159,3 +159,21 @@ func (fe *frontendServer) getStock(ctx context.Context, productID string) (int64
 		})
 	return resp.GetStock(), errors.Wrapf(err, "failed to get stock for product #%s", productID)
 }
+
+func (fe *frontendServer) reorderProduct(ctx context.Context, productID string, quantity int64, cookie *http.Cookie) (*pb.InventoryProduct, error) {
+	tokenString := ""
+	if cookie != nil {
+		tokenString = cookie.Value
+	}
+
+	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+tokenString)
+	resp, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).ChangeInventoryProductStock(ctx,
+		&pb.ChangeInventoryProductStockRequest{
+			Id:    productID,
+			Delta: quantity,
+		})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to reorder product #%s", productID)
+	}
+	return resp.Product, nil
+}

@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	pb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto"
+	auth "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -59,6 +61,17 @@ func (p *inventory) GetInventoryProduct(ctx context.Context, req *pb.GetInventor
 }
 
 func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *pb.ChangeInventoryProductStockRequest) (*pb.ChangeInventoryProductStockResponse, error) {
+	claims, ok := auth.GetClaims(ctx)
+	log.Infof("ChangeInventoryProductStock called for product with ID %s with claims: %v", req.Id, claims)
+	if !ok {
+		return nil, status.Error(codes.Internal, "failed to resolve user identity data from context")
+	}
+	log.Printf("ChangeInventoryProductStock called by user: %s, roles: %v", claims.Username, claims.Roles)
+
+	if !p.userAllowedToModifyProduct(ctx, req.GetId(), *claims) {
+		return nil, status.Error(codes.Unauthenticated, "user not allowed to modify product")
+	}
+
 	inventory := p.parseInventory()
 	for _, product := range inventory {
 		if req.Id == product.Id {
@@ -232,4 +245,39 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 	}
 	log.Printf("Published event for topic '%s' successfully", topic)
 	return nil
+}
+
+func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims auth.UserClaims) bool {
+	product, err := pb.NewProductCatalogServiceClient(p.productCatalogSvcConn).GetProduct(ctx, &pb.GetProductRequest{Id: productId})
+	if err != nil {
+		log.Errorf("failed to get product from catalog: %v", err)
+		return false
+	}
+
+	categories := claimsToCategories(&claims)
+	for _, cat := range product.GetCategories() {
+		if slices.Contains(categories, cat) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func claimsToCategories(claims *auth.UserClaims) []string {
+	log.Infof("User %s has the following roles: %v", claims.Username, claims.Roles)
+	var categories []string
+
+	for _, role := range claims.Roles {
+		switch role {
+		case "admin":
+			categories = append(categories, "all")
+		case "inventory-accessories-manage":
+			categories = append(categories, "accessories")
+		case "inventory-clothing-manage":
+			categories = append(categories, "clothing")
+		}
+	}
+
+	return categories
 }
