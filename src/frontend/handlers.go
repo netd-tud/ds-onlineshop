@@ -235,7 +235,7 @@ func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	tokenString := cookie.Value
-	claims := shared.UserClaims{}
+	claims := &shared.UserClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
