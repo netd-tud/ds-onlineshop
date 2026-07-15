@@ -29,6 +29,55 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
+type Category string
+
+const (
+	CategoryAll         Category = "all"
+	CategoryAccessories Category = "accessories"
+	CategoryClothing    Category = "clothing"
+	CategoryTops        Category = "tops"
+	CategoryFootwear    Category = "footwear"
+	CategoryBeauty      Category = "beauty"
+	CategoryHair        Category = "hair"
+	CategoryDecor       Category = "decor"
+	CategoryHome        Category = "home"
+	CategoryKitchen     Category = "kitchen"
+)
+
+type Permission int
+
+const (
+	PermissionRead Permission = iota
+	PermissionWrite
+)
+
+type CategoryAccess struct {
+	Category   Category
+	Permission Permission
+}
+
+var CategoriesForClaims = map[string]CategoryAccess{
+	"admin":                        {CategoryAll, PermissionWrite},
+	"inventory-accessories-view":   {CategoryAccessories, PermissionRead},
+	"inventory-accessories-manage": {CategoryAccessories, PermissionWrite},
+	"inventory-clothing-view":      {CategoryClothing, PermissionRead},
+	"inventory-clothing-manage":    {CategoryClothing, PermissionWrite},
+	"inventory-tops-view":          {CategoryTops, PermissionRead},
+	"inventory-tops-manage":        {CategoryTops, PermissionWrite},
+	"inventory-footwear-view":      {CategoryFootwear, PermissionRead},
+	"inventory-footwear-manage":    {CategoryFootwear, PermissionWrite},
+	"inventory-beauty-view":        {CategoryBeauty, PermissionRead},
+	"inventory-beauty-manage":      {CategoryBeauty, PermissionWrite},
+	"inventory-hair-view":          {CategoryHair, PermissionRead},
+	"inventory-hair-manage":        {CategoryHair, PermissionWrite},
+	"inventory-kitchen-view":       {CategoryKitchen, PermissionRead},
+	"inventory-kitchen-manage":     {CategoryKitchen, PermissionWrite},
+	"inventory-decor-view":         {CategoryDecor, PermissionRead},
+	"inventory-decor-manage":       {CategoryDecor, PermissionWrite},
+	"inventory-home-view":          {CategoryHome, PermissionRead},
+	"inventory-home-manage":        {CategoryHome, PermissionWrite},
+}
+
 var defaultPublicMethods = map[string]struct{}{
 	healthpb.Health_Check_FullMethodName: {},
 	healthpb.Health_Watch_FullMethodName: {},
@@ -88,6 +137,16 @@ func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.Unary
 func GetClaims(ctx context.Context) (*UserClaims, bool) {
 	claims, ok := ctx.Value(UserContextKey).(*UserClaims)
 	return claims, ok
+}
+
+func ClaimsToCategories(claims *UserClaims) []CategoryAccess {
+	var categories []CategoryAccess
+	for _, role := range claims.Roles {
+		if access, ok := CategoriesForClaims[role]; ok {
+			categories = append(categories, access)
+		}
+	}
+	return categories
 }
 
 func MustMapEnv(target *string, envKey string) {
