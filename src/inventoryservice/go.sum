@@ -27,8 +27,8 @@ github.com/sirupsen/logrus v1.9.4 h1:TsZE7l11zFCLZnZ+teH4Umoq5BhEIfIzfRDZ1Uzql2w
 github.com/sirupsen/logrus v1.9.4/go.mod h1:ftWc9WdOfJ0a92nsE2jF5u5ZwH8Bv2zdeOC42RjbV2g=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
-github.com/turt1z/microservices-demo/src/shared v0.0.0-20260709095850-ce7972c78a81 h1:sfSl5v4balKUAAbsf4ldm7K7JfdjdE1cOJEGUMSbGdo=
-github.com/turt1z/microservices-demo/src/shared v0.0.0-20260709095850-ce7972c78a81/go.mod h1:yr/34h7mHHENx1id20C+nCOe+rgdxvpybiBcMSyJ0Q4=
+github.com/turt1z/microservices-demo/src/shared v0.0.0-20260715091515-425d812108a6 h1:aXwm/P/XpxM1SYpve5RhQC32cN22EmmO1X/LAJjkeHc=
+github.com/turt1z/microservices-demo/src/shared v0.0.0-20260715091515-425d812108a6/go.mod h1:yr/34h7mHHENx1id20C+nCOe+rgdxvpybiBcMSyJ0Q4=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.69.0 h1:2yEATaop1/a1I4psnSLgWVPLWwCzkqWakgJy7xTDVy0=

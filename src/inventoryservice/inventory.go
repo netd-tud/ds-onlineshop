@@ -11,7 +11,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	pb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto"
-	auth "github.com/turt1z/microservices-demo/src/shared"
+	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -61,7 +61,7 @@ func (p *inventory) GetInventoryProduct(ctx context.Context, req *pb.GetInventor
 }
 
 func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *pb.ChangeInventoryProductStockRequest) (*pb.ChangeInventoryProductStockResponse, error) {
-	claims, ok := auth.GetClaims(ctx)
+	claims, ok := shared.GetClaims(ctx)
 	log.Infof("ChangeInventoryProductStock called for product with ID %s with claims: %v", req.Id, claims)
 	if !ok {
 		return nil, status.Error(codes.Internal, "failed to resolve user identity data from context")
@@ -247,37 +247,20 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 	return nil
 }
 
-func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims auth.UserClaims) bool {
+func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims shared.UserClaims) bool {
 	product, err := pb.NewProductCatalogServiceClient(p.productCatalogSvcConn).GetProduct(ctx, &pb.GetProductRequest{Id: productId})
 	if err != nil {
 		log.Errorf("failed to get product from catalog: %v", err)
 		return false
 	}
 
-	categories := claimsToCategories(&claims)
+	categories := shared.ClaimsToCategories(&claims)
 	for _, cat := range product.GetCategories() {
-		if slices.Contains(categories, cat) {
+		target := shared.CategoryAccess{Category: shared.Category(cat), Permission: shared.PermissionWrite}
+		if slices.Contains(categories, target) {
 			return true
 		}
 	}
 
 	return false
-}
-
-func claimsToCategories(claims *auth.UserClaims) []string {
-	log.Infof("User %s has the following roles: %v", claims.Username, claims.Roles)
-	var categories []string
-
-	for _, role := range claims.Roles {
-		switch role {
-		case "admin":
-			categories = append(categories, "all")
-		case "inventory-accessories-manage":
-			categories = append(categories, "accessories")
-		case "inventory-clothing-manage":
-			categories = append(categories, "clothing")
-		}
-	}
-
-	return categories
 }
