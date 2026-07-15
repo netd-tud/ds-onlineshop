@@ -22,7 +22,7 @@ secretGenerator:
 patches:
   - target:
       kind: Deployment
-      name: "^(inventoryservice|frontend)$"
+      name: "^(inventoryservice|frontend|frontend-demo|frontend-demo-replicated)$"
     patch: |-
       apiVersion: apps/v1
       kind: Deployment
