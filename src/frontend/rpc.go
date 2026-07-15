@@ -157,7 +157,10 @@ func (fe *frontendServer) getStock(ctx context.Context, productID string) (int64
 		&pb.GetInventoryProductRequest{
 			Id: productID,
 		})
-	return resp.GetStock(), errors.Wrapf(err, "failed to get stock for product #%s", productID)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to get stock for product #%s", productID)
+	}
+	return resp.GetStock(), nil
 }
 
 func (fe *frontendServer) reorderProduct(ctx context.Context, productID string, quantity int64, cookie *http.Cookie) (*pb.InventoryProduct, error) {
