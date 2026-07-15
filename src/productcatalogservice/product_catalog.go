@@ -23,7 +23,6 @@ import (
 	"time"
 
 	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
-	auth "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
@@ -51,13 +50,6 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 }
 
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
-	claims, ok := auth.GetClaims(ctx)
-	log.Infof("GetProduct called with claims: %v", claims)
-	if !ok {
-		return nil, status.Error(codes.Internal, "failed to resolve user identity data from context")
-	}
-	log.Printf("GetProduct called by user: %s, roles: %v", claims.Username, claims.Roles)
-
 	time.Sleep(extraLatency)
 
 	catalog := p.parseCatalog()

@@ -125,16 +125,6 @@ func run(port string) string {
 		log.Fatal(err)
 	}
 
-	publicKeyPath := os.Getenv("AUTH_PUBLIC_KEY_PATH")
-	if publicKeyPath == "" {
-		publicKeyPath = "certs/auth_public.pem"
-	}
-
-	pubKey, err := os.ReadFile(publicKeyPath)
-	if err != nil {
-		log.Fatalf("failed to read public key from path %s: %v", publicKeyPath, err)
-	}
-
 	// Propagate trace context
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
@@ -142,10 +132,7 @@ func run(port string) string {
 
 	var srv *grpc.Server
 
-	srv = grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.UnaryInterceptor(shared.NewAuthInterceptor(pubKey, "/hipstershop.ProductCatalogService/ListProducts")),
-	)
+	srv = grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
 
 	svc := &productCatalog{}
 	err = loadCatalog(&svc.catalog)
