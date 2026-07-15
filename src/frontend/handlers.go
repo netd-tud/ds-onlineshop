@@ -156,6 +156,11 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 				continue
 			}
 			if slices.Contains(categoryAccess, shared.CategoryAccess{shared.CategoryAll, shared.PermissionWrite}) {
+				cp = &Product{
+					Item:        cp.Item,
+					Stock:       cp.Stock,
+					Reorderable: true,
+				}
 				tmp = append(tmp, cp)
 				continue
 			}
@@ -163,7 +168,11 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 				targetW := shared.CategoryAccess{shared.Category(cat), shared.PermissionWrite}
 				targetRO := shared.CategoryAccess{shared.Category(cat), shared.PermissionRead}
 				if slices.Contains(categoryAccess, targetW) {
-					cp = &Product{Item: cp.Item, Stock: cp.Stock, Reorderable: true}
+					cp = &Product{
+						Item:        cp.Item,
+						Stock:       cp.Stock,
+						Reorderable: true,
+					}
 				} else if !slices.Contains(categoryAccess, targetRO) {
 					break
 				}
@@ -172,6 +181,22 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 		}
 		filtered = tmp
 	}
+
+	slices.SortFunc(filtered, func(a, b *Product) int {
+		if a.Reorderable != b.Reorderable {
+			if a.Reorderable {
+				return -1
+			}
+			return 1
+		}
+		if a.Stock < b.Stock {
+			return -1
+		}
+		if a.Stock > b.Stock {
+			return 1
+		}
+		return 0
+	})
 
 	log.Infof("User %s has access to categories: %v, filtered inventory list has the following content: %v", claims.Username, categoryAccess, filtered)
 
