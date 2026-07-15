@@ -5,6 +5,9 @@ resources:
   - ldap-ui.yaml
   - authservice.yaml
 
+components:
+  - ldif
+
 configMapGenerator:
   - name: jwt-public-key
     files:
