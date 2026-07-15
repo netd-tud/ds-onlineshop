@@ -99,8 +99,9 @@ func computeHeavyLoad(iterations int) string {
 }
 
 type Product struct {
-	Item  *pb.Product
-	Stock int64
+	Item        *pb.Product
+	Stock       int64
+	Reorderable bool
 }
 
 func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Request) {
@@ -113,12 +114,20 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	claims, token, err := fe.claimsFromCookie(cookie)
+
+	if err != nil || !token.Valid {
+		fe.invalidateCookie(w, r, cookieAuth, err)
+		return
+	}
+	categoryAccess := shared.ClaimsToCategories(claims)
+
 	products, _ := fe.getProducts(r.Context())
 	inventoryProducts, _ := fe.listInventory(r.Context())
 
 	combinedMap := make(map[string]*Product, len(products)+len(inventoryProducts))
 	for _, product := range products {
-		combinedMap[product.GetId()] = &Product{Item: product, Stock: 0}
+		combinedMap[product.GetId()] = &Product{Item: product, Stock: 0, Reorderable: false}
 	}
 	for _, inventoryProduct := range inventoryProducts {
 		if cp, ok := combinedMap[inventoryProduct.GetId()]; ok {
@@ -133,41 +142,38 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 		combinedList = append(combinedList, cp)
 	}
 
-	claims, token, err := fe.claimsFromCookie(cookie)
-
-	if err != nil || !token.Valid {
-		fe.invalidateCookie(w, r, cookieAuth, err)
-		return
-	}
-
 	log.Infof("Claims: %s", claims)
 
-	categories := claimsToCategories(claims)
+	//categories := claimsToCategories(claims)
 
-	log.Infof("User %s has access to categories: %v, combined inventory list has the following content: %v", claims.Username, categories, combinedList)
+	log.Infof("User %s has access to categories: %v, combined inventory list has the following content: %v", claims.Username, categoryAccess, combinedList)
 
 	filtered := combinedList
-	if categories != nil {
+	if categoryAccess != nil {
 		tmp := make([]*Product, 0, len(combinedList))
 		for _, cp := range combinedList {
 			if cp == nil || cp.Item == nil {
 				continue
 			}
-			if slices.Contains(categories, "all") {
+			if slices.Contains(categoryAccess, shared.CategoryAccess{shared.CategoryAll, shared.PermissionWrite}) {
 				tmp = append(tmp, cp)
 				continue
 			}
 			for _, cat := range cp.Item.Categories {
-				if slices.Contains(categories, cat) {
-					tmp = append(tmp, cp)
+				targetW := shared.CategoryAccess{shared.Category(cat), shared.PermissionWrite}
+				targetRO := shared.CategoryAccess{shared.Category(cat), shared.PermissionRead}
+				if slices.Contains(categoryAccess, targetW) {
+					cp = &Product{Item: cp.Item, Stock: cp.Stock, Reorderable: true}
+				} else if !slices.Contains(categoryAccess, targetRO) {
 					break
 				}
+				tmp = append(tmp, cp)
 			}
 		}
 		filtered = tmp
 	}
 
-	log.Infof("User %s has access to categories: %v, filtered inventory list has the following content: %v", claims.Username, categories, filtered)
+	log.Infof("User %s has access to categories: %v, filtered inventory list has the following content: %v", claims.Username, categoryAccess, filtered)
 
 	if err := templates.ExecuteTemplate(w, "reorder", injectCommonTemplateData(r, map[string]interface{}{
 		"show_currency": false,

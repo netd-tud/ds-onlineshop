@@ -33,10 +33,12 @@
                     {{ template "inventoryStockProduct" . }}
                   </div>
 
+                  {{ if .Reorderable }}
                   <div class="reorder-controls">
                     <input type="number" name="quantity" class="form-control quantity-input" min="1" step="1" value="10">
                     <button type="submit" class="cymbal-button-primary">Reorder</button>
                   </div>
+                  {{ end }}
                 </div>
               </form>
             </div>
