@@ -22,6 +22,7 @@ secretGenerator:
 patches:
   - target:
       kind: Deployment
+      name: "^(inventoryservice|frontend)$"
     patch: |-
       apiVersion: apps/v1
       kind: Deployment
@@ -36,10 +37,10 @@ patches:
                 - name: JWT_PUBLIC_KEY_PATH
                   value: "/etc/auth/auth_public.pem"
                 volumeMounts:
-                  - name: jwt-key-volume
+                  - name: jwt-public-key-volume
                     mountPath: "/etc/auth"
                     readOnly: true
             volumes:
-              - name: jwt-key-volume
+              - name: jwt-public-key-volume
                 configMap:
                   name: jwt-public-key
