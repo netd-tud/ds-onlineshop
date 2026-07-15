@@ -109,7 +109,7 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 	cookie, err := r.Cookie(cookieAuth)
 	if err != nil {
 		log.Warn("unauthenticated access attempt to inventory page: missing cookie")
-		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		http.Redirect(w, r, baseUrl+"/login?next=/inventory", http.StatusFound)
 		return
 	}
 
@@ -266,14 +266,18 @@ func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request)
 
 func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
 	if r.Method == http.MethodGet {
-		log.Info("login page requested")
-		if err := templates.ExecuteTemplate(w, "login", injectCommonTemplateData(r, map[string]interface{}{})); err != nil {
+		nextTarget := r.URL.Query().Get("next")
+		if err := templates.ExecuteTemplate(w, "login", injectCommonTemplateData(r, map[string]interface{}{
+			"next": nextTarget,
+		})); err != nil {
 			log.Error(err)
 		}
 		return
 	}
 
+	nextTarget := r.FormValue("next")
 	// Handle POST
 	username := r.FormValue("uid")
 	password := r.FormValue("password")
@@ -288,6 +292,7 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		log.WithError(err).Warn("login failed")
 		if err := templates.ExecuteTemplate(w, "login", injectCommonTemplateData(r, map[string]interface{}{
 			"error": "Invalid username or password",
+			"next":  nextTarget,
 		})); err != nil {
 			log.Error(err)
 		}
@@ -306,8 +311,11 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		// Secure: true,
 	})
 
-	w.Header().Set("Location", baseUrl+"/")
-	w.WriteHeader(http.StatusFound)
+	if nextTarget == "" || !strings.HasPrefix(nextTarget, "/") || strings.HasPrefix(nextTarget, "//") {
+		nextTarget = "/"
+	}
+
+	http.Redirect(w, r, baseUrl+nextTarget, http.StatusFound)
 }
 
 func (fe *frontendServer) reorderHandler(w http.ResponseWriter, r *http.Request) {
