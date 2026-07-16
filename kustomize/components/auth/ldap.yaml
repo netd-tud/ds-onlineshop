@@ -64,10 +64,10 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/openldap/openldap-data
               name: ldap-storage
-              subPath: data-v59
+              subPath: data-v62
             - mountPath: /etc/openldap/slapd.d
               name: ldap-storage
-              subPath: config-v59
+              subPath: config-v62
             - mountPath: /var/lib/openldap/openldap-backups
               name: backups
             - mountPath: /var/custom-ldif/custom

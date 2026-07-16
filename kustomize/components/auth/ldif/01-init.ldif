@@ -48,8 +48,8 @@ uid: davidm
 cn: David Meyer
 givenName: David
 sn: Meyer
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}eld/2XvyU7rvTFR7NPENRqgLyzK0z+9X
+# ↑ password: davidm
 mail: davidm@mailbox.theonlineshop.de
 title: Tops Manager, View Footwear
 
@@ -61,8 +61,8 @@ uid: elenar
 cn: Elena Richter
 givenName: Elena
 sn: Richter
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}YmcddIGZ1EKNZ+t6s9p+m5XKH0SQPRe+
+# ↑ password: elenar
 mail: elenar@mailbox.theonlineshop.de
 title: Footwear Manager
 
@@ -74,8 +74,8 @@ uid: felixw
 cn: Felix Wagner
 givenName: Felix
 sn: Wagner
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}PXycVw2FO0pH1fV+4BDLy6/rX1zNZrRK
+# ↑ password: felixw
 mail: felixw@mailbox.theonlineshop.de
 title: Beauty Manager, View Hair
 
@@ -87,8 +87,8 @@ uid: ginah
 cn: Gina Hoffmann
 givenName: Gina
 sn: Hoffmann
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}AdYK4GrHvv3+bQoin/ghh1rUNvbPxs2O
+# ↑ password: ginah
 mail: ginah@mailbox.theonlineshop.de
 title: Hair Manager, View Beauty
 
@@ -100,8 +100,8 @@ uid: hassank
 cn: Hassan Klein
 givenName: Hassan
 sn: Klein
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}SLv/ExPhRNr3HFDikbVfACOTXeFPnf19
+# ↑ password: hassank
 mail: hassank@mailbox.theonlineshop.de
 title: Kitchen Manager, Decor View
 
@@ -113,8 +113,8 @@ uid: juliab
 cn: Julia Becker
 givenName: Julia
 sn: Becker
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}aqtp/fVNZ2tlAUaWRHVi2XNRGlwADqQW
+# ↑ password: juliab
 mail: juliab@mailbox.theonlineshop.de
 title: Decor Manager
 
@@ -126,8 +126,8 @@ uid: leonp
 cn: Leon Peters
 givenName: Leon
 sn: Peters
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}63R05IkBJJAN8n8++x7ZE5tsN1DR8KCY
+# ↑ password: leonp
 mail: leonp@mailbox.theonlineshop.de
 title: Home Manager
 
@@ -139,8 +139,8 @@ uid: isabellal
 cn: Isabella Lange
 givenName: Isabella
 sn: Lange
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}RZb1Zv7wWK+Sklu1BGgaE6PPjOIMtb4C
+# ↑ password: isabellal
 mail: isabellal@mailbox.theonlineshop.de
 title: Fashion Overlord
 
@@ -152,8 +152,8 @@ uid: markusw
 cn: Markus Wolf
 givenName: Markus
 sn: Wolf
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}6ekOKIWKb0YUUvnGOPhcgvoy0aZiALHK
+# ↑ password: markusw
 mail: markusw@mailbox.theonlineshop.de
 title: Living Overlord
 
@@ -165,8 +165,8 @@ uid: sarahn
 cn: Sarah Neumann
 givenName: Sarah
 sn: Neumann
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}PwVAfEg2r0x1A5hj3RDO260MYwhOLi77
+# ↑ password: sarahn
 mail: sarahn@mailbox.theonlineshop.de
 title: View Only (Beauty & Hair)
 
@@ -178,8 +178,8 @@ uid: klausw
 cn: Klaus Wagner
 givenName: Klaus
 sn: Wagner
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}tYnNRxN/siTRWXNEqvDWb+hcLqkFP5pB
+# ↑ password: klausw
 mail: klausw@mailbox.theonlineshop.de
 title: Accessories Manager
 
@@ -191,8 +191,8 @@ uid: timos
 cn: Timo Schulz
 givenName: Timo
 sn: Schulz
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-# ↑ password: password123
+userPassword: {SSHA}0sWNo4JiUyRWFgaUgXA2xsb3wO/P0GSX
+# ↑ password: timos
 mail: timos@mailbox.theonlineshop.de
 title: Clothing Manager
 
