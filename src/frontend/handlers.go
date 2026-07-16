@@ -219,24 +219,6 @@ func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*shared.UserCla
 	return claims, token, err
 }
 
-func claimsToCategories(claims *shared.UserClaims) []string {
-	log.Infof("User %s has the following roles: %v", claims.Username, claims.Roles)
-	var categories []string
-
-	for _, role := range claims.Roles {
-		switch role {
-		case "admin":
-			categories = append(categories, "all")
-		case "inventory-accessories-manage":
-			categories = append(categories, "accessories")
-		case "inventory-clothing-manage":
-			categories = append(categories, "clothing")
-		}
-	}
-
-	return categories
-}
-
 func (fe *frontendServer) invalidateCookie(w http.ResponseWriter, r *http.Request, cookieName string, err error) {
 	log.WithError(err).Warn("invalidating cookie")
 	http.SetCookie(w, &http.Cookie{
@@ -404,6 +386,8 @@ func (fe *frontendServer) accountHandler(w http.ResponseWriter, r *http.Request)
 		"Username": claims.Username,
 		"UserID":   claims.UserID,
 		"Roles":    claims.Roles,
+		"Name":     claims.Name,
+		"Title":    claims.Title,
 	}
 
 	if err := templates.ExecuteTemplate(w, "account", injectCommonTemplateData(r, templateData)); err != nil {

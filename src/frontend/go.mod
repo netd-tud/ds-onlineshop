@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.4
-	github.com/turt1z/microservices-demo/src/shared v0.0.0-20260715091515-425d812108a6
+	github.com/turt1z/microservices-demo/src/shared v0.0.0-20260716075959-15ab3ddc1a69
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.42.0
