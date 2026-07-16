@@ -177,6 +177,7 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 					break
 				}
 				tmp = append(tmp, cp)
+				break
 			}
 		}
 		filtered = tmp
