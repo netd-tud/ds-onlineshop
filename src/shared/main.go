@@ -26,6 +26,8 @@ type UserClaims struct {
 	UserID   string   `json:"user_id"`
 	Username string   `json:"username"`
 	Roles    []string `json:"roles"`
+	Title    string   `json:"title"`
+	Name     string   `json:"name"`
 	jwt.RegisteredClaims
 }
 
@@ -57,7 +59,7 @@ type CategoryAccess struct {
 }
 
 var CategoriesForClaims = map[string]CategoryAccess{
-	"admin":                        {CategoryAll, PermissionWrite},
+	"admins":                       {CategoryAll, PermissionWrite},
 	"inventory-accessories-view":   {CategoryAccessories, PermissionRead},
 	"inventory-accessories-manage": {CategoryAccessories, PermissionWrite},
 	"inventory-clothing-view":      {CategoryClothing, PermissionRead},
