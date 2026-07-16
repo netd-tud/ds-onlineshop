@@ -17,13 +17,6 @@ objectClass: organizationalUnit
 objectClass: top
 ou: people
 
-# Create everybody group
-dn: cn=everybody,ou=groups,dc=theonlineshop,dc=com
-objectClass: top
-objectClass: groupOfUniqueNames
-cn: everybody
-uniqueMember: uid=admin,ou=people,dc=theonlineshop,dc=com
-
 # Create admins group
 dn: cn=admins,ou=groups,dc=theonlineshop,dc=com
 objectClass: top
@@ -43,60 +36,295 @@ userPassword: {SSHA}kWfjw33WbgMUgcixU0uY1wTqKCRLF75U
 # ↑ password: admin
 mail: admin@mailbox.theonlineshop.de
 
-# Departments/permission groups
-dn: cn=inventory-clothing-view,ou=groups,dc=theonlineshop,dc=com
-objectClass: top
-objectClass: groupOfUniqueNames
-cn: inventory-clothing-view
-uniqueMember: uid=carolf,ou=people,dc=theonlineshop,dc=com
+# ==========================================
+# Users
+# ==========================================
 
-dn: cn=inventory-clothing-manage,ou=groups,dc=theonlineshop,dc=com
-objectClass: top
-objectClass: groupOfUniqueNames
-cn: inventory-clothing-manage
-uniqueMember: uid=alicew,ou=people,dc=theonlineshop,dc=com
-uniqueMember: uid=carolf,ou=people,dc=theonlineshop,dc=com
+# 1. Single Department: Tops (Can view Footwear)
+dn: uid=davidm,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: davidm
+cn: David Meyer
+givenName: David
+sn: Meyer
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: davidm@mailbox.theonlineshop.de
+title: Tops Manager, View Footwear
+
+# 2. Single Department: Footwear (Strictly isolated)
+dn: uid=elenar,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: elenar
+cn: Elena Richter
+givenName: Elena
+sn: Richter
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: elenar@mailbox.theonlineshop.de
+title: Footwear Manager
+
+# 3. Single Department: Beauty (Can view Hair)
+dn: uid=felixw,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: felixw
+cn: Felix Wagner
+givenName: Felix
+sn: Wagner
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: felixw@mailbox.theonlineshop.de
+title: Beauty Manager, View Hair
+
+# 4. Single Department: Hair (Can view Beauty)
+dn: uid=ginah,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: ginah
+cn: Gina Hoffmann
+givenName: Gina
+sn: Hoffmann
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: ginah@mailbox.theonlineshop.de
+title: Hair Manager, View Beauty
+
+# 5. Single Department: Kitchen (Can view Decor)
+dn: uid=hassank,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: hassank
+cn: Hassan Klein
+givenName: Hassan
+sn: Klein
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: hassank@mailbox.theonlineshop.de
+title: Kitchen Manager, Decor View
+
+# 6. Single Department: Decor (Can view Kitchen)
+dn: uid=juliab,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: juliab
+cn: Julia Becker
+givenName: Julia
+sn: Becker
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: juliab@mailbox.theonlineshop.de
+title: Decor Manager
+
+# 7. Single Department: Home (Strictly isolated)
+dn: uid=leonp,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: leonp
+cn: Leon Peters
+givenName: Leon
+sn: Peters
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: leonp@mailbox.theonlineshop.de
+title: Home Manager
+
+# 8. Multi-Department: Fashion Overlord (Clothing, Tops, Accessories, Footwear)
+dn: uid=isabellal,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: isabellal
+cn: Isabella Lange
+givenName: Isabella
+sn: Lange
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: isabellal@mailbox.theonlineshop.de
+title: Fashion Overlord
+
+# 9. Multi-Department: Living Overlord (Decor, Kitchen, Home)
+dn: uid=markusw,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: markusw
+cn: Markus Wolf
+givenName: Markus
+sn: Wolf
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: markusw@mailbox.theonlineshop.de
+title: Living Overlord
+
+# 10. View-Only Auditor: Beauty & Hair (No manage rights anywhere)
+dn: uid=sarahn,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: sarahn
+cn: Sarah Neumann
+givenName: Sarah
+sn: Neumann
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: sarahn@mailbox.theonlineshop.de
+title: View Only (Beauty & Hair)
+
+# 11. Single Department: Accessories (Manage)
+dn: uid=klausw,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: klausw
+cn: Klaus Wagner
+givenName: Klaus
+sn: Wagner
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: klausw@mailbox.theonlineshop.de
+title: Accessories Manager
+
+# 14. Single Department: Clothing (Manage)
+dn: uid=timos,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: timos
+cn: Timo Schulz
+givenName: Timo
+sn: Schulz
+userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
+# ↑ password: password123
+mail: timos@mailbox.theonlineshop.de
+title: Clothing Manager
+
+# ==========================================
+# Groups
+# ==========================================
 
 dn: cn=inventory-accessories-view,ou=groups,dc=theonlineshop,dc=com
 objectClass: top
 objectClass: groupOfUniqueNames
 cn: inventory-accessories-view
-uniqueMember: uid=bobs,ou=people,dc=theonlineshop,dc=com
-uniqueMember: uid=carolf,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=klausw,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
 
 dn: cn=inventory-accessories-manage,ou=groups,dc=theonlineshop,dc=com
 objectClass: top
 objectClass: groupOfUniqueNames
 cn: inventory-accessories-manage
-uniqueMember: uid=bobs,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=klausw,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
 
-# Users
-dn: uid=alicew,ou=people,dc=theonlineshop,dc=com
-objectClass: person
-objectClass: inetOrgPerson
-uid: alicew
-cn: Alice Weber
-givenName: Alice
-sn: Weber
-userPassword: {SSHA}aHFNAnYwzJIWqCQO8xh1X1Hvm+QznCvw
-mail: alicew@mailbox.theonlineshop.de
+dn: cn=inventory-clothing-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-clothing-view
+uniqueMember: uid=timos,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
 
-dn: uid=bobs,ou=people,dc=theonlineshop,dc=com
-objectClass: person
-objectClass: inetOrgPerson
-uid: bobs
-cn: Bob Schmidt
-givenName: Bob
-sn: Schmidt
-userPassword: {SSHA}c8akea7QSW1FxaSYg2dy2sSLXbKEXn5K
-mail: bobs@mailbox.theonlineshop.de
+dn: cn=inventory-clothing-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-clothing-manage
+uniqueMember: uid=timos,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
 
-dn: uid=carolf,ou=people,dc=theonlineshop,dc=com
-objectClass: person
-objectClass: inetOrgPerson
-uid: carolf
-cn: Carol Fischer
-givenName: Carol
-sn: Fischer
-userPassword: {SSHA}ffLXx7vXZBo5AEliGovD+IlrlHL7egKc
-mail: carolf@mailbox.theonlineshop.de
+dn: cn=inventory-tops-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-tops-view
+uniqueMember: uid=davidm,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-tops-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-tops-manage
+uniqueMember: uid=davidm,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-footwear-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-footwear-view
+uniqueMember: uid=elenar,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=davidm,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-footwear-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-footwear-manage
+uniqueMember: uid=elenar,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-beauty-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-beauty-view
+uniqueMember: uid=felixw,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=ginah,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=sarahn,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-beauty-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-beauty-manage
+uniqueMember: uid=felixw,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-hair-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-hair-view
+uniqueMember: uid=ginah,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=felixw,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=sarahn,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-hair-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-hair-manage
+uniqueMember: uid=ginah,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-kitchen-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-kitchen-view
+uniqueMember: uid=hassank,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=juliab,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-kitchen-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-kitchen-manage
+uniqueMember: uid=hassank,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-decor-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-decor-view
+uniqueMember: uid=juliab,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=hassank,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-decor-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-decor-manage
+uniqueMember: uid=juliab,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-home-view,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-home-view
+uniqueMember: uid=leonp,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=inventory-home-manage,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: inventory-home-manage
+uniqueMember: uid=leonp,ou=people,dc=theonlineshop,dc=com
+uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
