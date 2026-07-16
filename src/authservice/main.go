@@ -25,18 +25,6 @@ type AuthServer struct {
 	port string
 }
 
-type UserDetails struct {
-	DN    string
-	Roles []string
-}
-
-type UserClaims struct {
-	UserID   string   `json:"user_id"`
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
-	jwt.RegisteredClaims
-}
-
 func main() {
 	var privateKeyPath string
 	mustMapEnv(&privateKeyPath, "JWT_PRIVATE_KEY_PATH")

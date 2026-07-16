@@ -10,10 +10,18 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	pb "github.com/turt1z/microservices-demo/src/authservice/genproto"
+	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 )
+
+type UserDetails struct {
+	DN    string
+	Roles []string
+	Title string
+	Name  string
+}
 
 var log *logrus.Logger
 
@@ -57,10 +65,12 @@ func (as *AuthServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 		return nil, status.Error(codes.Unauthenticated, "invalid username or password")
 	}
 
-	claims := &UserClaims{
+	claims := &shared.UserClaims{
 		UserID:   req.Username,
 		Username: req.Username,
 		Roles:    userDetails.Roles,
+		Title:    userDetails.Title,
+		Name:     userDetails.Name,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt: jwt.NewNumericDate(time.Now()),
 			Issuer:   "auth-service.theonlineshop.com",
@@ -100,7 +110,7 @@ func (s *AuthServer) lookupUser(username string) (*UserDetails, error) {
 		0,
 		false,
 		fmt.Sprintf("(uid=%s)", ldap.EscapeFilter(username)),
-		[]string{"dn", "memberOf"},
+		[]string{"dn", "title", "cn"},
 		nil,
 	)
 	log.Infof("Executing search request: %s", searchRequest)
@@ -129,6 +139,8 @@ func (s *AuthServer) lookupUser(username string) (*UserDetails, error) {
 	return &UserDetails{
 		DN:    userEntry.DN,
 		Roles: roles,
+		Title: userEntry.GetAttributeValue("title"),
+		Name:  userEntry.GetAttributeValue("cn"),
 	}, nil
 }
 
