@@ -1,0 +1,81 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kafka
+resources:
+  - namespace.yaml
+  - https://github.com/strimzi/strimzi-kafka-operator/releases/download/1.1.0/strimzi-cluster-operator-1.1.0.yaml
+patches:
+  - target:
+      kind: RoleBinding
+      name: strimzi-cluster-operator-leader-election
+    patch: |
+      - op: replace
+        path: /subjects/0/namespace
+        value: kafka
+  - target:
+      kind: RoleBinding
+      name: strimzi-cluster-operator
+    patch: |
+      - op: replace
+        path: /subjects/0/namespace
+        value: kafka
+  - target:
+      kind: RoleBinding
+      name: strimzi-cluster-operator-entity-operator-delegation
+    patch: |
+      - op: replace
+        path: /subjects/0/namespace
+        value: kafka
+  - target:
+      kind: RoleBinding
+      name: strimzi-cluster-operator-watched
+    patch: |
+      - op: replace
+        path: /subjects/0/namespace
+        value: kafka
+  - target:
+      kind: ClusterRoleBinding
+      name: strimzi-cluster-operator
+    patch: |
+      - op: replace
+        path: /subjects/0/namespace
+        value: kafka
+  - target:
+      kind: ClusterRoleBinding
+      name: strimzi-cluster-operator-kafka-broker-delegation
+    patch: |
+      - op: replace
+        path: /subjects/0/namespace
+        value: kafka
+  - target:
+      kind: ClusterRoleBinding
+      name: strimzi-cluster-operator-kafka-client-delegation
+    patch: |
+      - op: replace
+        path: /subjects/0/namespace
+        value: kafka
+
+  - target:
+      kind: Deployment
+      name: strimzi-cluster-operator
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: strimzi-cluster-operator
+      spec:
+        template:
+          spec:
+            tolerations:
+              - key: dedicated
+                operator: Equal
+                value: kafka
+                effect: NoSchedule
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: workload
+                          operator: In
+                          values: ["kafka"]
