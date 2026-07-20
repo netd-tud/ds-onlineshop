@@ -36,6 +36,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
+	"github.com/turt1z/microservices-demo/src/frontend/internal/analytics"
 	"github.com/turt1z/microservices-demo/src/frontend/money"
 	"github.com/turt1z/microservices-demo/src/frontend/validator"
 	shared "github.com/turt1z/microservices-demo/src/shared"
@@ -562,6 +563,12 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 			fmt.Println("Failed to obtain product's packaging info:", err)
 		}
 	}
+
+	fe.analyticsPublisher.Publish(analytics.ProductEvent{
+		EventType: analytics.EventView,
+		SKU:       p.GetId(),
+		SessionID: sessionID(r),
+	})
 
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
 		"ad":              fe.chooseAd(r.Context(), p.Categories, log),

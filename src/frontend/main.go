@@ -22,6 +22,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/turt1z/microservices-demo/src/frontend/internal/analytics"
+
 	"cloud.google.com/go/profiler"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
@@ -97,6 +99,8 @@ type frontendServer struct {
 	authSvcConn *grpc.ClientConn
 
 	publicKey *rsa.PublicKey
+
+	analyticsPublisher *analytics.Publisher
 }
 
 func main() {
@@ -202,6 +206,14 @@ func main() {
 	r.HandleFunc(baseUrl+"/account", svc.accountHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/inventory", svc.inventoryHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/reorder", svc.reorderHandler).Methods(http.MethodPost)
+
+	analyticsPub := analytics.NewPublisher("frontend-service")
+	defer func() {
+		if err := analyticsPub.Close(); err != nil {
+			log.Printf("failed to close analytics publisher: %v", err)
+		}
+	}()
+	svc.analyticsPublisher = analyticsPub
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}     // add logging
