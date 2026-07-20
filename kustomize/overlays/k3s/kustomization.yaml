@@ -16,6 +16,7 @@ components:
 - ../../components/warehousemanagement
 - ../../components/dtm
 - ../../components/auth
+- ../../components/kafka
 
 patches:
   - target:
