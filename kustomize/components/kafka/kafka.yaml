@@ -1,0 +1,38 @@
+apiVersion: kafka.strimzi.io/v1
+kind: Kafka
+metadata:
+  name: analytics-kafka
+  namespace: kafka
+spec:
+  kafka:
+    version: 4.3.0
+    metadataVersion: "4.3"
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+    template:
+      pod:
+        tolerations:
+          - key: dedicated
+            operator: Equal
+            value: kafka
+            effect: NoSchedule
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: workload
+                      operator: In
+                      values: ["kafka"]
