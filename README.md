@@ -18,8 +18,7 @@ If you’re using this demo, please **★Star** this repository to show your int
 **Online Boutique** is composed of 11 microservices written in different
 languages that talk to each other over gRPC.
 
-[![Architecture of
-microservices](/docs/img/architecture-diagram-deployment.svg)](/docs/img/architecture-diagram-deployment.svg)
+[![Architecture of microservices](/docs/img/architecture-diagram-deployment.png)](/docs/img/architecture-diagram-deployment.png)
 
 Find **Protocol Buffers Descriptions** at the [`./protos` directory](/protos).
 
