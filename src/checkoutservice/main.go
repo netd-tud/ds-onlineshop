@@ -23,6 +23,7 @@ import (
 
 	"cloud.google.com/go/profiler"
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
+	"github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/internal/analytics"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sirupsen/logrus"
 	shared "github.com/turt1z/microservices-demo/src/shared"
@@ -81,6 +82,8 @@ type checkoutService struct {
 
 	mqttBrokerAddr string
 	mqttClient     mqtt.Client
+
+	analyticsPublisher *analytics.Publisher
 }
 
 func main() {
@@ -124,6 +127,14 @@ func main() {
 	shared.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	shared.MustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
 	shared.MustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
+
+	analyticsPub := analytics.NewPublisher("checkout-service")
+	defer func() {
+		if err := analyticsPub.Close(); err != nil {
+			log.Printf("failed to close analytics publisher: %v", err)
+		}
+	}()
+	svc.analyticsPublisher = analyticsPub
 
 	log.Infof("service config: %+v", svc)
 

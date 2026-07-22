@@ -660,7 +660,6 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 
 	sID := sessionID(r)
-	log.Debugf("productHandler: sessionID: %s", sID)
 	if sID != "" {
 		ctx = metadata.AppendToOutgoingContext(r.Context(), "session-id", sID)
 	}
@@ -789,8 +788,14 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	ctx := r.Context()
+	sID := sessionID(r)
+	if sID != "" {
+		ctx = metadata.AppendToOutgoingContext(r.Context(), "session-id", sID)
+	}
+
 	order, err := pb.NewCheckoutServiceClient(fe.checkoutSvcConn).
-		PlaceOrder(r.Context(), &pb.PlaceOrderRequest{
+		PlaceOrder(ctx, &pb.PlaceOrderRequest{
 			Email: payload.Email,
 			CreditCard: &pb.CreditCardInfo{
 				CreditCardNumber:          payload.CcNumber,
@@ -813,7 +818,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 	log.WithField("order", order.GetOrder().GetOrderId()).Info("order placed")
 
 	order.GetOrder().GetItems()
-	recommendations, _ := fe.getRecommendations(r.Context(), sessionID(r), nil)
+	recommendations, _ := fe.getRecommendations(ctx, sessionID(r), nil)
 
 	totalPaid := *order.GetOrder().GetShippingCost()
 	for _, v := range order.GetOrder().GetItems() {
@@ -821,7 +826,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		totalPaid = money.Must(money.Sum(totalPaid, multPrice))
 	}
 
-	currencies, err := fe.getCurrencies(r.Context())
+	currencies, err := fe.getCurrencies(ctx)
 	if err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
 		return

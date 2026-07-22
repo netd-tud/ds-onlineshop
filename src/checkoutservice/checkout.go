@@ -20,11 +20,13 @@ import (
 	"fmt"
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
+	"github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/internal/analytics"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/money"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -38,6 +40,13 @@ func (cs *checkoutService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.H
 
 func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q", req.UserId, req.UserCurrency)
+
+	var sID string
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if vals := md.Get("session-id"); len(vals) > 0 {
+			sID = vals[0]
+		}
+	}
 
 	orderID, err := uuid.NewUUID()
 	if err != nil {
@@ -77,6 +86,15 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 		ShippingCost:       prep.shippingCostLocalized,
 		ShippingAddress:    req.Address,
 		Items:              prep.orderItems,
+	}
+
+	for _, item := range orderResult.Items {
+		cs.analyticsPublisher.Publish(analytics.ProductEvent{
+			EventType: analytics.EventOrder,
+			SessionID: sID,
+			SKU:       item.GetItem().GetProductId(),
+			OrderID:   orderResult.OrderId,
+		})
 	}
 
 	if err := cs.sendOrderConfirmation(ctx, req.Email, orderResult); err != nil {
