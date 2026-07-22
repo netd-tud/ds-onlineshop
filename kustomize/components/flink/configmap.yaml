@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flink-config
+  namespace: flink
+  labels:
+    app: flink
+data:
+  FLINK_PROPERTIES: |
+    jobmanager.rpc.address: flink-jobmanager
+    jobmanager.rpc.port: 6123
+    jobmanager.bind-host: 0.0.0.0
+    jobmanager.memory.process.size: 1200m
+    taskmanager.bind-host: 0.0.0.0
+    taskmanager.numberOfTaskSlots: 2
+    taskmanager.memory.process.size: 2600m
+    parallelism.default: 2
+    rest.address: flink-jobmanager
+    rest.bind-address: 0.0.0.0

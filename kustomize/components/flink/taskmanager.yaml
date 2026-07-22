@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+  namespace: flink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink
+      component: taskmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: taskmanager
+    spec:
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: flink
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workload
+                    operator: In
+                    values: ["flink"]
+      containers:
+        - name: taskmanager
+          image: flink:2.3.0
+          args: ["taskmanager"]
+          ports:
+            - name: rpc
+              containerPort: 6122
+          envFrom:
+            - configMapRef:
+                name: flink-config
+          resources:
+            requests:
+              cpu: 800m
+              memory: 1500Mi
+            limits:
+              cpu: 1200m
+              memory: 2600Mi
+      volumes:
+        - name: flink-config
+          configMap:
+            name: flink-config

@@ -17,6 +17,7 @@ components:
 - ../../components/dtm
 - ../../components/auth
 - ../../components/kafka
+- ../../components/flink
 
 patches:
   - target:

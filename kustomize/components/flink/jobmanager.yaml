@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-jobmanager
+  namespace: flink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink
+      component: jobmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: jobmanager
+    spec:
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: flink
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workload
+                    operator: In
+                    values: ["flink"]
+      containers:
+        - name: jobmanager
+          image: flink:2.3.0
+          args: ["jobmanager"]
+          ports:
+            - name: rpc
+              containerPort: 6123
+            - name: blob
+              containerPort: 6124
+            - name: ui
+              containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: flink-config
+          resources:
+            requests:
+              cpu: 300m
+              memory: 700Mi
+            limits:
+              cpu: 500m
+              memory: 1300Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flink-jobmanager
+  namespace: flink
+spec:
+  selector:
+    app: flink
+    component: jobmanager
+  ports:
+    - name: rpc
+      port: 6123
+    - name: blob
+      port: 6124
+    - name: ui
+      port: 8081
