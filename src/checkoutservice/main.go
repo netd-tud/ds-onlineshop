@@ -83,7 +83,8 @@ type checkoutService struct {
 	mqttBrokerAddr string
 	mqttClient     mqtt.Client
 
-	analyticsPublisher *analytics.Publisher
+	analyticsProductsPublisher *analytics.Publisher
+	analyticsOrderPublisher    *analytics.Publisher
 }
 
 func main() {
@@ -128,13 +129,21 @@ func main() {
 	shared.MustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
 	shared.MustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
 
-	analyticsPub := analytics.NewPublisher("checkout-service")
+	analyticsProductsPub := analytics.NewPublisher("checkout-service", "product-events")
 	defer func() {
-		if err := analyticsPub.Close(); err != nil {
+		if err := analyticsProductsPub.Close(); err != nil {
 			log.Printf("failed to close analytics publisher: %v", err)
 		}
 	}()
-	svc.analyticsPublisher = analyticsPub
+	svc.analyticsProductsPublisher = analyticsProductsPub
+
+	analyticsOrderPub := analytics.NewPublisher("checkout-service", "order-events")
+	defer func() {
+		if err := analyticsOrderPub.Close(); err != nil {
+			log.Printf("failed to close analytics publisher: %v", err)
+		}
+	}()
+	svc.analyticsOrderPublisher = analyticsOrderPub
 
 	log.Infof("service config: %+v", svc)
 

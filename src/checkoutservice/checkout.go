@@ -53,6 +53,12 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 		return nil, status.Errorf(codes.Internal, "failed to generate order uuid")
 	}
 
+	cs.analyticsOrderPublisher.Publish(analytics.OrderEvent{
+		EventType: analytics.EventCreate,
+		SessionID: sID,
+		OrderID:   orderID.String(),
+	})
+
 	prep, err := cs.prepareOrderItemsAndShippingQuoteFromCart(ctx, req.UserId, req.UserCurrency, req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -89,13 +95,21 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 	}
 
 	for _, item := range orderResult.Items {
-		cs.analyticsPublisher.Publish(analytics.ProductEvent{
+		cs.analyticsProductsPublisher.Publish(analytics.ProductEvent{
 			EventType: analytics.EventOrder,
 			SessionID: sID,
 			SKU:       item.GetItem().GetProductId(),
+			Price:     *item.GetCost(),
 			OrderID:   orderResult.OrderId,
 		})
 	}
+
+	cs.analyticsOrderPublisher.Publish(analytics.OrderEvent{
+		EventType: analytics.EventComplete,
+		SessionID: sID,
+		OrderID:   orderResult.OrderId,
+		Price:     total,
+	})
 
 	if err := cs.sendOrderConfirmation(ctx, req.Email, orderResult); err != nil {
 		log.Warnf("failed to send order confirmation to %q: %+v", req.Email, err)
