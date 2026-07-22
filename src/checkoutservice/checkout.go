@@ -100,6 +100,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 			SessionID: sID,
 			SKU:       item.GetItem().GetProductId(),
 			Price:     *item.GetCost(),
+			Qty:       item.GetItem().GetQuantity(),
 			OrderID:   orderResult.OrderId,
 		})
 	}
