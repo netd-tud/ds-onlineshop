@@ -18,6 +18,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using cartservice.cartstore;
 using Hipstershop;
+using cartservice.analytics;
 
 namespace cartservice.services
 {
@@ -25,15 +26,26 @@ namespace cartservice.services
     {
         private readonly static Empty Empty = new Empty();
         private readonly ICartStore _cartStore;
+        private readonly AnalyticsPublisher _analyticsPublisher;
 
-        public CartService(ICartStore cartStore)
+        public CartService(ICartStore cartStore, AnalyticsPublisher analyticsPublisher)
         {
             _cartStore = cartStore;
+            _analyticsPublisher = analyticsPublisher;
         }
 
         public async override Task<Empty> AddItem(AddItemRequest request, ServerCallContext context)
         {
+            var sessionId = context.RequestHeaders.GetValue("session-id") ?? string.Empty;
+
             await _cartStore.AddItemAsync(request.UserId, request.Item.ProductId, request.Item.Quantity);
+
+            _analyticsPublisher.Publish(new ProductEvent {
+                EventType = "ATC",
+                Sku = request.Item.ProductId,
+                Qty = request.Item.Quantity,
+                SessionId = sessionId
+            });
             return Empty;
         }
 

@@ -40,6 +40,7 @@ import (
 	"github.com/turt1z/microservices-demo/src/frontend/money"
 	"github.com/turt1z/microservices-demo/src/frontend/validator"
 	shared "github.com/turt1z/microservices-demo/src/shared"
+	"google.golang.org/grpc/metadata"
 )
 
 type platformDetails struct {
@@ -656,7 +657,15 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := fe.insertCart(r.Context(), sessionID(r), p.GetId(), int32(payload.Quantity)); err != nil {
+	ctx := r.Context()
+
+	sID := sessionID(r)
+	log.Debugf("productHandler: sessionID: %s", sID)
+	if sID != "" {
+		ctx = metadata.AppendToOutgoingContext(r.Context(), "session-id", sID)
+	}
+
+	if err := fe.insertCart(ctx, sessionID(r), p.GetId(), int32(payload.Quantity)); err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to add to cart"), http.StatusInternalServerError)
 		return
 	}
