@@ -5,3 +5,10 @@ resources:
   - configmap.yaml
   - jobmanager.yaml
   - taskmanager.yaml
+  - sql-runner-job.yaml
+
+configMapGenerator:
+  - name: flink-sql-scripts
+    namespace: flink
+    files:
+      - sql/01_product_analytics.sql

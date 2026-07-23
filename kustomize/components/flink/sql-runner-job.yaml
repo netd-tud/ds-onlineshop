@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flink-sql-runner
+  namespace: flink
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: flink
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: workload
+                    operator: In
+                    values: [ "flink" ]
+      initContainers:
+        - name: wait-and-setup
+          image: curlimages/curl:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Fetching Kafka SQL Connector..."
+              curl -sL https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/5.0.0-2.2/flink-sql-connector-kafka-5.0.0-2.2.jar -o /flink-lib/flink-sql-connector-kafka.jar
+
+              echo "Waiting for Flink JobManager REST API..."
+              until curl -s http://flink-jobmanager:8081/v1/overview > /dev/null; do
+                sleep 2
+              done
+              echo "JobManager is ready!"
+          volumeMounts:
+            - name: flink-lib
+              mountPath: /flink-lib
+      containers:
+        - name: sql-client
+          image: flink:2.3.0
+          command: ["/docker-entrypoint.sh"]
+          args:
+            - /bin/bash
+            - -c
+            - |
+              echo "Submitting Flink SQL script..."
+              /opt/flink/bin/sql-client.sh \
+                -j /flink-lib/flink-sql-connector-kafka.jar \
+                -f /opt/flink/sql/01_product_analytics.sql
+          envFrom:
+            - configMapRef:
+                name: flink-config
+          volumeMounts:
+            - name: flink-sql-scripts
+              mountPath: /opt/flink/sql
+            - name: flink-lib
+              mountPath: /flink-lib
+      volumes:
+        - name: flink-lib
+          emptyDir: {}
+        - name: flink-sql-scripts
+          configMap:
+            name: flink-sql-scripts
