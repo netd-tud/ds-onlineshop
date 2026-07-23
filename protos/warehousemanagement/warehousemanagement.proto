@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package warehouse.management;
 
-option go_package = "github.com/turt1z/microservices-demo/proto/demo";
+option go_package = "github.com/turt1z/microservices-demo/proto/warehousemanagement/warehousemanagementpb";
 
 import "demo.proto";
 

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth;
 
-option go_package = "github.com/turt1z/microservices-demo/proto/demo";
+option go_package = "github.com/turt1z/microservices-demo/proto/auth;authpb";
 
 
 // ------------Authentication and authorization services------------------
