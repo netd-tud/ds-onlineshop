@@ -27,14 +27,19 @@ CREATE TABLE IF NOT EXISTS product_events (
 CREATE TABLE IF NOT EXISTS product_events_aggregated (
   sku STRING,
   total_units_bought INT,
-  ts TIMESTAMP(3)
+  window_start TIMESTAMP(3)
 ) WITH (
   'connector' = 'print'
 );
+
+-- Continuous Aggregation Job
 INSERT INTO product_events_aggregated
 SELECT
   sku,
-  qty AS total_units_bought,
-  CAST(event_time AS TIMESTAMP(3)) AS ts
+  SUM(qty) AS total_units_bought,
+  TUMBLE_START(event_time, INTERVAL '1' MINUTE) AS window_start
 FROM product_events
-WHERE event_type = 'ORDER';
+WHERE event_type = 'ORDER'
+GROUP BY
+  sku,
+  TUMBLE(event_time, INTERVAL '1' MINUTE);
