@@ -29,7 +29,8 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/shippingservice/genproto"
+	commonpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
+	shippingpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/shipping"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -89,7 +90,7 @@ func main() {
 		srv = grpc.NewServer()
 	}
 	svc := &server{}
-	pb.RegisterShippingServiceServer(srv, svc)
+	shippingpb.RegisterShippingServiceServer(srv, svc)
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthcheck)
 	log.Infof("Shipping Service listening on port %s", port)
@@ -103,7 +104,7 @@ func main() {
 
 // server controls RPC service responses.
 type server struct {
-	pb.UnimplementedShippingServiceServer
+	shippingpb.UnimplementedShippingServiceServer
 }
 
 // Check is for health checking.
@@ -116,7 +117,7 @@ func (s *server) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_Watc
 }
 
 // GetQuote produces a shipping quote (cost) in USD.
-func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQuoteResponse, error) {
+func (s *server) GetQuote(ctx context.Context, in *shippingpb.GetQuoteRequest) (*shippingpb.GetQuoteResponse, error) {
 	log.Info("[GetQuote] received request")
 	defer log.Info("[GetQuote] completed request")
 
@@ -128,8 +129,8 @@ func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQ
 	quote := CreateQuoteFromCount(count)
 
 	// 2. Generate a response.
-	return &pb.GetQuoteResponse{
-		CostUsd: &pb.Money{
+	return &shippingpb.GetQuoteResponse{
+		CostUsd: &commonpb.Money{
 			CurrencyCode: "USD",
 			Units:        int64(quote.Dollars),
 			Nanos:        int32(quote.Cents * 10000000)},
@@ -139,7 +140,7 @@ func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQ
 
 // ShipOrder mocks that the requested items will be shipped.
 // It supplies a tracking ID for notional lookup of shipment delivery status.
-func (s *server) ShipOrder(ctx context.Context, in *pb.ShipOrderRequest) (*pb.ShipOrderResponse, error) {
+func (s *server) ShipOrder(ctx context.Context, in *shippingpb.ShipOrderRequest) (*shippingpb.ShipOrderResponse, error) {
 	log.Info("[ShipOrder] received request")
 	defer log.Info("[ShipOrder] completed request")
 	// 1. Create a Tracking ID
@@ -147,7 +148,7 @@ func (s *server) ShipOrder(ctx context.Context, in *pb.ShipOrderRequest) (*pb.Sh
 	id := CreateTrackingId(baseAddress)
 
 	// 2. Generate a response.
-	return &pb.ShipOrderResponse{
+	return &shippingpb.ShipOrderResponse{
 		TrackingId: id,
 	}, nil
 }
