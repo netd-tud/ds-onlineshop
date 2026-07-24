@@ -28,8 +28,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateErr
 from google.api_core.exceptions import GoogleAPICallError
 from google.auth.exceptions import DefaultCredentialsError
 
-import demo_pb2
-import demo_pb2_grpc
+import proto.email.email_pb2_grpc as email_pb_grpc
+import proto.common.common_pb2 as common_pb
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 
@@ -52,7 +52,7 @@ env = Environment(
 )
 template = env.get_template('confirmation.html')
 
-class BaseEmailService(demo_pb2_grpc.EmailServiceServicer):
+class BaseEmailService(email_pb_grpc.EmailServiceServicer):
   def Check(self, request, context):
     return health_pb2.HealthCheckResponse(
       status=health_pb2.HealthCheckResponse.SERVING)
@@ -96,7 +96,7 @@ class EmailService(BaseEmailService):
       context.set_details("An error occurred when preparing the confirmation mail.")
       logger.error(err.message)
       context.set_code(grpc.StatusCode.INTERNAL)
-      return demo_pb2.Empty()
+      return common_pb.Empty()
 
     try:
       EmailService.send_email(self.client, email, confirmation)
@@ -104,14 +104,14 @@ class EmailService(BaseEmailService):
       context.set_details("An error occurred when sending the email.")
       print(err.message)
       context.set_code(grpc.StatusCode.INTERNAL)
-      return demo_pb2.Empty()
+      return common_pb.Empty()
 
-    return demo_pb2.Empty()
+    return common_pb.Empty()
 
 class DummyEmailService(BaseEmailService):
   def SendOrderConfirmation(self, request, context):
     logger.info('A request to send order confirmation email to {} has been received via gRPC.'.format(request.email))
-    return demo_pb2.Empty()
+    return common_pb.Empty()
 
 class HealthCheck():
   def Check(self, request, context):
@@ -126,7 +126,7 @@ def start(dummy_mode):
   else:
     raise Exception('non-dummy mode not implemented yet')
 
-  demo_pb2_grpc.add_EmailServiceServicer_to_server(service, server)
+  email_pb_grpc.add_EmailServiceServicer_to_server(service, server)
   health_pb2_grpc.add_HealthServicer_to_server(service, server)
 
   port = os.environ.get('PORT', "8080")
