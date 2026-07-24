@@ -7,14 +7,14 @@ import (
 	"os"
 
 	"github.com/golang-jwt/jwt/v5"
-	pb "github.com/turt1z/microservices-demo/src/authservice/genproto"
+	authpb "github.com/turt1z/microservices-demo/src/authservice/genproto/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 type AuthServer struct {
-	pb.UnimplementedAuthServiceServer
+	authpb.UnimplementedAuthServiceServer
 	privateKey *rsa.PrivateKey
 
 	ldapURL   string
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	srv := grpc.NewServer()
-	pb.RegisterAuthServiceServer(srv, svc)
+	authpb.RegisterAuthServiceServer(srv, svc)
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthcheck)
 

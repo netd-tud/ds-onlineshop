@@ -9,7 +9,7 @@ import (
 	"github.com/go-ldap/ldap/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
-	pb "github.com/turt1z/microservices-demo/src/authservice/genproto"
+	authpb "github.com/turt1z/microservices-demo/src/authservice/genproto/auth"
 	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -47,7 +47,7 @@ func (as *AuthServer) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
-func (as *AuthServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (as *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	if req.Username == "" || req.Password == "" {
 		return nil, status.Error(codes.InvalidArgument, "username and password required")
 	}
@@ -84,7 +84,7 @@ func (as *AuthServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 		return nil, status.Error(codes.Internal, "failed to generate access token")
 	}
 
-	return &pb.LoginResponse{
+	return &authpb.LoginResponse{
 		Token: tokenString,
 	}, nil
 }
