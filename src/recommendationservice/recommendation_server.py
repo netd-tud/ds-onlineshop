@@ -26,8 +26,12 @@ from concurrent import futures
 from google.auth.exceptions import DefaultCredentialsError
 import grpc
 
-import demo_pb2
-import demo_pb2_grpc
+import proto.recommendation.recommendation_pb2 as recommendation_pb
+import proto.recommendation.recommendation_pb2_grpc as recommendation_pb_grpc
+import proto.common.common_pb2 as common_pb
+import proto.common.common_pb2_grpc as common_pb_grpc
+import proto.productcatalog.productcatalog_pb2 as productcatalog_pb
+import proto.productcatalog.productcatalog_pb2_grpc as productcatalog_pb_grpc
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 
@@ -66,11 +70,11 @@ def initStackdriverProfiling():
   #       logger.warning("Could not initialize Stackdriver Profiler after retrying, giving up")
   return
 
-class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
+class RecommendationService(recommendation_pb_grpc.RecommendationServiceServicer):
     def ListRecommendations(self, request, context):
         max_responses = 5
         # fetch list of products from product catalog stub
-        cat_response = product_catalog_stub.ListProducts(demo_pb2.Empty())
+        cat_response = product_catalog_stub.ListProducts(common_pb.Empty())
         product_ids = [x.id for x in cat_response.products]
         filtered_products = list(set(product_ids)-set(request.product_ids))
         num_products = len(filtered_products)
@@ -81,7 +85,7 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
         prod_list = [filtered_products[i] for i in indices]
         logger.info("[Recv ListRecommendations] product_ids={}".format(prod_list))
         # build and return response
-        response = demo_pb2.ListRecommendationsResponse()
+        response = recommendation_pb.ListRecommendationsResponse()
         response.product_ids.extend(prod_list)
         return response
 
@@ -125,7 +129,7 @@ if __name__ == "__main__":
     except (KeyError, DefaultCredentialsError):
         logger.info("Tracing disabled.")
     except Exception as e:
-        logger.warn(f"Exception on Cloud Trace setup: {traceback.format_exc()}, tracing disabled.") 
+        logger.warn(f"Exception on Cloud Trace setup: {traceback.format_exc()}, tracing disabled.")
 
     port = os.environ.get('PORT', "8080")
     catalog_addr = os.environ.get('PRODUCT_CATALOG_SERVICE_ADDR', '')
@@ -133,14 +137,14 @@ if __name__ == "__main__":
         raise Exception('PRODUCT_CATALOG_SERVICE_ADDR environment variable not set')
     logger.info("product catalog address: " + catalog_addr)
     channel = grpc.insecure_channel(catalog_addr)
-    product_catalog_stub = demo_pb2_grpc.ProductCatalogServiceStub(channel)
+    product_catalog_stub = productcatalog_pb_grpc.ProductCatalogServiceStub(channel)
 
     # create gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     # add class to gRPC server
     service = RecommendationService()
-    demo_pb2_grpc.add_RecommendationServiceServicer_to_server(service, server)
+    recommendation_pb_grpc.add_RecommendationServiceServicer_to_server(service, server)
     health_pb2_grpc.add_HealthServicer_to_server(service, server)
 
     # start server
