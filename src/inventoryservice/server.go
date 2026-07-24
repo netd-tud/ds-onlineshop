@@ -9,7 +9,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sirupsen/logrus"
-	pb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto"
+	inventorypb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto/inventory"
 	shared "github.com/turt1z/microservices-demo/src/shared"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -112,7 +112,7 @@ func run(port string) error {
 
 	log.Debugln("MQTT: Connected successfully to broker")
 
-	pb.RegisterInventoryServiceServer(srv, svc)
+	inventorypb.RegisterInventoryServiceServer(srv, svc)
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthcheck)
 	go srv.Serve(listener)
