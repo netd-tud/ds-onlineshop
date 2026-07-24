@@ -20,6 +20,25 @@ PATH=$PATH:$(go env GOPATH)/bin
 protodir=../../protos
 outdir=./genproto
 
-protoc --proto_path=$protodir --go_out=./$outdir --go_opt=paths=source_relative --go-grpc_out=./$outdir --go-grpc_opt=paths=source_relative $protodir/demo.proto
+rm -rf $outdir
+mkdir -p $outdir
+
+protoc --proto_path=$protodir \
+    --go_out=./$outdir --go_opt=paths=source_relative \
+    --go-grpc_out=./$outdir --go-grpc_opt=paths=source_relative \
+    --go_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common \
+    --go-grpc_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common \
+    --go_opt=Mpayment/payment.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/payment \
+    --go-grpc_opt=Mpayment/payment.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/payment \
+    --go_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/cart \
+    --go-grpc_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/cart \
+    $protodir/checkout/checkout.proto \
+    $protodir/common/common.proto \
+    $protodir/payment/payment.proto \
+    $protodir/productcatalog/productcatalog.proto \
+    $protodir/cart/cart.proto \
+    $protodir/currency/currency.proto \
+    $protodir/email/email.proto \
+    $protodir/shipping/shipping.proto
 
 # [END gke_checkoutservice_genproto]
