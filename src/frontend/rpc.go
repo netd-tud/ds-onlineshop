@@ -19,7 +19,14 @@ import (
 	"net/http"
 	"time"
 
-	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
+	adpb "github.com/turt1z/microservices-demo/src/frontend/genproto/ad"
+	cartpb "github.com/turt1z/microservices-demo/src/frontend/genproto/cart"
+	commonpb "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
+	currencypb "github.com/turt1z/microservices-demo/src/frontend/genproto/currency"
+	inventorypb "github.com/turt1z/microservices-demo/src/frontend/genproto/inventory"
+	productcatalogpb "github.com/turt1z/microservices-demo/src/frontend/genproto/productcatalog"
+	recommendationpb "github.com/turt1z/microservices-demo/src/frontend/genproto/recommendation"
+	shippingpb "github.com/turt1z/microservices-demo/src/frontend/genproto/shipping"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pkg/errors"
@@ -30,8 +37,8 @@ const (
 )
 
 func (fe *frontendServer) getCurrencies(ctx context.Context) ([]string, error) {
-	currs, err := pb.NewCurrencyServiceClient(fe.currencySvcConn).
-		GetSupportedCurrencies(ctx, &pb.Empty{})
+	currs, err := currencypb.NewCurrencyServiceClient(fe.currencySvcConn).
+		GetSupportedCurrencies(ctx, &commonpb.Empty{})
 	if err != nil {
 		return nil, err
 	}
@@ -44,57 +51,57 @@ func (fe *frontendServer) getCurrencies(ctx context.Context) ([]string, error) {
 	return out, nil
 }
 
-func (fe *frontendServer) getProducts(ctx context.Context) ([]*pb.Product, error) {
-	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
-		ListProducts(ctx, &pb.Empty{})
+func (fe *frontendServer) getProducts(ctx context.Context) ([]*productcatalogpb.Product, error) {
+	resp, err := productcatalogpb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
+		ListProducts(ctx, &commonpb.Empty{})
 	return resp.GetProducts(), err
 }
 
-func (fe *frontendServer) getProduct(ctx context.Context, id string, cookie *http.Cookie) (*pb.Product, error) {
+func (fe *frontendServer) getProduct(ctx context.Context, id string, cookie *http.Cookie) (*productcatalogpb.Product, error) {
 	tokenString := ""
 	if cookie != nil {
 		tokenString = cookie.Value
 	}
 
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+tokenString)
-	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
-		GetProduct(ctx, &pb.GetProductRequest{Id: id})
+	resp, err := productcatalogpb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
+		GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: id})
 	return resp, err
 }
 
-func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
-	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
+func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*commonpb.CartItem, error) {
+	resp, err := cartpb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &cartpb.GetCartRequest{UserId: userID})
 	return resp.GetItems(), err
 }
 
 func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
-	_, err := pb.NewCartServiceClient(fe.cartSvcConn).EmptyCart(ctx, &pb.EmptyCartRequest{UserId: userID})
+	_, err := cartpb.NewCartServiceClient(fe.cartSvcConn).EmptyCart(ctx, &cartpb.EmptyCartRequest{UserId: userID})
 	return err
 }
 
 func (fe *frontendServer) insertCart(ctx context.Context, userID, productID string, quantity int32) error {
-	_, err := pb.NewCartServiceClient(fe.cartSvcConn).AddItem(ctx, &pb.AddItemRequest{
+	_, err := cartpb.NewCartServiceClient(fe.cartSvcConn).AddItem(ctx, &cartpb.AddItemRequest{
 		UserId: userID,
-		Item: &pb.CartItem{
+		Item: &commonpb.CartItem{
 			ProductId: productID,
 			Quantity:  quantity},
 	})
 	return err
 }
 
-func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, currency string) (*pb.Money, error) {
-	if avoidNoopCurrencyConversionRPC && money.GetCurrencyCode() == currency {
+func (fe *frontendServer) convertCurrency(ctx context.Context, money *commonpb.Money, currencyCode string) (*commonpb.Money, error) {
+	if avoidNoopCurrencyConversionRPC && money.GetCurrencyCode() == currencyCode {
 		return money, nil
 	}
-	return pb.NewCurrencyServiceClient(fe.currencySvcConn).
-		Convert(ctx, &pb.CurrencyConversionRequest{
+	return currencypb.NewCurrencyServiceClient(fe.currencySvcConn).
+		Convert(ctx, &currencypb.CurrencyConversionRequest{
 			From:   money,
-			ToCode: currency})
+			ToCode: currencyCode})
 }
 
-func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.CartItem, currency string) (*pb.Money, error) {
-	quote, err := pb.NewShippingServiceClient(fe.shippingSvcConn).GetQuote(ctx,
-		&pb.GetQuoteRequest{
+func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*commonpb.CartItem, currency string) (*commonpb.Money, error) {
+	quote, err := shippingpb.NewShippingServiceClient(fe.shippingSvcConn).GetQuote(ctx,
+		&shippingpb.GetQuoteRequest{
 			Address: nil,
 			Items:   items})
 	if err != nil {
@@ -104,13 +111,13 @@ func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.Cart
 	return localized, errors.Wrap(err, "failed to convert currency for shipping cost")
 }
 
-func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*pb.Product, error) {
-	resp, err := pb.NewRecommendationServiceClient(fe.recommendationSvcConn).ListRecommendations(ctx,
-		&pb.ListRecommendationsRequest{UserId: userID, ProductIds: productIDs})
+func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*productcatalogpb.Product, error) {
+	resp, err := recommendationpb.NewRecommendationServiceClient(fe.recommendationSvcConn).ListRecommendations(ctx,
+		&recommendationpb.ListRecommendationsRequest{UserId: userID, ProductIds: productIDs})
 	if err != nil {
 		return nil, err
 	}
-	out := make([]*pb.Product, len(resp.GetProductIds()))
+	out := make([]*productcatalogpb.Product, len(resp.GetProductIds()))
 	for i, v := range resp.GetProductIds() {
 		p, err := fe.getProduct(ctx, v, nil)
 		if err != nil {
@@ -124,25 +131,25 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 	return out, err
 }
 
-func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
+func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*adpb.Ad, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
 	defer cancel()
 
-	resp, err := pb.NewAdServiceClient(fe.adSvcConn).GetAds(ctx, &pb.AdRequest{
+	resp, err := adpb.NewAdServiceClient(fe.adSvcConn).GetAds(ctx, &adpb.AdRequest{
 		ContextKeys: ctxKeys,
 	})
 	return resp.GetAds(), errors.Wrap(err, "failed to get ads")
 }
 
-func (fe *frontendServer) listInventory(ctx context.Context) ([]*pb.InventoryProduct, error) {
+func (fe *frontendServer) listInventory(ctx context.Context) ([]*inventorypb.InventoryProduct, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
 	defer cancel()
 
-	resp, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).ListInventory(ctx, &pb.Empty{})
+	resp, err := inventorypb.NewInventoryServiceClient(fe.inventorySvcConn).ListInventory(ctx, &commonpb.Empty{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get inventory")
 	}
-	inventory := make([]*pb.InventoryProduct, 0)
+	inventory := make([]*inventorypb.InventoryProduct, 0)
 	for _, item := range resp.Products {
 		inventory = append(inventory, item)
 	}
@@ -153,8 +160,8 @@ func (fe *frontendServer) getStock(ctx context.Context, productID string) (int64
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
 	defer cancel()
 
-	resp, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).GetInventoryProduct(ctx,
-		&pb.GetInventoryProductRequest{
+	resp, err := inventorypb.NewInventoryServiceClient(fe.inventorySvcConn).GetInventoryProduct(ctx,
+		&inventorypb.GetInventoryProductRequest{
 			Id: productID,
 		})
 	if err != nil {
@@ -163,15 +170,15 @@ func (fe *frontendServer) getStock(ctx context.Context, productID string) (int64
 	return resp.GetStock(), nil
 }
 
-func (fe *frontendServer) reorderProduct(ctx context.Context, productID string, quantity int64, cookie *http.Cookie) (*pb.InventoryProduct, error) {
+func (fe *frontendServer) reorderProduct(ctx context.Context, productID string, quantity int64, cookie *http.Cookie) (*inventorypb.InventoryProduct, error) {
 	tokenString := ""
 	if cookie != nil {
 		tokenString = cookie.Value
 	}
 
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+tokenString)
-	resp, err := pb.NewInventoryServiceClient(fe.inventorySvcConn).ChangeInventoryProductStock(ctx,
-		&pb.ChangeInventoryProductStockRequest{
+	resp, err := inventorypb.NewInventoryServiceClient(fe.inventorySvcConn).ChangeInventoryProductStock(ctx,
+		&inventorypb.ChangeInventoryProductStockRequest{
 			Id:    productID,
 			Delta: quantity,
 		})

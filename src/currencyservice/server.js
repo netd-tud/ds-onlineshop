@@ -77,26 +77,29 @@ const path = require('path');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 
-const MAIN_PROTO_PATH = path.join(__dirname, './proto/demo.proto');
+const CURRENCY_PROTO_PATH = path.join(__dirname, './proto/currency.proto');
 const HEALTH_PROTO_PATH = path.join(__dirname, './proto/grpc/health/v1/health.proto');
 
 const PORT = process.env.PORT;
 
-const shopProto = _loadProto(MAIN_PROTO_PATH).hipstershop;
+const currencyProto = _loadProto(CURRENCY_PROTO_PATH).hipstershop;
 const healthProto = _loadProto(HEALTH_PROTO_PATH).grpc.health.v1;
 
 /**
  * Helper function that loads a protobuf file.
  */
-function _loadProto (path) {
+function _loadProto (protoPath) {
   const packageDefinition = protoLoader.loadSync(
-    path,
+    protoPath,
     {
       keepCase: true,
       longs: String,
       enums: String,
       defaults: true,
-      oneofs: true
+      oneofs: true,
+      includeDirs: [
+        path.join(__dirname, 'proto')
+      ]
     }
   );
   return grpc.loadPackageDefinition(packageDefinition);
@@ -182,7 +185,7 @@ function check (call, callback) {
 function main () {
   logger.info(`Starting gRPC server on port ${PORT}...`);
   const server = new grpc.Server();
-  server.addService(shopProto.CurrencyService.service, {getSupportedCurrencies, convert});
+  server.addService(currencyProto.CurrencyService.service, {getSupportedCurrencies, convert});
   server.addService(healthProto.Health.service, {check});
 
   server.bindAsync(

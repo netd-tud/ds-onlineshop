@@ -1,4 +1,4 @@
-module github.com/GoogleCloudPlatform/microservices-demo/src/shippingservice
+module github.com/turt1z/microservices-demo/src/shippingservice
 
 go 1.25.0
 
@@ -40,3 +40,5 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
 )
+
+replace github.com/turt1z/microservices-demo/src/shippingservice => ./

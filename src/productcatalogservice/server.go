@@ -25,7 +25,7 @@ import (
 	"syscall"
 	"time"
 
-	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
+	productcatalogpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/productcatalog"
 	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -140,7 +140,7 @@ func run(port string) string {
 		log.Fatalf("could not parse product catalog: %v", err)
 	}
 
-	pb.RegisterProductCatalogServiceServer(srv, svc)
+	productcatalogpb.RegisterProductCatalogServiceServer(srv, svc)
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthcheck)
 	go srv.Serve(listener)

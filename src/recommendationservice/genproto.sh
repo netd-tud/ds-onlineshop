@@ -20,7 +20,28 @@
 #
 # requires gRPC tools:
 #   pip install -r requirements.txt
+outdir=proto
 
-python -m grpc_tools.protoc -I../../protos --python_out=. --grpc_python_out=. ../../protos/demo.proto
+rm -rf $outdir
+mkdir -p $outdir/recommendation
 
+python -m grpc_tools.protoc -I../../protos \
+    --python_out=./$outdir \
+    --grpc_python_out=./$outdir \
+    ../../protos/recommendation/recommendation.proto \
+    ../../protos/productcatalog/productcatalog.proto \
+    ../../protos/common/common.proto \
+
+python -m grpc_tools.protoc -I../../protos --include_imports \
+    --descriptor_set_out=/tmp/recommendation_descriptor.pb \
+    ../../protos/recommendation/recommendation.proto \
+    ../../protos/productcatalog/productcatalog.proto \
+    ../../protos/common/common.proto \
+
+python -m protoletariat --python-out ./$outdir --in-place raw /tmp/recommendation_descriptor.pb
+
+touch $outdir/__init__.py
+touch $outdir/recommendation/__init__.py
+touch $outdir/productcatalog/__init__.py
+touch $outdir/common/__init__.py
 # [END gke_recommendationservice_genproto]

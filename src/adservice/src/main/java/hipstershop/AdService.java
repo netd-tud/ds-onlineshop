@@ -19,9 +19,9 @@ package hipstershop;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import hipstershop.Demo.Ad;
-import hipstershop.Demo.AdRequest;
-import hipstershop.Demo.AdResponse;
+import hipstershop.Ad;
+import hipstershop.AdRequest;
+import hipstershop.AdResponse;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.StatusRuntimeException;
@@ -215,7 +215,7 @@ public final class AdService {
     logger.info("See https://github.com/GoogleCloudPlatform/microservices-demo/issues/422 for more info.");
 
     // TODO(arbrown) Implement OpenTelemetry tracing
-    
+
     logger.info("Tracing enabled - Stackdriver exporter initialized.");
   }
 

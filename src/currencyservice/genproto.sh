@@ -17,7 +17,16 @@
 # [START gke_currencyservice_genproto]
 
 # protos are loaded dynamically for node, simply copies over the proto.
-mkdir -p proto
-cp ../../protos/demo.proto src/main/proto
+outdir=proto
+
+rm -rf $outdir
+
+mkdir -p $outdir
+mkdir -p $outdir/common
+
+cp ../../protos/currency/currency.proto $outdir
+cp ../../protos/common/common.proto $outdir/common
+
+cp -r ../../protos/grpc $outdir/grpc
 
 # [END gke_currencyservice_genproto]

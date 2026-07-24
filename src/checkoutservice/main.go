@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"cloud.google.com/go/profiler"
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
-	"github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/internal/analytics"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sirupsen/logrus"
+	checkoutpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/checkout"
+	"github.com/turt1z/microservices-demo/src/checkoutservice/internal/analytics"
 	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -60,7 +60,7 @@ func init() {
 }
 
 type checkoutService struct {
-	pb.UnimplementedCheckoutServiceServer
+	checkoutpb.UnimplementedCheckoutServiceServer
 
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
@@ -162,7 +162,7 @@ func main() {
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 
-	pb.RegisterCheckoutServiceServer(srv, svc)
+	checkoutpb.RegisterCheckoutServiceServer(srv, svc)
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthcheck)
 	log.Infof("starting to listen on tcp: %q", lis.Addr().String())

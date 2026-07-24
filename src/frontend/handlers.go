@@ -35,7 +35,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	pb "github.com/turt1z/microservices-demo/src/frontend/genproto"
+	adpb "github.com/turt1z/microservices-demo/src/frontend/genproto/ad"
+	authpb "github.com/turt1z/microservices-demo/src/frontend/genproto/auth"
+	checkoutpb "github.com/turt1z/microservices-demo/src/frontend/genproto/checkout"
+	commonpb "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
+	paymentpb "github.com/turt1z/microservices-demo/src/frontend/genproto/payment"
+	productcatalogpb "github.com/turt1z/microservices-demo/src/frontend/genproto/productcatalog"
 	"github.com/turt1z/microservices-demo/src/frontend/internal/analytics"
 	"github.com/turt1z/microservices-demo/src/frontend/money"
 	"github.com/turt1z/microservices-demo/src/frontend/validator"
@@ -101,7 +106,7 @@ func computeHeavyLoad(iterations int) string {
 }
 
 type Product struct {
-	Item        *pb.Product
+	Item        *productcatalogpb.Product
 	Stock       int64
 	Reorderable bool
 }
@@ -299,7 +304,7 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	log.WithField("username", username).Info("login attempt")
-	resp, err := pb.NewAuthServiceClient(fe.authSvcConn).Login(r.Context(), &pb.LoginRequest{
+	resp, err := authpb.NewAuthServiceClient(fe.authSvcConn).Login(r.Context(), &authpb.LoginRequest{
 		Username: username,
 		Password: password,
 	})
@@ -418,8 +423,8 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type productView struct {
-		Item  *pb.Product
-		Price *pb.Money
+		Item  *productcatalogpb.Product
+		Price *commonpb.Money
 	}
 	ps := make([]productView, len(products))
 	for i, p := range products {
@@ -524,8 +529,8 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	product := struct {
-		Item    *pb.Product
-		Price   *pb.Money
+		Item    *productcatalogpb.Product
+		Price   *commonpb.Money
 		Ratings *Ratings
 		Stock   int64
 	}{p, price, nil, -1}
@@ -711,12 +716,12 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	type cartItemView struct {
-		Item     *pb.Product
+		Item     *productcatalogpb.Product
 		Quantity int32
-		Price    *pb.Money
+		Price    *commonpb.Money
 	}
 	items := make([]cartItemView, len(cart))
-	totalPrice := pb.Money{CurrencyCode: currentCurrency(r)}
+	totalPrice := commonpb.Money{CurrencyCode: currentCurrency(r)}
 	for i, item := range cart {
 		cookie, _ := r.Cookie(cookieAuth)
 		p, err := fe.getProduct(r.Context(), item.GetProductId(), cookie)
@@ -794,17 +799,17 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		ctx = metadata.AppendToOutgoingContext(r.Context(), "session-id", sID)
 	}
 
-	order, err := pb.NewCheckoutServiceClient(fe.checkoutSvcConn).
-		PlaceOrder(ctx, &pb.PlaceOrderRequest{
+	order, err := checkoutpb.NewCheckoutServiceClient(fe.checkoutSvcConn).
+		PlaceOrder(ctx, &checkoutpb.PlaceOrderRequest{
 			Email: payload.Email,
-			CreditCard: &pb.CreditCardInfo{
+			CreditCard: &paymentpb.CreditCardInfo{
 				CreditCardNumber:          payload.CcNumber,
 				CreditCardExpirationMonth: int32(payload.CcMonth),
 				CreditCardExpirationYear:  int32(payload.CcYear),
 				CreditCardCvv:             int32(payload.CcCVV)},
 			UserId:       sessionID(r),
 			UserCurrency: currentCurrency(r),
-			Address: &pb.Address{
+			Address: &commonpb.Address{
 				StreetAddress: payload.StreetAddress,
 				City:          payload.City,
 				State:         payload.State,
@@ -968,7 +973,7 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 
 // chooseAd queries for advertisements available and randomly chooses one, if
 // available. It ignores the error retrieving the ad since it is not critical.
-func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log logrus.FieldLogger) *pb.Ad {
+func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log logrus.FieldLogger) *adpb.Ad {
 	ads, err := fe.getAd(ctx, ctxKeys)
 	if err != nil {
 		log.WithField("error", err).Warn("failed to retrieve ads")
@@ -1030,7 +1035,7 @@ func sessionID(r *http.Request) string {
 	return ""
 }
 
-func cartIDs(c []*pb.CartItem) []string {
+func cartIDs(c []*commonpb.CartItem) []string {
 	out := make([]string, len(c))
 	for i, v := range c {
 		out[i] = v.GetProductId()
@@ -1039,7 +1044,7 @@ func cartIDs(c []*pb.CartItem) []string {
 }
 
 // get total # of items in cart
-func cartSize(c []*pb.CartItem) int {
+func cartSize(c []*commonpb.CartItem) int {
 	cartSize := 0
 	for _, item := range c {
 		cartSize += int(item.GetQuantity())
@@ -1047,7 +1052,7 @@ func cartSize(c []*pb.CartItem) int {
 	return cartSize
 }
 
-func renderMoney(money pb.Money) string {
+func renderMoney(money commonpb.Money) string {
 	currencyLogo := renderCurrencyLogo(money.GetCurrencyCode())
 	return fmt.Sprintf("%s%d.%02d", currencyLogo, money.GetUnits(), money.GetNanos()/10000000)
 }

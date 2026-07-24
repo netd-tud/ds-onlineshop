@@ -19,11 +19,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
-	"github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/internal/analytics"
-	"github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/money"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+	cartpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/cart"
+	checkoutpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/checkout"
+	commonpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
+	currencypb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/currency"
+	emailpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/email"
+	paymentpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/payment"
+	productcatalogpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/productcatalog"
+	shippingpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/shipping"
+	"github.com/turt1z/microservices-demo/src/checkoutservice/internal/analytics"
+	"github.com/turt1z/microservices-demo/src/checkoutservice/money"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
@@ -38,7 +45,7 @@ func (cs *checkoutService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.H
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
-func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
+func (cs *checkoutService) PlaceOrder(ctx context.Context, req *checkoutpb.PlaceOrderRequest) (*checkoutpb.PlaceOrderResponse, error) {
 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q", req.UserId, req.UserCurrency)
 
 	var sID string
@@ -64,7 +71,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	total := pb.Money{CurrencyCode: req.UserCurrency,
+	total := commonpb.Money{CurrencyCode: req.UserCurrency,
 		Units: 0,
 		Nanos: 0}
 	total = money.Must(money.Sum(total, *prep.shippingCostLocalized))
@@ -86,7 +93,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 
 	_ = cs.emptyUserCart(ctx, req.UserId)
 
-	orderResult := &pb.OrderResult{
+	orderResult := &commonpb.OrderResult{
 		OrderId:            orderID.String(),
 		ShippingTrackingId: shippingTrackingID,
 		ShippingCost:       prep.shippingCostLocalized,
@@ -117,17 +124,17 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 	} else {
 		log.Infof("order confirmation email sent to %q", req.Email)
 	}
-	resp := &pb.PlaceOrderResponse{Order: orderResult}
+	resp := &checkoutpb.PlaceOrderResponse{Order: orderResult}
 	return resp, nil
 }
 
 type orderPrep struct {
-	orderItems            []*pb.OrderItem
-	cartItems             []*pb.CartItem
-	shippingCostLocalized *pb.Money
+	orderItems            []*commonpb.OrderItem
+	cartItems             []*commonpb.CartItem
+	shippingCostLocalized *commonpb.Money
 }
 
-func (cs *checkoutService) prepareOrderItemsAndShippingQuoteFromCart(ctx context.Context, userID, userCurrency string, address *pb.Address) (orderPrep, error) {
+func (cs *checkoutService) prepareOrderItemsAndShippingQuoteFromCart(ctx context.Context, userID, userCurrency string, address *commonpb.Address) (orderPrep, error) {
 	var out orderPrep
 	cartItems, err := cs.getUserCart(ctx, userID)
 	if err != nil {
@@ -152,9 +159,9 @@ func (cs *checkoutService) prepareOrderItemsAndShippingQuoteFromCart(ctx context
 	return out, nil
 }
 
-func (cs *checkoutService) quoteShipping(ctx context.Context, address *pb.Address, items []*pb.CartItem) (*pb.Money, error) {
-	shippingQuote, err := pb.NewShippingServiceClient(cs.shippingSvcConn).
-		GetQuote(ctx, &pb.GetQuoteRequest{
+func (cs *checkoutService) quoteShipping(ctx context.Context, address *commonpb.Address, items []*commonpb.CartItem) (*commonpb.Money, error) {
+	shippingQuote, err := shippingpb.NewShippingServiceClient(cs.shippingSvcConn).
+		GetQuote(ctx, &shippingpb.GetQuoteRequest{
 			Address: address,
 			Items:   items})
 	if err != nil {
@@ -163,8 +170,8 @@ func (cs *checkoutService) quoteShipping(ctx context.Context, address *pb.Addres
 	return shippingQuote.GetCostUsd(), nil
 }
 
-func (cs *checkoutService) getUserCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
-	cart, err := pb.NewCartServiceClient(cs.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
+func (cs *checkoutService) getUserCart(ctx context.Context, userID string) ([]*commonpb.CartItem, error) {
+	cart, err := cartpb.NewCartServiceClient(cs.cartSvcConn).GetCart(ctx, &cartpb.GetCartRequest{UserId: userID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user cart during checkout: %+v", err)
 	}
@@ -172,18 +179,18 @@ func (cs *checkoutService) getUserCart(ctx context.Context, userID string) ([]*p
 }
 
 func (cs *checkoutService) emptyUserCart(ctx context.Context, userID string) error {
-	if _, err := pb.NewCartServiceClient(cs.cartSvcConn).EmptyCart(ctx, &pb.EmptyCartRequest{UserId: userID}); err != nil {
+	if _, err := cartpb.NewCartServiceClient(cs.cartSvcConn).EmptyCart(ctx, &cartpb.EmptyCartRequest{UserId: userID}); err != nil {
 		return fmt.Errorf("failed to empty user cart during checkout: %+v", err)
 	}
 	return nil
 }
 
-func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*pb.CartItem, userCurrency string) ([]*pb.OrderItem, error) {
-	out := make([]*pb.OrderItem, len(items))
-	cl := pb.NewProductCatalogServiceClient(cs.productCatalogSvcConn)
+func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*commonpb.CartItem, userCurrency string) ([]*commonpb.OrderItem, error) {
+	out := make([]*commonpb.OrderItem, len(items))
+	cl := productcatalogpb.NewProductCatalogServiceClient(cs.productCatalogSvcConn)
 
 	for i, item := range items {
-		product, err := cl.GetProduct(ctx, &pb.GetProductRequest{Id: item.GetProductId()})
+		product, err := cl.GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: item.GetProductId()})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get product #%q", item.GetProductId())
 		}
@@ -191,15 +198,15 @@ func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*pb.CartI
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert price of %q to %s", item.GetProductId(), userCurrency)
 		}
-		out[i] = &pb.OrderItem{
+		out[i] = &commonpb.OrderItem{
 			Item: item,
 			Cost: price}
 	}
 	return out, nil
 }
 
-func (cs *checkoutService) convertCurrency(ctx context.Context, from *pb.Money, toCurrency string) (*pb.Money, error) {
-	result, err := pb.NewCurrencyServiceClient(cs.currencySvcConn).Convert(context.TODO(), &pb.CurrencyConversionRequest{
+func (cs *checkoutService) convertCurrency(ctx context.Context, from *commonpb.Money, toCurrency string) (*commonpb.Money, error) {
+	result, err := currencypb.NewCurrencyServiceClient(cs.currencySvcConn).Convert(context.TODO(), &currencypb.CurrencyConversionRequest{
 		From:   from,
 		ToCode: toCurrency})
 	if err != nil {
@@ -208,8 +215,8 @@ func (cs *checkoutService) convertCurrency(ctx context.Context, from *pb.Money, 
 	return result, err
 }
 
-func (cs *checkoutService) chargeCard(ctx context.Context, amount *pb.Money, paymentInfo *pb.CreditCardInfo) (string, error) {
-	paymentResp, err := pb.NewPaymentServiceClient(cs.paymentSvcConn).Charge(ctx, &pb.ChargeRequest{
+func (cs *checkoutService) chargeCard(ctx context.Context, amount *commonpb.Money, paymentInfo *paymentpb.CreditCardInfo) (string, error) {
+	paymentResp, err := paymentpb.NewPaymentServiceClient(cs.paymentSvcConn).Charge(ctx, &paymentpb.ChargeRequest{
 		Amount:     amount,
 		CreditCard: paymentInfo})
 	if err != nil {
@@ -236,14 +243,14 @@ func (cs *checkoutService) initializeMQTTClient() mqtt.Client {
 	return client
 }
 
-func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email string, order *pb.OrderResult) error {
+func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email string, order *commonpb.OrderResult) error {
 	if cs.mqttBrokerAddr != "" {
 		return cs.sendOrderConfirmationMQTT(ctx, email, order)
 	}
 	return cs.sendOrderConfirmationgRPC(ctx, email, order)
 }
 
-func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email string, order *pb.OrderResult) error {
+func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email string, order *commonpb.OrderResult) error {
 	type OrderEvent struct {
 		Email string `json:"email"`
 		Order string `json:"order"`
@@ -263,15 +270,15 @@ func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email 
 	return nil
 }
 
-func (cs *checkoutService) sendOrderConfirmationgRPC(ctx context.Context, email string, order *pb.OrderResult) error {
-	_, err := pb.NewEmailServiceClient(cs.emailSvcConn).SendOrderConfirmation(ctx, &pb.SendOrderConfirmationRequest{
+func (cs *checkoutService) sendOrderConfirmationgRPC(ctx context.Context, email string, order *commonpb.OrderResult) error {
+	_, err := emailpb.NewEmailServiceClient(cs.emailSvcConn).SendOrderConfirmation(ctx, &emailpb.SendOrderConfirmationRequest{
 		Email: email,
 		Order: order})
 	return err
 }
 
-func (cs *checkoutService) shipOrder(ctx context.Context, address *pb.Address, items []*pb.CartItem) (string, error) {
-	resp, err := pb.NewShippingServiceClient(cs.shippingSvcConn).ShipOrder(ctx, &pb.ShipOrderRequest{
+func (cs *checkoutService) shipOrder(ctx context.Context, address *commonpb.Address, items []*commonpb.CartItem) (string, error) {
+	resp, err := shippingpb.NewShippingServiceClient(cs.shippingSvcConn).ShipOrder(ctx, &shippingpb.ShipOrderRequest{
 		Address: address,
 		Items:   items})
 	if err != nil {

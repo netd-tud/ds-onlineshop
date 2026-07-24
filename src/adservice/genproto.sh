@@ -17,7 +17,11 @@
 # [START gke_adservice_genproto]
 # protos are needed in adservice folder for compiling during Docker build.
 
-mkdir -p proto && \
-cp ../../protos/demo.proto src/main/proto
+outdir=src/main/proto
+
+rm -rf $outdir
+
+mkdir -p $outdir && \
+cp ../../protos/ad/ad.proto $outdir
 
 # [END gke_adservice_genproto]
