@@ -2,11 +2,14 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.35.1
-// source: warehousemanagement.proto
+// source: warehousemanagement/warehousemanagement.proto
 
-package demo
+package warehousemanagementpb
 
 import (
+	common "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/common"
+	inventory "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
+	productcatalog "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/productcatalog"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -25,7 +28,7 @@ type CreateWarehouseProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	PriceUsd      *Money                 `protobuf:"bytes,3,opt,name=price_usd,json=priceUsd,proto3" json:"price_usd,omitempty"`
+	PriceUsd      *common.Money          `protobuf:"bytes,3,opt,name=price_usd,json=priceUsd,proto3" json:"price_usd,omitempty"`
 	Categories    []string               `protobuf:"bytes,4,rep,name=categories,proto3" json:"categories,omitempty"`
 	InitialStock  int64                  `protobuf:"varint,5,opt,name=initial_stock,json=initialStock,proto3" json:"initial_stock,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -34,7 +37,7 @@ type CreateWarehouseProductRequest struct {
 
 func (x *CreateWarehouseProductRequest) Reset() {
 	*x = CreateWarehouseProductRequest{}
-	mi := &file_warehousemanagement_proto_msgTypes[0]
+	mi := &file_warehousemanagement_warehousemanagement_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -46,7 +49,7 @@ func (x *CreateWarehouseProductRequest) String() string {
 func (*CreateWarehouseProductRequest) ProtoMessage() {}
 
 func (x *CreateWarehouseProductRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_warehousemanagement_proto_msgTypes[0]
+	mi := &file_warehousemanagement_warehousemanagement_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -59,7 +62,7 @@ func (x *CreateWarehouseProductRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateWarehouseProductRequest.ProtoReflect.Descriptor instead.
 func (*CreateWarehouseProductRequest) Descriptor() ([]byte, []int) {
-	return file_warehousemanagement_proto_rawDescGZIP(), []int{0}
+	return file_warehousemanagement_warehousemanagement_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CreateWarehouseProductRequest) GetName() string {
@@ -76,7 +79,7 @@ func (x *CreateWarehouseProductRequest) GetDescription() string {
 	return ""
 }
 
-func (x *CreateWarehouseProductRequest) GetPriceUsd() *Money {
+func (x *CreateWarehouseProductRequest) GetPriceUsd() *common.Money {
 	if x != nil {
 		return x.PriceUsd
 	}
@@ -98,15 +101,15 @@ func (x *CreateWarehouseProductRequest) GetInitialStock() int64 {
 }
 
 type CreateWarehouseProductResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Product       *Product               `protobuf:"bytes,1,opt,name=product,proto3" json:"product,omitempty"`
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Product       *productcatalog.Product `protobuf:"bytes,1,opt,name=product,proto3" json:"product,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateWarehouseProductResponse) Reset() {
 	*x = CreateWarehouseProductResponse{}
-	mi := &file_warehousemanagement_proto_msgTypes[1]
+	mi := &file_warehousemanagement_warehousemanagement_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -118,7 +121,7 @@ func (x *CreateWarehouseProductResponse) String() string {
 func (*CreateWarehouseProductResponse) ProtoMessage() {}
 
 func (x *CreateWarehouseProductResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_warehousemanagement_proto_msgTypes[1]
+	mi := &file_warehousemanagement_warehousemanagement_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -131,22 +134,21 @@ func (x *CreateWarehouseProductResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateWarehouseProductResponse.ProtoReflect.Descriptor instead.
 func (*CreateWarehouseProductResponse) Descriptor() ([]byte, []int) {
-	return file_warehousemanagement_proto_rawDescGZIP(), []int{1}
+	return file_warehousemanagement_warehousemanagement_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateWarehouseProductResponse) GetProduct() *Product {
+func (x *CreateWarehouseProductResponse) GetProduct() *productcatalog.Product {
 	if x != nil {
 		return x.Product
 	}
 	return nil
 }
 
-var File_warehousemanagement_proto protoreflect.FileDescriptor
+var File_warehousemanagement_warehousemanagement_proto protoreflect.FileDescriptor
 
-const file_warehousemanagement_proto_rawDesc = "" +
+const file_warehousemanagement_warehousemanagement_proto_rawDesc = "" +
 	"\n" +
-	"\x19warehousemanagement.proto\x12\x14warehouse.management\x1a\n" +
-	"demo.proto\"\xcb\x01\n" +
+	"-warehousemanagement/warehousemanagement.proto\x12\x14warehouse.management\x1a\x19inventory/inventory.proto\x1a#productcatalog/productcatalog.proto\x1a\x13common/common.proto\"\xcb\x01\n" +
 	"\x1dCreateWarehouseProductRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12/\n" +
@@ -159,30 +161,30 @@ const file_warehousemanagement_proto_rawDesc = "" +
 	"\aproduct\x18\x01 \x01(\v2\x14.hipstershop.ProductR\aproduct2\xfa\x01\n" +
 	"\x13WarehouseManagement\x12d\n" +
 	"\x12UpdateProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a\x1d.hipstershop.InventoryProduct\x12}\n" +
-	"\x10CreateNewProduct\x123.warehouse.management.CreateWarehouseProductRequest\x1a4.warehouse.management.CreateWarehouseProductResponseB1Z/github.com/turt1z/microservices-demo/proto/demob\x06proto3"
+	"\x10CreateNewProduct\x123.warehouse.management.CreateWarehouseProductRequest\x1a4.warehouse.management.CreateWarehouseProductResponseBVZTgithub.com/turt1z/microservices-demo/proto/warehousemanagement/warehousemanagementpbb\x06proto3"
 
 var (
-	file_warehousemanagement_proto_rawDescOnce sync.Once
-	file_warehousemanagement_proto_rawDescData []byte
+	file_warehousemanagement_warehousemanagement_proto_rawDescOnce sync.Once
+	file_warehousemanagement_warehousemanagement_proto_rawDescData []byte
 )
 
-func file_warehousemanagement_proto_rawDescGZIP() []byte {
-	file_warehousemanagement_proto_rawDescOnce.Do(func() {
-		file_warehousemanagement_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_warehousemanagement_proto_rawDesc), len(file_warehousemanagement_proto_rawDesc)))
+func file_warehousemanagement_warehousemanagement_proto_rawDescGZIP() []byte {
+	file_warehousemanagement_warehousemanagement_proto_rawDescOnce.Do(func() {
+		file_warehousemanagement_warehousemanagement_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_warehousemanagement_warehousemanagement_proto_rawDesc), len(file_warehousemanagement_warehousemanagement_proto_rawDesc)))
 	})
-	return file_warehousemanagement_proto_rawDescData
+	return file_warehousemanagement_warehousemanagement_proto_rawDescData
 }
 
-var file_warehousemanagement_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_warehousemanagement_proto_goTypes = []any{
-	(*CreateWarehouseProductRequest)(nil),      // 0: warehouse.management.CreateWarehouseProductRequest
-	(*CreateWarehouseProductResponse)(nil),     // 1: warehouse.management.CreateWarehouseProductResponse
-	(*Money)(nil),                              // 2: hipstershop.Money
-	(*Product)(nil),                            // 3: hipstershop.Product
-	(*ChangeInventoryProductStockRequest)(nil), // 4: hipstershop.ChangeInventoryProductStockRequest
-	(*InventoryProduct)(nil),                   // 5: hipstershop.InventoryProduct
+var file_warehousemanagement_warehousemanagement_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_warehousemanagement_warehousemanagement_proto_goTypes = []any{
+	(*CreateWarehouseProductRequest)(nil),                // 0: warehouse.management.CreateWarehouseProductRequest
+	(*CreateWarehouseProductResponse)(nil),               // 1: warehouse.management.CreateWarehouseProductResponse
+	(*common.Money)(nil),                                 // 2: hipstershop.Money
+	(*productcatalog.Product)(nil),                       // 3: hipstershop.Product
+	(*inventory.ChangeInventoryProductStockRequest)(nil), // 4: hipstershop.ChangeInventoryProductStockRequest
+	(*inventory.InventoryProduct)(nil),                   // 5: hipstershop.InventoryProduct
 }
-var file_warehousemanagement_proto_depIdxs = []int32{
+var file_warehousemanagement_warehousemanagement_proto_depIdxs = []int32{
 	2, // 0: warehouse.management.CreateWarehouseProductRequest.price_usd:type_name -> hipstershop.Money
 	3, // 1: warehouse.management.CreateWarehouseProductResponse.product:type_name -> hipstershop.Product
 	4, // 2: warehouse.management.WarehouseManagement.UpdateProductStock:input_type -> hipstershop.ChangeInventoryProductStockRequest
@@ -196,27 +198,26 @@ var file_warehousemanagement_proto_depIdxs = []int32{
 	0, // [0:2] is the sub-list for field type_name
 }
 
-func init() { file_warehousemanagement_proto_init() }
-func file_warehousemanagement_proto_init() {
-	if File_warehousemanagement_proto != nil {
+func init() { file_warehousemanagement_warehousemanagement_proto_init() }
+func file_warehousemanagement_warehousemanagement_proto_init() {
+	if File_warehousemanagement_warehousemanagement_proto != nil {
 		return
 	}
-	file_demo_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_warehousemanagement_proto_rawDesc), len(file_warehousemanagement_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_warehousemanagement_warehousemanagement_proto_rawDesc), len(file_warehousemanagement_warehousemanagement_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_warehousemanagement_proto_goTypes,
-		DependencyIndexes: file_warehousemanagement_proto_depIdxs,
-		MessageInfos:      file_warehousemanagement_proto_msgTypes,
+		GoTypes:           file_warehousemanagement_warehousemanagement_proto_goTypes,
+		DependencyIndexes: file_warehousemanagement_warehousemanagement_proto_depIdxs,
+		MessageInfos:      file_warehousemanagement_warehousemanagement_proto_msgTypes,
 	}.Build()
-	File_warehousemanagement_proto = out.File
-	file_warehousemanagement_proto_goTypes = nil
-	file_warehousemanagement_proto_depIdxs = nil
+	File_warehousemanagement_warehousemanagement_proto = out.File
+	file_warehousemanagement_warehousemanagement_proto_goTypes = nil
+	file_warehousemanagement_warehousemanagement_proto_depIdxs = nil
 }

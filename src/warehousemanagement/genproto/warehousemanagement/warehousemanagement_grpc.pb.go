@@ -2,12 +2,13 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v7.35.1
-// source: warehousemanagement.proto
+// source: warehousemanagement/warehousemanagement.proto
 
-package demo
+package warehousemanagementpb
 
 import (
 	context "context"
+	inventory "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -27,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WarehouseManagementClient interface {
-	UpdateProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*InventoryProduct, error)
+	UpdateProductStock(ctx context.Context, in *inventory.ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*inventory.InventoryProduct, error)
 	CreateNewProduct(ctx context.Context, in *CreateWarehouseProductRequest, opts ...grpc.CallOption) (*CreateWarehouseProductResponse, error)
 }
 
@@ -39,9 +40,9 @@ func NewWarehouseManagementClient(cc grpc.ClientConnInterface) WarehouseManageme
 	return &warehouseManagementClient{cc}
 }
 
-func (c *warehouseManagementClient) UpdateProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*InventoryProduct, error) {
+func (c *warehouseManagementClient) UpdateProductStock(ctx context.Context, in *inventory.ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*inventory.InventoryProduct, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(InventoryProduct)
+	out := new(inventory.InventoryProduct)
 	err := c.cc.Invoke(ctx, WarehouseManagement_UpdateProductStock_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -63,7 +64,7 @@ func (c *warehouseManagementClient) CreateNewProduct(ctx context.Context, in *Cr
 // All implementations must embed UnimplementedWarehouseManagementServer
 // for forward compatibility.
 type WarehouseManagementServer interface {
-	UpdateProductStock(context.Context, *ChangeInventoryProductStockRequest) (*InventoryProduct, error)
+	UpdateProductStock(context.Context, *inventory.ChangeInventoryProductStockRequest) (*inventory.InventoryProduct, error)
 	CreateNewProduct(context.Context, *CreateWarehouseProductRequest) (*CreateWarehouseProductResponse, error)
 	mustEmbedUnimplementedWarehouseManagementServer()
 }
@@ -75,7 +76,7 @@ type WarehouseManagementServer interface {
 // pointer dereference when methods are called.
 type UnimplementedWarehouseManagementServer struct{}
 
-func (UnimplementedWarehouseManagementServer) UpdateProductStock(context.Context, *ChangeInventoryProductStockRequest) (*InventoryProduct, error) {
+func (UnimplementedWarehouseManagementServer) UpdateProductStock(context.Context, *inventory.ChangeInventoryProductStockRequest) (*inventory.InventoryProduct, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateProductStock not implemented")
 }
 func (UnimplementedWarehouseManagementServer) CreateNewProduct(context.Context, *CreateWarehouseProductRequest) (*CreateWarehouseProductResponse, error) {
@@ -103,7 +104,7 @@ func RegisterWarehouseManagementServer(s grpc.ServiceRegistrar, srv WarehouseMan
 }
 
 func _WarehouseManagement_UpdateProductStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangeInventoryProductStockRequest)
+	in := new(inventory.ChangeInventoryProductStockRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func _WarehouseManagement_UpdateProductStock_Handler(srv interface{}, ctx contex
 		FullMethod: WarehouseManagement_UpdateProductStock_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WarehouseManagementServer).UpdateProductStock(ctx, req.(*ChangeInventoryProductStockRequest))
+		return srv.(WarehouseManagementServer).UpdateProductStock(ctx, req.(*inventory.ChangeInventoryProductStockRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -155,5 +156,5 @@ var WarehouseManagement_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "warehousemanagement.proto",
+	Metadata: "warehousemanagement/warehousemanagement.proto",
 }
