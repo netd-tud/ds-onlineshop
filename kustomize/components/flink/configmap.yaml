@@ -11,9 +11,18 @@ data:
     jobmanager.rpc.port: 6123
     jobmanager.bind-host: 0.0.0.0
     jobmanager.memory.process.size: 1200m
+
     taskmanager.bind-host: 0.0.0.0
-    taskmanager.numberOfTaskSlots: 2
+    taskmanager.numberOfTaskSlots: 4
     taskmanager.memory.process.size: 2600m
+
     parallelism.default: 2
     rest.address: flink-jobmanager
     rest.bind-address: 0.0.0.0
+
+    restart-strategy.type: exponential-delay
+    restart-strategy.exponential-delay.initial-backoff: 2s
+    restart-strategy.exponential-delay.max-backoff: 1min
+    restart-strategy.exponential-delay.backoff-multiplier: 2.0
+    restart-strategy.exponential-delay.reset-backoff-threshold: 10m
+    restart-strategy.exponential-delay.jitter-factor: 0.1
