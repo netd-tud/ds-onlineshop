@@ -5,6 +5,8 @@ metadata:
   namespace: flink
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: flink
@@ -30,7 +32,7 @@ spec:
                     values: ["flink"]
       containers:
         - name: taskmanager
-          image: flink:2.3.0
+          image: flink:1.19.0
           args: ["taskmanager"]
           ports:
             - name: rpc

@@ -30,7 +30,7 @@ spec:
                     values: ["flink"]
       containers:
         - name: jobmanager
-          image: flink:2.3.0
+          image: flink:1.19.0
           args: ["jobmanager"]
           ports:
             - name: rpc

@@ -23,17 +23,23 @@ CREATE TABLE IF NOT EXISTS product_events (
   'json.timestamp-format.standard' = 'ISO-8601'
 );
 
--- Debug: Print the incoming order events
-CREATE TABLE IF NOT EXISTS product_events_aggregated (
+CREATE TABLE IF NOT EXISTS product_events_aggregated_db (
   sku STRING,
   total_units_bought INT,
-  window_start TIMESTAMP(3)
+  window_start TIMESTAMP(3),
+  PRIMARY KEY (sku, window_start) NOT ENFORCED
 ) WITH (
-  'connector' = 'print'
+  'connector' = 'jdbc',
+  'url' = 'jdbc:postgresql://postgres:5432/analytics_db',
+  'table-name' = 'product_sales_1m',
+  'username' = 'user',
+  'password' = 'password',
+  'sink.buffer-flush.max-rows' = '100',
+  'sink.buffer-flush.interval' = '1s'
 );
 
 -- Continuous Aggregation Job
-INSERT INTO product_events_aggregated
+INSERT INTO product_events_aggregated_db
 SELECT
   sku,
   SUM(qty) AS total_units_bought,

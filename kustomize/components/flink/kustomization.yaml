@@ -6,6 +6,7 @@ resources:
   - jobmanager.yaml
   - taskmanager.yaml
   - sql-runner-job.yaml
+  - postgres.yaml
 
 configMapGenerator:
   - name: flink-sql-scripts
