@@ -7,7 +7,6 @@ resources:
 components:
 - ../../components/container-images-registry
 
-- ../../components/without-loadgenerator
 - ../../components/ratingservice
 - ../../components/email-via-mqtt
 - ../../components/monitoring
