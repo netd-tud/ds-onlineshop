@@ -12,4 +12,5 @@ configMapGenerator:
   - name: flink-sql-scripts
     namespace: flink
     files:
-      - sql/01_product_analytics.sql
+      - sql/00_setup_source.sql
+      - sql/01_product_sales_1m.sql

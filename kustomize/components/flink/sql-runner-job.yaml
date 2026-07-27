@@ -58,12 +58,18 @@ spec:
             - /bin/bash
             - -c
             - |
+              echo "Combining SQL scripts in alphabetical order..."
+              cat $(ls /opt/flink/sql/*.sql | sort) > /tmp/combined_jobs.sql
+
+              echo "Combined SQL Payload:"
+              cat /tmp/combined_jobs.sql
+
               echo "Submitting Flink SQL script..."
               /opt/flink/bin/sql-client.sh \
                 -j /flink-lib/flink-sql-connector-kafka-3.2.0-1.19.jar \
                 -j /flink-lib/flink-connector-jdbc-3.2.0-1.19.jar \
                 -j /flink-lib/postgresql-42.7.3.jar \
-                -f /opt/flink/sql/01_product_analytics.sql
+                -f /tmp/combined_jobs.sql
           envFrom:
             - configMapRef:
                 name: flink-config
