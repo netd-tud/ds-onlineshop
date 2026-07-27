@@ -21,7 +21,14 @@ data:
       total_units_bought INT NOT NULL,
       window_start TIMESTAMP NOT NULL,
       PRIMARY KEY (sku, window_start)
-      );
+    );
+
+    CREATE TABLE IF NOT EXISTS product_clicks_1m (
+      sku VARCHAR(255) NOT NULL,
+      total_clicks BIGINT NOT NULL,
+      window_start TIMESTAMP NOT NULL,
+      PRIMARY KEY (sku, window_start)
+    );
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

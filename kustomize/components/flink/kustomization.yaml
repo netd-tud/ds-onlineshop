@@ -14,3 +14,4 @@ configMapGenerator:
     files:
       - sql/00_setup_source.sql
       - sql/01_product_sales_1m.sql
+      - sql/02_product_clicks_1m.sql
