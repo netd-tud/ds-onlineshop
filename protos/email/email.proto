@@ -19,6 +19,7 @@ package hipstershop;
 option go_package = "github.com/turt1z/microservices-demo/proto/email;emailpb";
 
 import "common/common.proto";
+import "checkout/checkout.proto";
 
 // -------------Email service-----------------
 

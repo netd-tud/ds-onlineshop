@@ -93,7 +93,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *checkoutpb.Place
 
 	_ = cs.emptyUserCart(ctx, req.UserId)
 
-	orderResult := &commonpb.OrderResult{
+	orderResult := &checkoutpb.OrderResult{
 		OrderId:            orderID.String(),
 		ShippingTrackingId: shippingTrackingID,
 		ShippingCost:       prep.shippingCostLocalized,
@@ -129,8 +129,8 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *checkoutpb.Place
 }
 
 type orderPrep struct {
-	orderItems            []*commonpb.OrderItem
-	cartItems             []*commonpb.CartItem
+	orderItems            []*checkoutpb.OrderItem
+	cartItems             []*cartpb.CartItem
 	shippingCostLocalized *commonpb.Money
 }
 
@@ -159,7 +159,7 @@ func (cs *checkoutService) prepareOrderItemsAndShippingQuoteFromCart(ctx context
 	return out, nil
 }
 
-func (cs *checkoutService) quoteShipping(ctx context.Context, address *commonpb.Address, items []*commonpb.CartItem) (*commonpb.Money, error) {
+func (cs *checkoutService) quoteShipping(ctx context.Context, address *commonpb.Address, items []*cartpb.CartItem) (*commonpb.Money, error) {
 	shippingQuote, err := shippingpb.NewShippingServiceClient(cs.shippingSvcConn).
 		GetQuote(ctx, &shippingpb.GetQuoteRequest{
 			Address: address,
@@ -170,7 +170,7 @@ func (cs *checkoutService) quoteShipping(ctx context.Context, address *commonpb.
 	return shippingQuote.GetCostUsd(), nil
 }
 
-func (cs *checkoutService) getUserCart(ctx context.Context, userID string) ([]*commonpb.CartItem, error) {
+func (cs *checkoutService) getUserCart(ctx context.Context, userID string) ([]*cartpb.CartItem, error) {
 	cart, err := cartpb.NewCartServiceClient(cs.cartSvcConn).GetCart(ctx, &cartpb.GetCartRequest{UserId: userID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user cart during checkout: %+v", err)
@@ -185,8 +185,8 @@ func (cs *checkoutService) emptyUserCart(ctx context.Context, userID string) err
 	return nil
 }
 
-func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*commonpb.CartItem, userCurrency string) ([]*commonpb.OrderItem, error) {
-	out := make([]*commonpb.OrderItem, len(items))
+func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*cartpb.CartItem, userCurrency string) ([]*checkoutpb.OrderItem, error) {
+	out := make([]*checkoutpb.OrderItem, len(items))
 	cl := productcatalogpb.NewProductCatalogServiceClient(cs.productCatalogSvcConn)
 
 	for i, item := range items {
@@ -198,7 +198,7 @@ func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*commonpb
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert price of %q to %s", item.GetProductId(), userCurrency)
 		}
-		out[i] = &commonpb.OrderItem{
+		out[i] = &checkoutpb.OrderItem{
 			Item: item,
 			Cost: price}
 	}
@@ -243,14 +243,14 @@ func (cs *checkoutService) initializeMQTTClient() mqtt.Client {
 	return client
 }
 
-func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email string, order *commonpb.OrderResult) error {
+func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email string, order *checkoutpb.OrderResult) error {
 	if cs.mqttBrokerAddr != "" {
 		return cs.sendOrderConfirmationMQTT(ctx, email, order)
 	}
 	return cs.sendOrderConfirmationgRPC(ctx, email, order)
 }
 
-func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email string, order *commonpb.OrderResult) error {
+func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email string, order *checkoutpb.OrderResult) error {
 	type OrderEvent struct {
 		Email string `json:"email"`
 		Order string `json:"order"`
@@ -270,14 +270,14 @@ func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email 
 	return nil
 }
 
-func (cs *checkoutService) sendOrderConfirmationgRPC(ctx context.Context, email string, order *commonpb.OrderResult) error {
+func (cs *checkoutService) sendOrderConfirmationgRPC(ctx context.Context, email string, order *checkoutpb.OrderResult) error {
 	_, err := emailpb.NewEmailServiceClient(cs.emailSvcConn).SendOrderConfirmation(ctx, &emailpb.SendOrderConfirmationRequest{
 		Email: email,
 		Order: order})
 	return err
 }
 
-func (cs *checkoutService) shipOrder(ctx context.Context, address *commonpb.Address, items []*commonpb.CartItem) (string, error) {
+func (cs *checkoutService) shipOrder(ctx context.Context, address *commonpb.Address, items []*cartpb.CartItem) (string, error) {
 	resp, err := shippingpb.NewShippingServiceClient(cs.shippingSvcConn).ShipOrder(ctx, &shippingpb.ShipOrderRequest{
 		Address: address,
 		Items:   items})

@@ -21,6 +21,7 @@
 package emailpb
 
 import (
+	checkout "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/checkout"
 	common "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -39,7 +40,7 @@ const (
 type SendOrderConfirmationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Order         *common.OrderResult    `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
+	Order         *checkout.OrderResult  `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -81,7 +82,7 @@ func (x *SendOrderConfirmationRequest) GetEmail() string {
 	return ""
 }
 
-func (x *SendOrderConfirmationRequest) GetOrder() *common.OrderResult {
+func (x *SendOrderConfirmationRequest) GetOrder() *checkout.OrderResult {
 	if x != nil {
 		return x.Order
 	}
@@ -92,7 +93,7 @@ var File_email_email_proto protoreflect.FileDescriptor
 
 const file_email_email_proto_rawDesc = "" +
 	"\n" +
-	"\x11email/email.proto\x12\vhipstershop\x1a\x13common/common.proto\"d\n" +
+	"\x11email/email.proto\x12\vhipstershop\x1a\x13common/common.proto\x1a\x17checkout/checkout.proto\"d\n" +
 	"\x1cSendOrderConfirmationRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12.\n" +
 	"\x05order\x18\x02 \x01(\v2\x18.hipstershop.OrderResultR\x05order2h\n" +
@@ -114,7 +115,7 @@ func file_email_email_proto_rawDescGZIP() []byte {
 var file_email_email_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_email_email_proto_goTypes = []any{
 	(*SendOrderConfirmationRequest)(nil), // 0: hipstershop.SendOrderConfirmationRequest
-	(*common.OrderResult)(nil),           // 1: hipstershop.OrderResult
+	(*checkout.OrderResult)(nil),         // 1: hipstershop.OrderResult
 	(*common.Empty)(nil),                 // 2: hipstershop.Empty
 }
 var file_email_email_proto_depIdxs = []int32{

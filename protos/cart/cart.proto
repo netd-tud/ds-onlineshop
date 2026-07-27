@@ -28,6 +28,11 @@ service CartService {
   rpc EmptyCart(EmptyCartRequest) returns (Empty) {}
 }
 
+message CartItem {
+  string product_id = 1;
+  int32  quantity = 2;
+}
+
 message AddItemRequest {
   string user_id = 1;
   CartItem item = 2;

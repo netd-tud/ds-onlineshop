@@ -32,6 +32,8 @@ protoc --proto_path=$protodir \
     --go-grpc_opt=Mpayment/payment.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/payment \
     --go_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/cart \
     --go-grpc_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/cart \
+    --go_opt=Mcheckout/checkout.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/checkout \
+    --go-grpc_opt=Mcheckout/checkout.proto=github.com/turt1z/microservices-demo/src/checkoutservice/genproto/checkout \
     $protodir/checkout/checkout.proto \
     $protodir/common/common.proto \
     $protodir/payment/payment.proto \

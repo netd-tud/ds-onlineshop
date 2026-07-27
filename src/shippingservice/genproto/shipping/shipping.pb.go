@@ -21,6 +21,7 @@
 package shippingpb
 
 import (
+	cart "github.com/turt1z/microservices-demo/src/shippingservice/genproto/cart"
 	common "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -39,7 +40,7 @@ const (
 type GetQuoteRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Address       *common.Address        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Items         []*common.CartItem     `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*cart.CartItem       `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -81,7 +82,7 @@ func (x *GetQuoteRequest) GetAddress() *common.Address {
 	return nil
 }
 
-func (x *GetQuoteRequest) GetItems() []*common.CartItem {
+func (x *GetQuoteRequest) GetItems() []*cart.CartItem {
 	if x != nil {
 		return x.Items
 	}
@@ -135,7 +136,7 @@ func (x *GetQuoteResponse) GetCostUsd() *common.Money {
 type ShipOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Address       *common.Address        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Items         []*common.CartItem     `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*cart.CartItem       `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -177,7 +178,7 @@ func (x *ShipOrderRequest) GetAddress() *common.Address {
 	return nil
 }
 
-func (x *ShipOrderRequest) GetItems() []*common.CartItem {
+func (x *ShipOrderRequest) GetItems() []*cart.CartItem {
 	if x != nil {
 		return x.Items
 	}
@@ -232,7 +233,7 @@ var File_shipping_shipping_proto protoreflect.FileDescriptor
 
 const file_shipping_shipping_proto_rawDesc = "" +
 	"\n" +
-	"\x17shipping/shipping.proto\x12\vhipstershop\x1a\x13common/common.proto\"n\n" +
+	"\x17shipping/shipping.proto\x12\vhipstershop\x1a\x13common/common.proto\x1a\x0fcart/cart.proto\"n\n" +
 	"\x0fGetQuoteRequest\x12.\n" +
 	"\aaddress\x18\x01 \x01(\v2\x14.hipstershop.AddressR\aaddress\x12+\n" +
 	"\x05items\x18\x02 \x03(\v2\x15.hipstershop.CartItemR\x05items\"A\n" +
@@ -267,7 +268,7 @@ var file_shipping_shipping_proto_goTypes = []any{
 	(*ShipOrderRequest)(nil),  // 2: hipstershop.ShipOrderRequest
 	(*ShipOrderResponse)(nil), // 3: hipstershop.ShipOrderResponse
 	(*common.Address)(nil),    // 4: hipstershop.Address
-	(*common.CartItem)(nil),   // 5: hipstershop.CartItem
+	(*cart.CartItem)(nil),     // 5: hipstershop.CartItem
 	(*common.Money)(nil),      // 6: hipstershop.Money
 }
 var file_shipping_shipping_proto_depIdxs = []int32{

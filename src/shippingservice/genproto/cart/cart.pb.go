@@ -21,7 +21,7 @@
 package cartpb
 
 import (
-	common "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
+	common "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

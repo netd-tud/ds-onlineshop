@@ -28,7 +28,10 @@ protoc --proto_path=$protodir \
     --go-grpc_out=./$outdir --go-grpc_opt=paths=source_relative \
     --go_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/shippingservice/genproto/common \
     --go-grpc_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/shippingservice/genproto/common \
+    --go_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/shippingservice/genproto/cart \
+    --go-grpc_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/shippingservice/genproto/cart \
     $protodir/shipping/shipping.proto \
-    $protodir/common/common.proto
+    $protodir/common/common.proto \
+    $protodir/cart/cart.proto
 
 # [END gke_shippingservice_genproto]

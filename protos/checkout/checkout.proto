@@ -20,11 +20,25 @@ option go_package = "github.com/turt1z/microservices-demo/proto/checkout;checkou
 
 import "common/common.proto";
 import "payment/payment.proto";
+import "cart/cart.proto";
 
 // -------------Checkout service-----------------
 
 service CheckoutService {
   rpc PlaceOrder(PlaceOrderRequest) returns (PlaceOrderResponse) {}
+}
+
+message OrderItem {
+  CartItem item = 1;
+  Money cost = 2;
+}
+
+message OrderResult {
+  string   order_id = 1;
+  string   shipping_tracking_id = 2;
+  Money shipping_cost = 3;
+  Address  shipping_address = 4;
+  repeated OrderItem items = 5;
 }
 
 message PlaceOrderRequest {

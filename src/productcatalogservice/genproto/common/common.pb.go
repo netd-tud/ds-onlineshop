@@ -261,186 +261,6 @@ func (x *Address) GetZipCode() int32 {
 	return 0
 }
 
-type CartItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
-	Quantity      int32                  `protobuf:"varint,2,opt,name=quantity,proto3" json:"quantity,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CartItem) Reset() {
-	*x = CartItem{}
-	mi := &file_common_common_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CartItem) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CartItem) ProtoMessage() {}
-
-func (x *CartItem) ProtoReflect() protoreflect.Message {
-	mi := &file_common_common_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CartItem.ProtoReflect.Descriptor instead.
-func (*CartItem) Descriptor() ([]byte, []int) {
-	return file_common_common_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *CartItem) GetProductId() string {
-	if x != nil {
-		return x.ProductId
-	}
-	return ""
-}
-
-func (x *CartItem) GetQuantity() int32 {
-	if x != nil {
-		return x.Quantity
-	}
-	return 0
-}
-
-type OrderItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Item          *CartItem              `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
-	Cost          *Money                 `protobuf:"bytes,2,opt,name=cost,proto3" json:"cost,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *OrderItem) Reset() {
-	*x = OrderItem{}
-	mi := &file_common_common_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *OrderItem) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OrderItem) ProtoMessage() {}
-
-func (x *OrderItem) ProtoReflect() protoreflect.Message {
-	mi := &file_common_common_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OrderItem.ProtoReflect.Descriptor instead.
-func (*OrderItem) Descriptor() ([]byte, []int) {
-	return file_common_common_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *OrderItem) GetItem() *CartItem {
-	if x != nil {
-		return x.Item
-	}
-	return nil
-}
-
-func (x *OrderItem) GetCost() *Money {
-	if x != nil {
-		return x.Cost
-	}
-	return nil
-}
-
-type OrderResult struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	OrderId            string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	ShippingTrackingId string                 `protobuf:"bytes,2,opt,name=shipping_tracking_id,json=shippingTrackingId,proto3" json:"shipping_tracking_id,omitempty"`
-	ShippingCost       *Money                 `protobuf:"bytes,3,opt,name=shipping_cost,json=shippingCost,proto3" json:"shipping_cost,omitempty"`
-	ShippingAddress    *Address               `protobuf:"bytes,4,opt,name=shipping_address,json=shippingAddress,proto3" json:"shipping_address,omitempty"`
-	Items              []*OrderItem           `protobuf:"bytes,5,rep,name=items,proto3" json:"items,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
-}
-
-func (x *OrderResult) Reset() {
-	*x = OrderResult{}
-	mi := &file_common_common_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *OrderResult) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OrderResult) ProtoMessage() {}
-
-func (x *OrderResult) ProtoReflect() protoreflect.Message {
-	mi := &file_common_common_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OrderResult.ProtoReflect.Descriptor instead.
-func (*OrderResult) Descriptor() ([]byte, []int) {
-	return file_common_common_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *OrderResult) GetOrderId() string {
-	if x != nil {
-		return x.OrderId
-	}
-	return ""
-}
-
-func (x *OrderResult) GetShippingTrackingId() string {
-	if x != nil {
-		return x.ShippingTrackingId
-	}
-	return ""
-}
-
-func (x *OrderResult) GetShippingCost() *Money {
-	if x != nil {
-		return x.ShippingCost
-	}
-	return nil
-}
-
-func (x *OrderResult) GetShippingAddress() *Address {
-	if x != nil {
-		return x.ShippingAddress
-	}
-	return nil
-}
-
-func (x *OrderResult) GetItems() []*OrderItem {
-	if x != nil {
-		return x.Items
-	}
-	return nil
-}
-
 var File_common_common_proto protoreflect.FileDescriptor
 
 const file_common_common_proto_rawDesc = "" +
@@ -458,20 +278,7 @@ const file_common_common_proto_rawDesc = "" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12\x14\n" +
 	"\x05state\x18\x03 \x01(\tR\x05state\x12\x18\n" +
 	"\acountry\x18\x04 \x01(\tR\acountry\x12\x19\n" +
-	"\bzip_code\x18\x05 \x01(\x05R\azipCode\"E\n" +
-	"\bCartItem\x12\x1d\n" +
-	"\n" +
-	"product_id\x18\x01 \x01(\tR\tproductId\x12\x1a\n" +
-	"\bquantity\x18\x02 \x01(\x05R\bquantity\"^\n" +
-	"\tOrderItem\x12)\n" +
-	"\x04item\x18\x01 \x01(\v2\x15.hipstershop.CartItemR\x04item\x12&\n" +
-	"\x04cost\x18\x02 \x01(\v2\x12.hipstershop.MoneyR\x04cost\"\x82\x02\n" +
-	"\vOrderResult\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\x120\n" +
-	"\x14shipping_tracking_id\x18\x02 \x01(\tR\x12shippingTrackingId\x127\n" +
-	"\rshipping_cost\x18\x03 \x01(\v2\x12.hipstershop.MoneyR\fshippingCost\x12?\n" +
-	"\x10shipping_address\x18\x04 \x01(\v2\x14.hipstershop.AddressR\x0fshippingAddress\x12,\n" +
-	"\x05items\x18\x05 \x03(\v2\x16.hipstershop.OrderItemR\x05itemsB<Z:github.com/turt1z/microservices-demo/proto/common;commonpbb\x06proto3"
+	"\bzip_code\x18\x05 \x01(\x05R\azipCodeB<Z:github.com/turt1z/microservices-demo/proto/common;commonpbb\x06proto3"
 
 var (
 	file_common_common_proto_rawDescOnce sync.Once
@@ -485,27 +292,19 @@ func file_common_common_proto_rawDescGZIP() []byte {
 	return file_common_common_proto_rawDescData
 }
 
-var file_common_common_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_common_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_common_common_proto_goTypes = []any{
 	(*Empty)(nil),           // 0: hipstershop.Empty
 	(*XaBranchRequest)(nil), // 1: hipstershop.XaBranchRequest
 	(*Money)(nil),           // 2: hipstershop.Money
 	(*Address)(nil),         // 3: hipstershop.Address
-	(*CartItem)(nil),        // 4: hipstershop.CartItem
-	(*OrderItem)(nil),       // 5: hipstershop.OrderItem
-	(*OrderResult)(nil),     // 6: hipstershop.OrderResult
 }
 var file_common_common_proto_depIdxs = []int32{
-	4, // 0: hipstershop.OrderItem.item:type_name -> hipstershop.CartItem
-	2, // 1: hipstershop.OrderItem.cost:type_name -> hipstershop.Money
-	2, // 2: hipstershop.OrderResult.shipping_cost:type_name -> hipstershop.Money
-	3, // 3: hipstershop.OrderResult.shipping_address:type_name -> hipstershop.Address
-	5, // 4: hipstershop.OrderResult.items:type_name -> hipstershop.OrderItem
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_common_common_proto_init() }
@@ -519,7 +318,7 @@ func file_common_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_common_proto_rawDesc), len(file_common_common_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

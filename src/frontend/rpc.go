@@ -69,7 +69,7 @@ func (fe *frontendServer) getProduct(ctx context.Context, id string, cookie *htt
 	return resp, err
 }
 
-func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*commonpb.CartItem, error) {
+func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*cartpb.CartItem, error) {
 	resp, err := cartpb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &cartpb.GetCartRequest{UserId: userID})
 	return resp.GetItems(), err
 }
@@ -82,7 +82,7 @@ func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
 func (fe *frontendServer) insertCart(ctx context.Context, userID, productID string, quantity int32) error {
 	_, err := cartpb.NewCartServiceClient(fe.cartSvcConn).AddItem(ctx, &cartpb.AddItemRequest{
 		UserId: userID,
-		Item: &commonpb.CartItem{
+		Item: &cartpb.CartItem{
 			ProductId: productID,
 			Quantity:  quantity},
 	})
@@ -99,7 +99,7 @@ func (fe *frontendServer) convertCurrency(ctx context.Context, money *commonpb.M
 			ToCode: currencyCode})
 }
 
-func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*commonpb.CartItem, currency string) (*commonpb.Money, error) {
+func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*cartpb.CartItem, currency string) (*commonpb.Money, error) {
 	quote, err := shippingpb.NewShippingServiceClient(fe.shippingSvcConn).GetQuote(ctx,
 		&shippingpb.GetQuoteRequest{
 			Address: nil,

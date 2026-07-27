@@ -21,7 +21,7 @@
 package shippingpb
 
 import (
-	_ "github.com/turt1z/microservices-demo/proto/cart"
+	cart "github.com/turt1z/microservices-demo/src/frontend/genproto/cart"
 	common "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -40,7 +40,7 @@ const (
 type GetQuoteRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Address       *common.Address        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Items         []*common.CartItem     `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*cart.CartItem       `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -82,7 +82,7 @@ func (x *GetQuoteRequest) GetAddress() *common.Address {
 	return nil
 }
 
-func (x *GetQuoteRequest) GetItems() []*common.CartItem {
+func (x *GetQuoteRequest) GetItems() []*cart.CartItem {
 	if x != nil {
 		return x.Items
 	}
@@ -136,7 +136,7 @@ func (x *GetQuoteResponse) GetCostUsd() *common.Money {
 type ShipOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Address       *common.Address        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Items         []*common.CartItem     `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*cart.CartItem       `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -178,7 +178,7 @@ func (x *ShipOrderRequest) GetAddress() *common.Address {
 	return nil
 }
 
-func (x *ShipOrderRequest) GetItems() []*common.CartItem {
+func (x *ShipOrderRequest) GetItems() []*cart.CartItem {
 	if x != nil {
 		return x.Items
 	}
@@ -268,7 +268,7 @@ var file_shipping_shipping_proto_goTypes = []any{
 	(*ShipOrderRequest)(nil),  // 2: hipstershop.ShipOrderRequest
 	(*ShipOrderResponse)(nil), // 3: hipstershop.ShipOrderResponse
 	(*common.Address)(nil),    // 4: hipstershop.Address
-	(*common.CartItem)(nil),   // 5: hipstershop.CartItem
+	(*cart.CartItem)(nil),     // 5: hipstershop.CartItem
 	(*common.Money)(nil),      // 6: hipstershop.Money
 }
 var file_shipping_shipping_proto_depIdxs = []int32{

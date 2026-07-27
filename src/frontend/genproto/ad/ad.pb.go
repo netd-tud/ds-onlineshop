@@ -192,7 +192,7 @@ const file_ad_ad_proto_rawDesc = "" +
 	"\fredirect_url\x18\x01 \x01(\tR\vredirectUrl\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text2H\n" +
 	"\tAdService\x12;\n" +
-	"\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x00B4Z2github.com/turt1z/microservices-demo/proto/ad;adpbb\x06proto3"
+	"\x06GetAds\x12\x16.hipstershop.AdRequest\x1a\x17.hipstershop.AdResponse\"\x00B6P\x01Z2github.com/turt1z/microservices-demo/proto/ad;adpbb\x06proto3"
 
 var (
 	file_ad_ad_proto_rawDescOnce sync.Once

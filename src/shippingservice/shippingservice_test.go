@@ -20,6 +20,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	cartpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/cart"
 	commonpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
 	shippingpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/shipping"
 )
@@ -36,7 +37,7 @@ func TestGetQuote(t *testing.T) {
 			State:         "",
 			Country:       "England",
 		},
-		Items: []*commonpb.CartItem{
+		Items: []*cartpb.CartItem{
 			{
 				ProductId: "23",
 				Quantity:  1,
@@ -68,7 +69,7 @@ func TestGetQuoteEmptyCart(t *testing.T) {
 			State:         "",
 			Country:       "England",
 		},
-		Items: []*commonpb.CartItem{},
+		Items: []*cartpb.CartItem{},
 	}
 
 	res, err := s.GetQuote(context.Background(), req)
@@ -92,7 +93,7 @@ func TestShipOrder(t *testing.T) {
 			State:         "",
 			Country:       "England",
 		},
-		Items: []*commonpb.CartItem{
+		Items: []*cartpb.CartItem{
 			{
 				ProductId: "23",
 				Quantity:  1,

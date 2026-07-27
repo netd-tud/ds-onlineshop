@@ -37,6 +37,7 @@ import (
 	"github.com/sirupsen/logrus"
 	adpb "github.com/turt1z/microservices-demo/src/frontend/genproto/ad"
 	authpb "github.com/turt1z/microservices-demo/src/frontend/genproto/auth"
+	cartpb "github.com/turt1z/microservices-demo/src/frontend/genproto/cart"
 	checkoutpb "github.com/turt1z/microservices-demo/src/frontend/genproto/checkout"
 	commonpb "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
 	paymentpb "github.com/turt1z/microservices-demo/src/frontend/genproto/payment"
@@ -1035,7 +1036,7 @@ func sessionID(r *http.Request) string {
 	return ""
 }
 
-func cartIDs(c []*commonpb.CartItem) []string {
+func cartIDs(c []*cartpb.CartItem) []string {
 	out := make([]string, len(c))
 	for i, v := range c {
 		out[i] = v.GetProductId()
@@ -1044,7 +1045,7 @@ func cartIDs(c []*commonpb.CartItem) []string {
 }
 
 // get total # of items in cart
-func cartSize(c []*commonpb.CartItem) int {
+func cartSize(c []*cartpb.CartItem) int {
 	cartSize := 0
 	for _, item := range c {
 		cartSize += int(item.GetQuantity())
