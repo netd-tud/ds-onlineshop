@@ -46,6 +46,7 @@ SELECT
   TUMBLE_START(event_time, INTERVAL '1' MINUTE) AS window_start
 FROM product_events
 WHERE event_type = 'ORDER'
+  AND qty IS NOT NULL
 GROUP BY
   sku,
   TUMBLE(event_time, INTERVAL '1' MINUTE);
