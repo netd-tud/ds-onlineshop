@@ -20,7 +20,9 @@ import (
 
 	"golang.org/x/net/context"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/shippingservice/genproto"
+	cartpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/cart"
+	commonpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
+	shippingpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/shipping"
 )
 
 // TestGetQuote is a basic check on the GetQuote RPC service.
@@ -28,14 +30,14 @@ func TestGetQuote(t *testing.T) {
 	s := server{}
 
 	// A basic test case to test logic and protobuf interactions.
-	req := &pb.GetQuoteRequest{
-		Address: &pb.Address{
+	req := &shippingpb.GetQuoteRequest{
+		Address: &commonpb.Address{
 			StreetAddress: "Muffin Man",
 			City:          "London",
 			State:         "",
 			Country:       "England",
 		},
-		Items: []*pb.CartItem{
+		Items: []*cartpb.CartItem{
 			{
 				ProductId: "23",
 				Quantity:  1,
@@ -60,14 +62,14 @@ func TestGetQuote(t *testing.T) {
 func TestGetQuoteEmptyCart(t *testing.T) {
 	s := server{}
 
-	req := &pb.GetQuoteRequest{
-		Address: &pb.Address{
+	req := &shippingpb.GetQuoteRequest{
+		Address: &commonpb.Address{
 			StreetAddress: "221B Baker Street",
 			City:          "London",
 			State:         "",
 			Country:       "England",
 		},
-		Items: []*pb.CartItem{},
+		Items: []*cartpb.CartItem{},
 	}
 
 	res, err := s.GetQuote(context.Background(), req)
@@ -84,14 +86,14 @@ func TestShipOrder(t *testing.T) {
 	s := server{}
 
 	// A basic test case to test logic and protobuf interactions.
-	req := &pb.ShipOrderRequest{
-		Address: &pb.Address{
+	req := &shippingpb.ShipOrderRequest{
+		Address: &commonpb.Address{
 			StreetAddress: "Muffin Man",
 			City:          "London",
 			State:         "",
 			Country:       "England",
 		},
-		Items: []*pb.CartItem{
+		Items: []*cartpb.CartItem{
 			{
 				ProductId: "23",
 				Quantity:  1,

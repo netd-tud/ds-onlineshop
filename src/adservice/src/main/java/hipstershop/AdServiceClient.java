@@ -16,9 +16,9 @@
 
 package hipstershop;
 
-import hipstershop.Demo.Ad;
-import hipstershop.Demo.AdRequest;
-import hipstershop.Demo.AdResponse;
+import hipstershop.Ad;
+import hipstershop.AdRequest;
+import hipstershop.AdResponse;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -67,7 +67,7 @@ public class AdServiceClient {
     } catch (StatusRuntimeException e) {
       logger.log(Level.WARN, "RPC failed: " + e.getStatus());
       return;
-    } 
+    }
     for (Ad ads : response.getAdsList()) {
       logger.info("Ads: " + ads.getText());
     }

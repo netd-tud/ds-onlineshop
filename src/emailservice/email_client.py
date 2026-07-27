@@ -16,17 +16,17 @@
 
 import grpc
 
-import demo_pb2
-import demo_pb2_grpc
+import proto.email.email_pb2 as email_pb
+import proto.email.email_pb2_grpc as email_pb_grpc
 
 from logger import getJSONLogger
 logger = getJSONLogger('emailservice-client')
 
 def send_confirmation_email(email, order):
   channel = grpc.insecure_channel('[::]:8080')
-  stub = demo_pb2_grpc.EmailServiceStub(channel)
+  stub = email_pb_grpc.EmailServiceStub(channel)
   try:
-    response = stub.SendOrderConfirmation(demo_pb2.SendOrderConfirmationRequest(
+    response = stub.SendOrderConfirmation(email_pb.SendOrderConfirmationRequest(
       email = email,
       order = order
     ))

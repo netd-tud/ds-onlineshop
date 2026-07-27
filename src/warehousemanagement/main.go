@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	shared "github.com/turt1z/microservices-demo/src/shared"
-	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
+	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -53,7 +53,7 @@ type warehouseManagement struct {
 
 	mqttBrokerAddr string
 
-	pb.UnimplementedWarehouseManagementServer
+	warehousemanagementpb.UnimplementedWarehouseManagementServer
 }
 
 var log *logrus.Logger
@@ -124,7 +124,7 @@ func run(port string, svc *warehouseManagement) string {
 	srv = grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()))
 
-	pb.RegisterWarehouseManagementServer(srv, svc)
+	warehousemanagementpb.RegisterWarehouseManagementServer(srv, svc)
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(srv, healthcheck)
 

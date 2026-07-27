@@ -27,10 +27,11 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/jackc/pgx/v5/pgxpool"
-	pb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto"
+	commonpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/common"
+	productcatalogpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/productcatalog"
 )
 
-func loadCatalog(catalog *pb.ListProductsResponse) error {
+func loadCatalog(catalog *productcatalogpb.ListProductsResponse) error {
 	catalogMutex.Lock()
 	defer catalogMutex.Unlock()
 
@@ -41,7 +42,7 @@ func loadCatalog(catalog *pb.ListProductsResponse) error {
 	return loadCatalogFromLocalFile(catalog)
 }
 
-func loadCatalogFromLocalFile(catalog *pb.ListProductsResponse) error {
+func loadCatalogFromLocalFile(catalog *productcatalogpb.ListProductsResponse) error {
 	log.Info("loading catalog from local products.json file...")
 
 	catalogJSON, err := os.ReadFile("products.json")
@@ -82,7 +83,7 @@ func getSecretPayload(project, secret, version string) (string, error) {
 	return string(result.Payload.Data), nil
 }
 
-func loadCatalogFromAlloyDB(catalog *pb.ListProductsResponse) error {
+func loadCatalogFromAlloyDB(catalog *productcatalogpb.ListProductsResponse) error {
 	log.Info("loading catalog from AlloyDB...")
 
 	projectID := os.Getenv("PROJECT_ID")
@@ -139,8 +140,8 @@ func loadCatalogFromAlloyDB(catalog *pb.ListProductsResponse) error {
 
 	catalog.Products = catalog.Products[:0]
 	for rows.Next() {
-		product := &pb.Product{}
-		product.PriceUsd = &pb.Money{}
+		product := &productcatalogpb.Product{}
+		product.PriceUsd = &commonpb.Money{}
 
 		var categories string
 		err = rows.Scan(&product.Id, &product.Name, &product.Description,

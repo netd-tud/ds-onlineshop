@@ -1,0 +1,99 @@
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package hipstershop;
+
+option go_package = "github.com/turt1z/microservices-demo/proto/productcatalog;productcatalogpb";
+
+import "common/common.proto";
+
+// ---------------Product Catalog----------------
+
+service ProductCatalogService {
+  rpc ListProducts(Empty) returns (ListProductsResponse) {}
+  rpc GetProduct(GetProductRequest) returns (Product) {}
+  rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+  rpc CreateNewProduct(CreateNewProductRequest) returns (CreateNewProductResponse) {}
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse) {}
+
+  // SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+  // because DTM resends the original action's request bytes when invoking the compensating transaction.
+  rpc CompensateCreateNewProduct(CreateNewProductRequest) returns (DeleteProductResponse) {}
+
+  // XA
+  rpc XaPrepareCreateProduct(XaPrepareCreateProductRequest) returns (Empty) {}
+  rpc XaCommitCreateProduct(XaBranchRequest) returns (Empty) {}
+  rpc XaRollbackCreateProduct(XaBranchRequest) returns (Empty) {}
+}
+
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string picture = 4;
+  Money price_usd = 5;
+
+  // Categories such as "clothing" or "kitchen" that can be used to look up
+  // other related products.
+  repeated string categories = 6;
+}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+}
+
+message GetProductRequest {
+  string id = 1;
+}
+
+message SearchProductsRequest {
+  string query = 1;
+}
+
+message SearchProductsResponse {
+  repeated Product results = 1;
+}
+
+message CreateNewProductRequest {
+  string name = 1;
+  string description = 2;
+  Money price_usd = 3;
+  repeated string categories = 4;
+
+  string id = 5; // used only in DTM-SAGA context. Normally products should be created without providing an ID.
+}
+
+message CreateNewProductResponse {
+  Product product = 1;
+}
+
+message DeleteProductRequest {
+  string id = 1;
+}
+
+message DeleteProductResponse {
+  Product product = 1;
+}
+
+message XaPrepareCreateProductRequest {
+  string gid = 1;
+  string id = 2;
+  string name = 3;
+  string description = 4;
+  Money price_usd = 5;
+  repeated string categories = 6;
+}
+

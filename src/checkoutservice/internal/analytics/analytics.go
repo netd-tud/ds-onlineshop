@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
+	commonpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
 )
 
 type ProductEventType string
@@ -28,7 +28,7 @@ type ProductEvent struct {
 	EventType ProductEventType `json:"event_type"`
 	SKU       string           `json:"sku"`
 	Qty       int32            `json:"qty,omitempty"`
-	Price     pb.Money         `json:"price"`
+	Price     commonpb.Money   `json:"price"`
 	OrderID   string           `json:"order_id,omitempty"`
 	SessionID string           `json:"session_id"`
 	Producer  string           `json:"producer"`
@@ -38,7 +38,7 @@ type OrderEvent struct {
 	EventID   string         `json:"event_id"`
 	EventTime time.Time      `json:"event_time"`
 	EventType OrderEventType `json:"event_type"`
-	Price     pb.Money       `json:"price"`
+	Price     commonpb.Money `json:"price"`
 	OrderID   string         `json:"order_id,omitempty"`
 	SessionID string         `json:"session_id"`
 	Producer  string         `json:"producer"`

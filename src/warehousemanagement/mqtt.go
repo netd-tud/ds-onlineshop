@@ -11,7 +11,9 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
+	commonpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/common"
+	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
+	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
 )
 
 // MQTT Structural Mappings
@@ -102,10 +104,10 @@ func setupMqttServer(svc *warehouseManagement) {
 					continue
 				}
 
-				grpcReq := &pb.CreateWarehouseProductRequest{
+				grpcReq := &warehousemanagementpb.CreateWarehouseProductRequest{
 					Name:        payload.Name,
 					Description: payload.Description,
-					PriceUsd: &pb.Money{
+					PriceUsd: &commonpb.Money{
 						CurrencyCode: payload.PriceUsd.CurrencyCode,
 						Units:        payload.PriceUsd.Units,
 						Nanos:        payload.PriceUsd.Nanos,
@@ -131,7 +133,7 @@ func setupMqttServer(svc *warehouseManagement) {
 
 				log.Infof("MQTT Worker: Processing stock update for item '%s' with delta %d", payload.ID, payload.Delta)
 
-				grpcReq := &pb.ChangeInventoryProductStockRequest{
+				grpcReq := &inventorypb.ChangeInventoryProductStockRequest{
 					Id:    payload.ID,
 					Delta: payload.Delta,
 				}

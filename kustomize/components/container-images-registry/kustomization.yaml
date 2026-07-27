@@ -33,3 +33,12 @@ images:
 - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/checkoutservice
   newName: ghcr.io/turt1z/microservices-demo/checkoutservice
   newTag: latest
+- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/adservice
+  newName: ghcr.io/turt1z/microservices-demo/adservice
+  newTag: latest
+- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/currencyservice
+  newName: ghcr.io/turt1z/microservices-demo/currencyservice
+  newTag: latest
+- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice
+  newName: ghcr.io/turt1z/microservices-demo/recommendationservice
+  newTag: latest

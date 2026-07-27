@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package warehouse.management;
+
+option go_package = "github.com/turt1z/microservices-demo/proto/warehousemanagement/warehousemanagementpb";
+
+import "inventory/inventory.proto";
+import "productcatalog/productcatalog.proto";
+import "common/common.proto";
+
+// ------------Warehouse management wrapper for students------------------
+
+service WarehouseManagement {
+
+  rpc UpdateProductStock (hipstershop.ChangeInventoryProductStockRequest) returns (hipstershop.InventoryProduct);
+
+  rpc CreateNewProduct (CreateWarehouseProductRequest) returns (CreateWarehouseProductResponse);
+}
+
+message CreateWarehouseProductRequest {
+  string name = 1;
+  string description = 2;
+  hipstershop.Money price_usd = 3;
+  repeated string categories = 4;
+  int64 initial_stock = 5;
+}
+
+message CreateWarehouseProductResponse {
+  hipstershop.Product product = 1;
+}

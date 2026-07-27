@@ -21,11 +21,11 @@ const path = require('path');
 const grpc = require('grpc');
 const pino = require('pino');
 
-const PROTO_PATH = path.join(__dirname, './proto/demo.proto');
+const CURRENCY_PROTO_PATH = path.join(__dirname, './proto/currency.proto');
 const PORT = 7000;
 
-const shopProto = grpc.load(PROTO_PATH).hipstershop;
-const client = new shopProto.CurrencyService(`localhost:${PORT}`,
+const currencyProto = grpc.load(CURRENCY_PROTO_PATH).hipstershop;
+const client = new currencyProto.CurrencyService(`localhost:${PORT}`,
   grpc.credentials.createInsecure());
 
 const logger = pino({

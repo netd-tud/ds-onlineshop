@@ -1,0 +1,96 @@
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package hipstershop;
+
+option go_package = "github.com/turt1z/microservices-demo/proto/inventory;inventorypb";
+
+import "common/common.proto";
+
+// ------------Inventory service------------------
+
+service InventoryService {
+  rpc ListInventory(Empty) returns (ListInventoryResponse) {}
+  rpc GetInventoryProduct(GetInventoryProductRequest) returns (InventoryProduct) {}
+  rpc ChangeInventoryProductStock(ChangeInventoryProductStockRequest) returns (ChangeInventoryProductStockResponse) {}
+  rpc SetInventoryProductStock(SetInventoryProductStockRequest) returns (SetInventoryProductStockRequestResponse) {}
+  rpc CreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (CreateNewInventoryProductResponse) {}
+  rpc DeleteInventoryProduct(DeleteInventoryProductRequest) returns (DeleteInventoryProductResponse) {}
+
+
+  // SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+  // because DTM resends the original action's request bytes when invoking the compensating transaction.
+  rpc CompensateCreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (DeleteInventoryProductResponse) {}
+
+  // XA
+  rpc XaPrepareCreateInventoryProduct(XaPrepareCreateInventoryProductRequest) returns (Empty) {}
+  rpc XaCommitCreateInventoryProduct(XaBranchRequest) returns (Empty) {}
+  rpc XaRollbackCreateInventoryProduct(XaBranchRequest) returns (Empty) {}
+}
+
+message InventoryProduct {
+  string id = 1;
+  int64 stock = 2;
+}
+
+message ListInventoryResponse {
+  repeated InventoryProduct products = 1;
+}
+
+message GetInventoryProductRequest {
+  string id = 1;
+}
+
+message ChangeInventoryProductStockRequest {
+  string id = 1;
+  int64 delta = 2;
+}
+
+message ChangeInventoryProductStockResponse {
+  InventoryProduct product = 1;
+}
+
+message SetInventoryProductStockRequest {
+  string id = 1;
+  int64 new_stock = 2;
+}
+
+message SetInventoryProductStockRequestResponse {
+  InventoryProduct product = 1;
+}
+
+message CreateNewInventoryProductRequest {
+  string id = 1;
+  int64 initial_stock = 2;
+}
+
+message CreateNewInventoryProductResponse {
+  InventoryProduct product = 1;
+}
+
+message DeleteInventoryProductRequest {
+  string id = 1;
+}
+
+message DeleteInventoryProductResponse {
+  InventoryProduct product = 1;
+}
+
+message XaPrepareCreateInventoryProductRequest {
+  string gid = 1;
+  string id = 2;
+  int64 initial_stock = 3;
+}

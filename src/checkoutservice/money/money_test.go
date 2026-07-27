@@ -19,16 +19,18 @@ import (
 	"reflect"
 	"testing"
 
-	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
+	commonpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
 )
 
-func mmc(u int64, n int32, c string) pb.Money { return pb.Money{Units: u, Nanos: n, CurrencyCode: c} }
-func mm(u int64, n int32) pb.Money            { return mmc(u, n, "") }
+func mmc(u int64, n int32, c string) commonpb.Money {
+	return commonpb.Money{Units: u, Nanos: n, CurrencyCode: c}
+}
+func mm(u int64, n int32) commonpb.Money { return mmc(u, n, "") }
 
 func TestIsValid(t *testing.T) {
 	tests := []struct {
 		name string
-		in   pb.Money
+		in   commonpb.Money
 		want bool
 	}{
 		{"valid -/-", mm(-981273891273, -999999999), true},
@@ -52,7 +54,7 @@ func TestIsValid(t *testing.T) {
 func TestIsZero(t *testing.T) {
 	tests := []struct {
 		name string
-		in   pb.Money
+		in   commonpb.Money
 		want bool
 	}{
 		{"zero", mm(0, 0), true},
@@ -73,7 +75,7 @@ func TestIsZero(t *testing.T) {
 func TestIsPositive(t *testing.T) {
 	tests := []struct {
 		name string
-		in   pb.Money
+		in   commonpb.Money
 		want bool
 	}{
 		{"zero", mm(0, 0), false},
@@ -94,7 +96,7 @@ func TestIsPositive(t *testing.T) {
 func TestIsNegative(t *testing.T) {
 	tests := []struct {
 		name string
-		in   pb.Money
+		in   commonpb.Money
 		want bool
 	}{
 		{"zero", mm(0, 0), false},
@@ -114,8 +116,8 @@ func TestIsNegative(t *testing.T) {
 
 func TestAreSameCurrency(t *testing.T) {
 	type args struct {
-		l pb.Money
-		r pb.Money
+		l commonpb.Money
+		r commonpb.Money
 	}
 	tests := []struct {
 		name string
@@ -139,8 +141,8 @@ func TestAreSameCurrency(t *testing.T) {
 
 func TestAreEquals(t *testing.T) {
 	type args struct {
-		l pb.Money
-		r pb.Money
+		l commonpb.Money
+		r commonpb.Money
 	}
 	tests := []struct {
 		name string
@@ -165,8 +167,8 @@ func TestAreEquals(t *testing.T) {
 func TestNegate(t *testing.T) {
 	tests := []struct {
 		name string
-		in   pb.Money
-		want pb.Money
+		in   commonpb.Money
+		want commonpb.Money
 	}{
 		{"zero", mm(0, 0), mm(0, 0)},
 		{"negative", mm(-1, -200), mm(1, 200)},
@@ -201,13 +203,13 @@ func TestMust_panic(t *testing.T) {
 
 func TestSum(t *testing.T) {
 	type args struct {
-		l pb.Money
-		r pb.Money
+		l commonpb.Money
+		r commonpb.Money
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    pb.Money
+		want    commonpb.Money
 		wantErr error
 	}{
 		{"0+0=0", args{mm(0, 0), mm(0, 0)}, mm(0, 0), nil},

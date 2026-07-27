@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/golang/protobuf/jsonpb"
-	pb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto"
+	inventorypb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto/inventory"
 )
 
-func loadInventory(inventory *pb.ListInventoryResponse) error {
+func loadInventory(inventory *inventorypb.ListInventoryResponse) error {
 	log.Info("loading inventory from local inventory.json file...")
 
 	inventoryJSON, err := os.ReadFile("inventory.json")

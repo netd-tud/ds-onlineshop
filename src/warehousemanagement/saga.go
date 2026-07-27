@@ -6,12 +6,14 @@ import (
 	"encoding/base64"
 
 	"github.com/dtm-labs/client/dtmgrpc"
-	pb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto"
+	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
+	productcatalogpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/productcatalog"
+	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *pb.CreateWarehouseProductRequest) (*pb.CreateWarehouseProductResponse, error) {
+func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
 	productID, _ := generateID(10)
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
 
@@ -19,7 +21,7 @@ func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *pb
 		Add(
 			wm.productCatalogSvcAddr+"/hipstershop.ProductCatalogService/CreateNewProduct",
 			wm.productCatalogSvcAddr+"/hipstershop.ProductCatalogService/CompensateCreateNewProduct",
-			&pb.CreateNewProductRequest{
+			&productcatalogpb.CreateNewProductRequest{
 				Id:          productID,
 				Name:        req.Name,
 				Description: req.Description,
@@ -30,7 +32,7 @@ func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *pb
 		Add(
 			wm.inventorySvcAddr+"/hipstershop.InventoryService/CreateNewInventoryProduct",
 			wm.inventorySvcAddr+"/hipstershop.InventoryService/CompensateCreateNewInventoryProduct",
-			&pb.CreateNewInventoryProductRequest{
+			&inventorypb.CreateNewInventoryProductRequest{
 				Id:           productID,
 				InitialStock: req.InitialStock,
 			},
@@ -42,19 +44,19 @@ func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *pb
 		return nil, status.Errorf(codes.Internal, "DTM-SAGA: saga submission failed: %v", err)
 	}
 
-	catalogResp, err := pb.NewProductCatalogServiceClient(wm.productCatalogSvcConn).GetProduct(ctx, &pb.GetProductRequest{Id: productID})
+	catalogResp, err := productcatalogpb.NewProductCatalogServiceClient(wm.productCatalogSvcConn).GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: productID})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "DTM-SAGA: failed to retrieve created product: %v", err)
 	}
 	log.Infof("DTM-SAGA: Retrieved created product from catalog: %v", catalogResp)
 
-	invResp, err := pb.NewInventoryServiceClient(wm.inventorySvcConn).GetInventoryProduct(ctx, &pb.GetInventoryProductRequest{Id: productID})
+	invResp, err := inventorypb.NewInventoryServiceClient(wm.inventorySvcConn).GetInventoryProduct(ctx, &inventorypb.GetInventoryProductRequest{Id: productID})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "DTM-SAGA: failed to retrieve created inventory product: %v", err)
 	}
 	log.Infof("DTM-SAGA: Retrieved created product from inventory: %v", invResp)
 
-	return &pb.CreateWarehouseProductResponse{
+	return &warehousemanagementpb.CreateWarehouseProductResponse{
 		Product: catalogResp,
 	}, nil
 }
