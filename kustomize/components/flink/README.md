@@ -47,24 +47,31 @@ The worker process that executes stream processing tasks, maintains state, and o
 
 **Deployment Details:**
 - **Replicas:** 1 (scalable)
-- **Slots:** 2 Task Slots per worker
+- **Slots:** 4 Task Slots per worker
 - **Memory:** 2600m Process Memory
 
 ### Flink SQL Runner (Job)
 A Kubernetes batch Job that initializes connector dependencies and submits long-running Flink SQL scripts to the JobManager.
 
 **Deployment Details:**
-- **Image:** `flink:2.3.0`
+- **Image:** `flink:1.19.0`
 - **Execution:** Runs `sql-client.sh` in embedded mode to submit streaming queries
 
 **Configuration:**
-- Uses an init container (`wait-and-setup`) to fetch the `flink-sql-connector-kafka` JAR from Maven Central and wait for the JobManager REST API
+- Uses an init container (`wait-and-setup`) to fetch `flink-connector-jdbc`, `postgresql` and `flink-sql-connector-kafka` JAR from Maven Central and wait for the JobManager REST API
 - Passes configuration environment variables via `/docker-entrypoint.sh`
+- Combines all sql scripts inside the `sql` folder into a single  `combined_jobs.sql` file for execution
 
 ## SQL Analytics Scripts
 
-### `01_product_analytics.sql`
-Defines the streaming data pipeline for processing product events:
+### `00_setup_source.sql`
+Defines the data sources for processing product events:
 - **Kafka Source (`product_events`):** Reads JSON-formatted events from the `product-events` Kafka topic with ISO-8601 timestamps and watermark strategy (`event_time - INTERVAL '5' SECOND`).
-- **Print Sink (`product_events_aggregated`):** Outputs aggregated results directly to TaskManager stdout.
+
+### `01_product_sales_1m.sql`
+- **Postgres Sink (`product_sales_1m_sink`):** Outputs aggregated results to `product_sales_1m` postgres table.
 - **Continuous Query:** Executes a 1-minute tumbling window aggregation on `ORDER` events, computing total units bought per product SKU.
+
+### `02_product_clicks_1m.sql`
+- **Postgres Sink (`product_clicks_1m_sink`):** Outputs aggregated results to `product_clicks_1m` postgres table.
+- **Continuous Query:** Executes a 1-minute tumbling window aggregation on `VIEW` events, computing total clicks/views per product SKU.
