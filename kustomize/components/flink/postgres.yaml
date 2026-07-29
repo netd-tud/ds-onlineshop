@@ -29,6 +29,26 @@ data:
       window_start TIMESTAMP NOT NULL,
       PRIMARY KEY (sku, window_start)
     );
+
+    CREATE TABLE IF NOT EXISTS product_view_to_cart_1h (
+      sku VARCHAR(255) NOT NULL,
+      window_start TIMESTAMP NOT NULL,
+      window_end TIMESTAMP NOT NULL,
+      total_views BIGINT NOT NULL DEFAULT 0,
+      total_atc BIGINT NOT NULL DEFAULT 0,
+      view_to_cart_rate DOUBLE PRECISION,
+      PRIMARY KEY (sku, window_start)
+    );
+
+    CREATE TABLE IF NOT EXISTS order_aov_15m (
+      currency_code VARCHAR(10) NOT NULL,
+      window_start TIMESTAMP NOT NULL,
+      window_end TIMESTAMP NOT NULL,
+      total_orders BIGINT NOT NULL DEFAULT 0,
+      total_revenue DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+      average_order_value DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+      PRIMARY KEY (currency_code, window_start)
+    );
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
