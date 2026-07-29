@@ -17,3 +17,8 @@ configMapGenerator:
       - sql/02_product_clicks_1m.sql
       - sql/03_view_to_cart_1h.sql
       - sql/04_average_order_value_1h.sql
+      - sql/00_setup.sql
+      - sql/10_product_sales_1m.sql
+      - sql/11_product_clicks_1m.sql
+      - sql/20_view_to_cart_1h.sql
+      - sql/21_average_order_value_1h.sql

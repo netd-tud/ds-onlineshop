@@ -44,3 +44,4 @@ CREATE TABLE IF NOT EXISTS order_events (
   'json.ignore-parse-errors' = 'true',
   'json.timestamp-format.standard' = 'ISO-8601'
   );
+

@@ -64,14 +64,14 @@ A Kubernetes batch Job that initializes connector dependencies and submits long-
 
 ## SQL Analytics Scripts
 
-### `00_setup_source.sql`
+### `00_setup.sql`
 Defines the data sources for processing product events:
 - **Kafka Source (`product_events`):** Reads JSON-formatted events from the `product-events` Kafka topic with ISO-8601 timestamps and watermark strategy (`event_time - INTERVAL '5' SECOND`).
 
-### `01_product_sales_1m.sql`
+### `10_product_sales_1m.sql`
 - **Postgres Sink (`product_sales_1m_sink`):** Outputs aggregated results to `product_sales_1m` postgres table.
 - **Continuous Query:** Executes a 1-minute tumbling window aggregation on `ORDER` events, computing total units bought per product SKU.
 
-### `02_product_clicks_1m.sql`
+### `11_product_clicks_1m.sql`
 - **Postgres Sink (`product_clicks_1m_sink`):** Outputs aggregated results to `product_clicks_1m` postgres table.
 - **Continuous Query:** Executes a 1-minute tumbling window aggregation on `VIEW` events, computing total clicks/views per product SKU.
