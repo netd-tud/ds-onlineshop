@@ -4,7 +4,7 @@ metadata:
   name: flink-taskmanager
   namespace: flink
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: Recreate
   selector:
@@ -42,10 +42,10 @@ spec:
                 name: flink-config
           resources:
             requests:
-              cpu: 800m
+              cpu: 400m
               memory: 2600Mi
             limits:
-              cpu: 1200m
+              cpu: 800m
               memory: 2600Mi
       volumes:
         - name: flink-config
