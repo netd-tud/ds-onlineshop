@@ -26,3 +26,7 @@ data:
     restart-strategy.exponential-delay.backoff-multiplier: 2.0
     restart-strategy.exponential-delay.reset-backoff-threshold: 10m
     restart-strategy.exponential-delay.jitter-factor: 0.1
+
+    execution.checkpointing.interval: 10s
+    execution.checkpointing.mode: EXACTLY_ONCE
+    execution.checkpointing.max-concurrent-checkpoints: 1
