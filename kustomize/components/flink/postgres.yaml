@@ -16,6 +16,24 @@ metadata:
   namespace: flink
 data:
   init.sql: |
+    CREATE TABLE IF NOT EXISTS raw_order_events (
+      event_id VARCHAR(255) PRIMARY KEY,
+      event_time TIMESTAMPTZ NOT NULL,
+      event_type VARCHAR(64) NOT NULL,
+      order_id VARCHAR(255),
+      session_id VARCHAR(255),
+      producer VARCHAR(255),
+      currency_code VARCHAR(10),
+      price_units BIGINT,
+      price_nanos INT,
+      amount DOUBLE PRECISION,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_raw_order_events_time
+    ON raw_order_events (event_time);
+    CREATE INDEX IF NOT EXISTS idx_raw_order_events_order_id
+    ON raw_order_events (order_id);
+
     CREATE TABLE IF NOT EXISTS product_sales_1m (
       sku VARCHAR(255) NOT NULL,
       total_units_bought INT NOT NULL,
