@@ -1,0 +1,33 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      warehousemanagement-grpc:
+        port: 30050
+        expose: { default: true }
+        exposedPort: 30050
+        protocol: TCP
+      mqtt:
+        port: 31883
+        expose: { default: true }
+        exposedPort: 31883
+        protocol: TCP
+      dtmui:
+        port: 30789
+        expose: { default: true }
+        exposedPort: 30789
+        protocol: TCP
+      ldap:
+        port: 30389
+        expose: { default: true }
+        exposedPort: 30389
+        protocol: TCP
+      flinkui:
+        port: 30181
+        expose: { default: true }
+        exposedPort: 30181
+        protocol: TCP

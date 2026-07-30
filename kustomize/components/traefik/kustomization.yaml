@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - traefik-config.yaml
+  - traefik-tls-store.yaml
+  - ingress-http.yaml
+  - ingress-tcp.yaml

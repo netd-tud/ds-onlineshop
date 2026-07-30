@@ -3,9 +3,17 @@ kind: Ingress
 metadata:
   name: frontend-ingress
   namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
 spec:
+  tls:
+    - hosts:
+        - ds-exercise-01.netd.cs.tu-dresden.de
+      secretName: vm1-tls-cert
   rules:
-    - http:
+    - host: ds-exercise-01.netd.cs.tu-dresden.de
+      http:
         paths:
           - path: /
             pathType: Prefix
@@ -14,7 +22,6 @@ spec:
                 name: frontend
                 port:
                   number: 80
-          # Grafana Subpath
           - path: /grafana
             pathType: Prefix
             backend:
@@ -22,8 +29,6 @@ spec:
                 name: grafana
                 port:
                   number: 3000
-
-          # Prometheus Subpath
           - path: /prometheus
             pathType: Prefix
             backend:
@@ -31,11 +36,3 @@ spec:
                 name: prometheus
                 port:
                   number: 9090
-
-          - path: /dtm
-            pathType: Prefix
-            backend:
-              service:
-                name: dtm-svc
-                port:
-                  number: 36789

@@ -1,0 +1,94 @@
+# ==========================================
+# MQTT (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehouse-mqtt
+  namespace: default
+spec:
+  entryPoints:
+    - mqtt
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: mqtt-broker
+          port: 1883
+  tls: {}
+
+---
+# ==========================================
+# LDAP (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: ldap-server
+  namespace: default
+spec:
+  entryPoints:
+    - ldap
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: ldap
+          port: 3890
+  tls: {}
+
+---
+# ==========================================
+# gRPC (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehouse-grpc
+  namespace: default
+spec:
+  entryPoints:
+    - warehousemanagement-grpc
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: warehousemanagement
+          port: 50000
+  tls: {}
+
+---
+# ==========================================
+# DTM UI (Dedicated Port 30789 HTTPS)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dtm-ui-route
+  namespace: default
+spec:
+  entryPoints:
+    - dtmui
+  routes:
+    - match: Host(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      kind: Rule
+      services:
+        - name: dtm-svc
+          port: 36789
+  tls: {}
+
+---
+# ==========================================
+# Flink Job UI (Dedicated Port 30181 HTTPS)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: flink-ui
+  namespace: flink
+spec:
+  entryPoints:
+    - flinkui
+  routes:
+    - match: Host(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: flink-jobmanager
+          port: 8081
+  tls: {}
