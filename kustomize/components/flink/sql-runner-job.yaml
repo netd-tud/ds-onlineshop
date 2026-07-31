@@ -20,7 +20,14 @@ spec:
               - matchExpressions:
                   - key: workload
                     operator: In
-                    values: [ "flink" ]
+                    values: ["flink", "fallback"]
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: workload
+                    operator: In
+                    values: ["flink"]
       initContainers:
         - name: wait-and-setup
           image: curlimages/curl:latest

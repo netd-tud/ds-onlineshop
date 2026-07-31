@@ -35,4 +35,11 @@ spec:
                 - matchExpressions:
                     - key: workload
                       operator: In
-                      values: ["kafka"]
+                      values: [ "kafka", "fallback" ]
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: workload
+                      operator: In
+                      values: [ "kafka" ]
