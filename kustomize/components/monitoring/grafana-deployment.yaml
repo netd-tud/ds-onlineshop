@@ -27,8 +27,8 @@ spec:
               value: "true"
           volumeMounts:
             - name: grafana-datasources
-              mountPath: /etc/grafana/provisioning/datasources/datasources.yml
-              subPath: datasources.yml
+              mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+              subPath: datasources.yaml
             - name: grafana-storage
               mountPath: /var/lib/grafana
       volumes:

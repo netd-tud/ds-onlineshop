@@ -28,8 +28,8 @@ spec:
             - "--web.external-url=/prometheus/"
           volumeMounts:
             - name: prometheus-config
-              mountPath: /etc/prometheus/prometheus.yml
-              subPath: prometheus.yml
+              mountPath: /etc/prometheus/prometheus.yaml
+              subPath: prometheus.yaml
             - name: prometheus-storage
               mountPath: /prometheus
         - name: pushgateway
