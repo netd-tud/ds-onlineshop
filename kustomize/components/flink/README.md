@@ -68,6 +68,10 @@ A Kubernetes batch Job that initializes connector dependencies and submits long-
 Defines the data sources for processing product events:
 - **Kafka Source (`product_events`):** Reads JSON-formatted events from the `product-events` Kafka topic with ISO-8601 timestamps and watermark strategy (`event_time - INTERVAL '5' SECOND`).
 
+### `01_raw_orders.sql`
+- **Postgres Sink (`raw_order_events_sink`):** Outputs raw `ORDER` events to the `raw_order_events` postgres table for persistent storage.
+- **Continuous Query:** Executes a continuous query to store the raw order events.
+
 ### `10_product_sales_1m.sql`
 - **Postgres Sink (`product_sales_1m_sink`):** Outputs aggregated results to `product_sales_1m` postgres table.
 - **Continuous Query:** Executes a 1-minute tumbling window aggregation on `ORDER` events, computing total units bought per product SKU.
@@ -75,3 +79,11 @@ Defines the data sources for processing product events:
 ### `11_product_clicks_1m.sql`
 - **Postgres Sink (`product_clicks_1m_sink`):** Outputs aggregated results to `product_clicks_1m` postgres table.
 - **Continuous Query:** Executes a 1-minute tumbling window aggregation on `VIEW` events, computing total clicks/views per product SKU.
+
+### `20_view_to_cart_1h.sql`
+- **Postgres Sink (`product_view_to_cart_1h_sink`):** Outputs aggregated results to `product_view_to_cart_1h` postgres table.
+- **Continuous Query:** Executes a 1-hour tumbling window aggregation on `VIEW` and `CART` events, computing the number of views that lead to cart additions.
+
+### `21_average_order_value_1h.sql`
+- **Postgres Sink (`order_aov_1h_sink`):** Outputs aggregated results to `order_aov_1h` postgres table.
+- **Continuous Query:** Executes a 1-hour tumbling window aggregation on `ORDER` events, computing the average order value.

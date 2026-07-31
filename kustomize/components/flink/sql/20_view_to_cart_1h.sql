@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS product_view_to_cart_1h (
+CREATE TABLE IF NOT EXISTS product_view_to_cart_1h_sink (
   window_start TIMESTAMP(3),
   window_end TIMESTAMP(3),
   sku STRING,

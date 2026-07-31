@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS order_aov_1h (
+CREATE TABLE IF NOT EXISTS order_aov_1h_sink (
   window_start TIMESTAMP(3),
   window_end TIMESTAMP(3),
   currency_code STRING,
