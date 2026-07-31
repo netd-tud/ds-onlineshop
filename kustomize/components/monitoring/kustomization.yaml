@@ -9,10 +9,10 @@ resources:
 configMapGenerator:
   - name: prometheus-config
     files:
-      - prometheus/prometheus.yml
+      - prometheus/prometheus.yaml
   - name: grafana-datasources
     files:
-      - grafana/provisioning/datasources/datasources.yml
+      - grafana/provisioning/datasources/datasources.yaml
 
 generatorOptions:
   disableNameSuffixHash: false
