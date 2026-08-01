@@ -23,7 +23,7 @@ spec:
             - containerPort: 9090
               name: web
           args:
-            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--config.file=/etc/prometheus/prometheus.yaml"
             - "--storage.tsdb.path=/prometheus"
             - "--web.external-url=/prometheus/"
           volumeMounts:
