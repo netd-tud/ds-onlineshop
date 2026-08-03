@@ -10,7 +10,7 @@ import proto.warehousemanagement.warehousemanagement_pb2_grpc as whm_pb_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-GRPC_ADDRESS = "ds-exercise-06.netd.cs.tu-dresden.de:30050"
+GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30050"
 CONFIG_FILE = "config.json"
 
 def load_config(file_path):

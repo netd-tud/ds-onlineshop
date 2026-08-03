@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	grpcAddress = "ds-exercise-06.netd.cs.tu-dresden.de:30050"
-	mqttBroker  = "tcp://ds-exercise-06.netd.cs.tu-dresden.de:31883"
+	grpcAddress = "ds-exercise-01.netd.cs.tu-dresden.de:30050"
+	mqttBroker  = "tcp://ds-exercise-01.netd.cs.tu-dresden.de:31883"
 )
 
 // MQTT Structural Mappings
