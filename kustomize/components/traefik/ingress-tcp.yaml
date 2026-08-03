@@ -37,21 +37,57 @@ spec:
 
 ---
 # ==========================================
-# gRPC (TLS Terminated)
+# NAIVE - gRPC (TLS Terminated)
 # ==========================================
 apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
-  name: warehouse-grpc
+  name: warehousemanagement-grpc-naive
   namespace: default
 spec:
   entryPoints:
-    - warehousemanagement-grpc
+    - grpc-naive
   routes:
     - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
       services:
-        - name: warehousemanagement
-          port: 50000
+        - name: warehousemanagement-naive
+          port: 50001
+  tls: {}
+---
+# ==========================================
+# SAGA - gRPC (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehousemanagement-grpc-saga
+  namespace: default
+spec:
+  entryPoints:
+    - grpc-saga
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: warehousemanagement-saga
+          port: 50002
+  tls: {}
+---
+# ==========================================
+# XA - gRPC (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehousemanagement-grpc-xa
+  namespace: default
+spec:
+  entryPoints:
+    - grpc-xa
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: warehousemanagement-xa
+          port: 50003
   tls: {}
 
 ---
@@ -72,7 +108,8 @@ spec:
       services:
         - name: dtm-svc
           port: 36789
-  tls: {}
+  tls:
+    secretName: vm1-tls-cert
 
 ---
 # ==========================================
@@ -91,4 +128,5 @@ spec:
       services:
         - name: flink-jobmanager
           port: 8081
-  tls: {}
+  tls:
+    secretName: vm1-tls-cert

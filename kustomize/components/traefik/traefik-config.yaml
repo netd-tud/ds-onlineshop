@@ -6,10 +6,20 @@ metadata:
 spec:
   valuesContent: |-
     ports:
-      warehousemanagement-grpc:
-        port: 30050
+      grpc-naive:
+        port: 30051
         expose: { default: true }
-        exposedPort: 30050
+        exposedPort: 30051
+        protocol: TCP
+      grpc-saga:
+        port: 30052
+        expose: { default: true }
+        exposedPort: 30052
+        protocol: TCP
+      grpc-xa:
+        port: 30053
+        expose: { default: true }
+        exposedPort: 30053
         protocol: TCP
       mqtt:
         port: 31883
