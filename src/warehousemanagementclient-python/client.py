@@ -2,11 +2,11 @@ import json
 import logging
 import sys
 import grpc
-import os
 
-import demo_pb2 as demo
-import warehousemanagement_pb2 as pb
-import warehousemanagement_pb2_grpc as pb_grpc
+import proto.common.common_pb2 as money_pb
+import proto.inventory.inventory_pb2 as inventory_pb
+import proto.warehousemanagement.warehousemanagement_pb2 as whm_pb
+import proto.warehousemanagement.warehousemanagement_pb2_grpc as whm_pb_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -28,13 +28,13 @@ def handle_create(stub, data):
     logging.info("--- Calling CreateNewProduct via gRPC ---")
 
     price_data = data.get("price_usd", {})
-    price = demo.Money(
+    price = money_pb.Money(
         currency_code=price_data.get("currency_code", "USD"),
         units=price_data.get("units", 0),
         nanos=price_data.get("nanos", 0)
     )
 
-    request = pb.CreateWarehouseProductRequest(
+    request = whm_pb.CreateWarehouseProductRequest(
         name=data.get("name", ""),
         description=data.get("description", ""),
         price_usd=price,
@@ -43,7 +43,7 @@ def handle_create(stub, data):
     )
 
     try:
-        response = stub.CreateNewProductWithXA(request, timeout=5)
+        response = stub.CreateNewProduct(request, timeout=5)
         logging.info(f"gRPC: Product Created Successfully!")
         logging.info(f"ID: {response.product.id} | Name: {response.product.name}")
     except grpc.RpcError as e:
@@ -57,7 +57,7 @@ def handle_update(stub, data):
         logging.error("gRPC Update Failed: No 'id' provided in 'update_stock' configuration.")
         return
 
-    request = demo.ChangeInventoryProductStockRequest(
+    request = inventory_pb.ChangeInventoryProductStockRequest(
         id=product_id,
         delta=data.get("delta", 0)
     )
@@ -79,7 +79,7 @@ def main():
 
     logging.info(f"Connecting to gRPC server at {GRPC_ADDRESS}...")
     with grpc.insecure_channel(GRPC_ADDRESS) as channel:
-        stub = pb_grpc.WarehouseManagementStub(channel)
+        stub = whm_pb_grpc.WarehouseManagementStub(channel)
 
         if action == "create":
             handle_create(stub, config.get("create_product", {}))

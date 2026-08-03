@@ -10,7 +10,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "github.com/turt1z/microservices-demo/src/client/genproto"
+	commonpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common"
+	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/inventory"
+	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/warehousemanagement"
 )
 
 const (
@@ -48,15 +50,15 @@ func main() {
 	}
 	defer conn.Close()
 
-	grpcClient := pb.NewWarehouseManagementClient(conn)
+	grpcClient := warehousemanagementpb.NewWarehouseManagementClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	log.Println("--- Calling CreateNewProduct via gRPC ---")
-	createRes, err := grpcClient.CreateNewProductWithDTM(ctx, &pb.CreateWarehouseProductRequest{
+	createRes, err := grpcClient.CreateNewProduct(ctx, &warehousemanagementpb.CreateWarehouseProductRequest{
 		Name:        "Hat",
 		Description: "A high-quality piece of clothing.",
-		PriceUsd: &pb.Money{
+		PriceUsd: &commonpb.Money{
 			CurrencyCode: "USD",
 			Units:        15,
 			Nanos:        990000000,
@@ -71,7 +73,7 @@ func main() {
 	log.Printf("gRPC: Product Created Successfully! ID: %s, Name: %s\n", gRPCProductID, createRes.GetProduct().GetName())
 
 	log.Println("\n--- Calling UpdateProductStock via gRPC ---")
-	updateRes, err := grpcClient.UpdateProductStock(ctx, &pb.ChangeInventoryProductStockRequest{
+	updateRes, err := grpcClient.UpdateProductStock(ctx, &inventorypb.ChangeInventoryProductStockRequest{
 		Id:    gRPCProductID,
 		Delta: 150,
 	})
