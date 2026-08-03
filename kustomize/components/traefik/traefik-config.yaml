@@ -5,6 +5,10 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |-
+    service:
+      spec:
+        externalIPs:
+          - 172.26.125.182
     ports:
       grpc-naive:
         port: 30051
