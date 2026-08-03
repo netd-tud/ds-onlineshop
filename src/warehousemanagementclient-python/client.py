@@ -71,14 +71,30 @@ def handle_update(stub, data):
 
 def main():
     config = load_config(CONFIG_FILE)
-    action = config.get("action", "").lower().strip()
+    dt_function = config.get("dt-function", "").lower().strip()
+    if dt_function not in ["naive", "saga", "xa"]:
+        logging.error(f"Invalid distributed transaction function '{dt_function}' in config. Use 'naive', 'saga' or 'xa'")
+        sys.exit(1)
+    else:
+        match dt_function:
+            case "naive":
+                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30051"
+            case "saga":
+                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30052"
+            case "xa":
+                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30053"
 
+    action = config.get("action", "").lower().strip()
     if action not in ["create", "update"]:
         logging.error(f"Invalid action '{action}' in config. Use 'create' or 'update'.")
         sys.exit(1)
 
     logging.info(f"Connecting to gRPC server at {GRPC_ADDRESS}...")
-    with grpc.insecure_channel(GRPC_ADDRESS) as channel:
+
+    channel_credentials = grpc.ssl_channel_credentials()
+    options = [('grpc.ssl_target_name_override', 'ds-exercise-01.netd.cs.tu-dresden.de')]
+
+    with grpc.secure_channel(GRPC_ADDRESS, channel_credentials, options=options) as channel:
         stub = whm_pb_grpc.WarehouseManagementStub(channel)
 
         if action == "create":
