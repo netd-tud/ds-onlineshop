@@ -6,12 +6,44 @@ resources:
 
 nameSuffix: -saga
 
+labels:
+  - pairs:
+      variant: saga
+    includeSelectors: true
+    includeTemplates: true
+
 patches:
-  - path: saga-patch.yaml
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: warehousemanagement
+      spec:
+        template:
+          spec:
+            containers:
+              - name: server
+                env:
+                  - name: SERVED_FUNCTION
+                    value: "SAGA"
+                  - name: PORT
+                    value: "50002"
+                  - name: WAREHOUSE_MANAGEMENT_SVC_ADDR
+                    value: "warehousemanagement-saga:50002"
+                readinessProbe:
+                  grpc:
+                    port: 50002
+                livenessProbe:
+                  grpc:
+                    port: 50002
+
   - target:
       kind: Service
-      name: warehouse-management-nodeport
+      name: warehousemanagement
     patch: |-
       - op: replace
-        path: /spec/ports/0/nodePort
-        value: 30052
+        path: /spec/ports/0/port
+        value: 50002
+      - op: replace
+        path: /spec/ports/0/targetPort
+        value: 50002

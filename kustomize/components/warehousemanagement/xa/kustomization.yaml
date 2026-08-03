@@ -6,12 +6,44 @@ resources:
 
 nameSuffix: -xa
 
+labels:
+  - pairs:
+      variant: xa
+    includeSelectors: true
+    includeTemplates: true
+
 patches:
-  - path: xa-patch.yaml
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: warehousemanagement
+      spec:
+        template:
+          spec:
+            containers:
+              - name: server
+                env:
+                  - name: SERVED_FUNCTION
+                    value: "XA"
+                  - name: PORT
+                    value: "50003"
+                  - name: WAREHOUSE_MANAGEMENT_SVC_ADDR
+                    value: "warehousemanagement-xa:50003"
+                readinessProbe:
+                  grpc:
+                    port: 50003
+                livenessProbe:
+                  grpc:
+                    port: 50003
+
   - target:
       kind: Service
-      name: warehouse-management-nodeport
+      name: warehousemanagement
     patch: |-
       - op: replace
-        path: /spec/ports/0/nodePort
-        value: 30053
+        path: /spec/ports/0/port
+        value: 50003
+      - op: replace
+        path: /spec/ports/0/targetPort
+        value: 50003
