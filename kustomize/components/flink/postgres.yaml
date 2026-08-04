@@ -67,6 +67,13 @@ data:
       average_order_value DOUBLE PRECISION NOT NULL DEFAULT 0.0,
       PRIMARY KEY (currency_code, window_start)
     );
+
+    CREATE TABLE IF NOT EXISTS product_recommendations (
+      sku_a VARCHAR(255) NOT NULL,
+      sku_b VARCHAR(255) NOT NULL,
+      co_purchase_count BIGINT NOT NULL,
+      PRIMARY KEY (sku_a, sku_b)
+    );
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
