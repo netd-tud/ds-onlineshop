@@ -10,6 +10,7 @@ import (
 	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -22,6 +23,10 @@ func (wm *warehouseManagement) Watch(req *healthpb.HealthCheckRequest, ws health
 }
 
 func (wm *warehouseManagement) UpdateProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.InventoryProduct, error) {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		ctx = metadata.NewOutgoingContext(ctx, md)
+	}
+
 	resp, err := inventorypb.NewInventoryServiceClient(wm.inventorySvcConn).ChangeInventoryProductStock(ctx, req)
 	if err != nil {
 		return nil, err
@@ -30,6 +35,10 @@ func (wm *warehouseManagement) UpdateProductStock(ctx context.Context, req *inve
 }
 
 func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		ctx = metadata.NewOutgoingContext(ctx, md)
+	}
+
 	switch wm.servedFunction {
 	case NAIVE:
 		return wm.createNewProductNaive(ctx, req)
