@@ -1,0 +1,156 @@
+"""Client and server classes corresponding to protobuf-defined services."""
+import grpc
+import warnings
+from ..common import common_pb2 as common_dot_common__pb2
+from ..inventory import inventory_pb2 as inventory_dot_inventory__pb2
+GRPC_GENERATED_VERSION = '1.81.1'
+GRPC_VERSION = grpc.__version__
+_version_not_supported = False
+try:
+    from grpc._utilities import first_version_is_lower
+    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
+except ImportError:
+    _version_not_supported = True
+if _version_not_supported:
+    raise RuntimeError(f'The grpc package installed is at version {GRPC_VERSION},' + ' but the generated code in inventory/inventory_pb2_grpc.py depends on' + f' grpcio>={GRPC_GENERATED_VERSION}.' + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}' + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.')
+
+class InventoryServiceStub:
+    """------------Inventory service------------------
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.ListInventory = channel.unary_unary('/hipstershop.InventoryService/ListInventory', request_serializer=common_dot_common__pb2.Empty.SerializeToString, response_deserializer=inventory_dot_inventory__pb2.ListInventoryResponse.FromString, _registered_method=True)
+        self.GetInventoryProduct = channel.unary_unary('/hipstershop.InventoryService/GetInventoryProduct', request_serializer=inventory_dot_inventory__pb2.GetInventoryProductRequest.SerializeToString, response_deserializer=inventory_dot_inventory__pb2.InventoryProduct.FromString, _registered_method=True)
+        self.ChangeInventoryProductStock = channel.unary_unary('/hipstershop.InventoryService/ChangeInventoryProductStock', request_serializer=inventory_dot_inventory__pb2.ChangeInventoryProductStockRequest.SerializeToString, response_deserializer=inventory_dot_inventory__pb2.ChangeInventoryProductStockResponse.FromString, _registered_method=True)
+        self.SetInventoryProductStock = channel.unary_unary('/hipstershop.InventoryService/SetInventoryProductStock', request_serializer=inventory_dot_inventory__pb2.SetInventoryProductStockRequest.SerializeToString, response_deserializer=inventory_dot_inventory__pb2.SetInventoryProductStockRequestResponse.FromString, _registered_method=True)
+        self.CreateNewInventoryProduct = channel.unary_unary('/hipstershop.InventoryService/CreateNewInventoryProduct', request_serializer=inventory_dot_inventory__pb2.CreateNewInventoryProductRequest.SerializeToString, response_deserializer=inventory_dot_inventory__pb2.CreateNewInventoryProductResponse.FromString, _registered_method=True)
+        self.DeleteInventoryProduct = channel.unary_unary('/hipstershop.InventoryService/DeleteInventoryProduct', request_serializer=inventory_dot_inventory__pb2.DeleteInventoryProductRequest.SerializeToString, response_deserializer=inventory_dot_inventory__pb2.DeleteInventoryProductResponse.FromString, _registered_method=True)
+        self.CompensateCreateNewInventoryProduct = channel.unary_unary('/hipstershop.InventoryService/CompensateCreateNewInventoryProduct', request_serializer=inventory_dot_inventory__pb2.CreateNewInventoryProductRequest.SerializeToString, response_deserializer=inventory_dot_inventory__pb2.DeleteInventoryProductResponse.FromString, _registered_method=True)
+        self.XaPrepareCreateInventoryProduct = channel.unary_unary('/hipstershop.InventoryService/XaPrepareCreateInventoryProduct', request_serializer=inventory_dot_inventory__pb2.XaPrepareCreateInventoryProductRequest.SerializeToString, response_deserializer=common_dot_common__pb2.Empty.FromString, _registered_method=True)
+        self.XaCommitCreateInventoryProduct = channel.unary_unary('/hipstershop.InventoryService/XaCommitCreateInventoryProduct', request_serializer=common_dot_common__pb2.XaBranchRequest.SerializeToString, response_deserializer=common_dot_common__pb2.Empty.FromString, _registered_method=True)
+        self.XaRollbackCreateInventoryProduct = channel.unary_unary('/hipstershop.InventoryService/XaRollbackCreateInventoryProduct', request_serializer=common_dot_common__pb2.XaBranchRequest.SerializeToString, response_deserializer=common_dot_common__pb2.Empty.FromString, _registered_method=True)
+
+class InventoryServiceServicer:
+    """------------Inventory service------------------
+
+    """
+
+    def ListInventory(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ChangeInventoryProductStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetInventoryProductStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateNewInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CompensateCreateNewInventoryProduct(self, request, context):
+        """SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
+        because DTM resends the original action's request bytes when invoking the compensating transaction.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def XaPrepareCreateInventoryProduct(self, request, context):
+        """XA
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def XaCommitCreateInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def XaRollbackCreateInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+def add_InventoryServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {'ListInventory': grpc.unary_unary_rpc_method_handler(servicer.ListInventory, request_deserializer=common_dot_common__pb2.Empty.FromString, response_serializer=inventory_dot_inventory__pb2.ListInventoryResponse.SerializeToString), 'GetInventoryProduct': grpc.unary_unary_rpc_method_handler(servicer.GetInventoryProduct, request_deserializer=inventory_dot_inventory__pb2.GetInventoryProductRequest.FromString, response_serializer=inventory_dot_inventory__pb2.InventoryProduct.SerializeToString), 'ChangeInventoryProductStock': grpc.unary_unary_rpc_method_handler(servicer.ChangeInventoryProductStock, request_deserializer=inventory_dot_inventory__pb2.ChangeInventoryProductStockRequest.FromString, response_serializer=inventory_dot_inventory__pb2.ChangeInventoryProductStockResponse.SerializeToString), 'SetInventoryProductStock': grpc.unary_unary_rpc_method_handler(servicer.SetInventoryProductStock, request_deserializer=inventory_dot_inventory__pb2.SetInventoryProductStockRequest.FromString, response_serializer=inventory_dot_inventory__pb2.SetInventoryProductStockRequestResponse.SerializeToString), 'CreateNewInventoryProduct': grpc.unary_unary_rpc_method_handler(servicer.CreateNewInventoryProduct, request_deserializer=inventory_dot_inventory__pb2.CreateNewInventoryProductRequest.FromString, response_serializer=inventory_dot_inventory__pb2.CreateNewInventoryProductResponse.SerializeToString), 'DeleteInventoryProduct': grpc.unary_unary_rpc_method_handler(servicer.DeleteInventoryProduct, request_deserializer=inventory_dot_inventory__pb2.DeleteInventoryProductRequest.FromString, response_serializer=inventory_dot_inventory__pb2.DeleteInventoryProductResponse.SerializeToString), 'CompensateCreateNewInventoryProduct': grpc.unary_unary_rpc_method_handler(servicer.CompensateCreateNewInventoryProduct, request_deserializer=inventory_dot_inventory__pb2.CreateNewInventoryProductRequest.FromString, response_serializer=inventory_dot_inventory__pb2.DeleteInventoryProductResponse.SerializeToString), 'XaPrepareCreateInventoryProduct': grpc.unary_unary_rpc_method_handler(servicer.XaPrepareCreateInventoryProduct, request_deserializer=inventory_dot_inventory__pb2.XaPrepareCreateInventoryProductRequest.FromString, response_serializer=common_dot_common__pb2.Empty.SerializeToString), 'XaCommitCreateInventoryProduct': grpc.unary_unary_rpc_method_handler(servicer.XaCommitCreateInventoryProduct, request_deserializer=common_dot_common__pb2.XaBranchRequest.FromString, response_serializer=common_dot_common__pb2.Empty.SerializeToString), 'XaRollbackCreateInventoryProduct': grpc.unary_unary_rpc_method_handler(servicer.XaRollbackCreateInventoryProduct, request_deserializer=common_dot_common__pb2.XaBranchRequest.FromString, response_serializer=common_dot_common__pb2.Empty.SerializeToString)}
+    generic_handler = grpc.method_handlers_generic_handler('hipstershop.InventoryService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('hipstershop.InventoryService', rpc_method_handlers)
+
+class InventoryService:
+    """------------Inventory service------------------
+
+    """
+
+    @staticmethod
+    def ListInventory(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/ListInventory', common_dot_common__pb2.Empty.SerializeToString, inventory_dot_inventory__pb2.ListInventoryResponse.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def GetInventoryProduct(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/GetInventoryProduct', inventory_dot_inventory__pb2.GetInventoryProductRequest.SerializeToString, inventory_dot_inventory__pb2.InventoryProduct.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def ChangeInventoryProductStock(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/ChangeInventoryProductStock', inventory_dot_inventory__pb2.ChangeInventoryProductStockRequest.SerializeToString, inventory_dot_inventory__pb2.ChangeInventoryProductStockResponse.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def SetInventoryProductStock(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/SetInventoryProductStock', inventory_dot_inventory__pb2.SetInventoryProductStockRequest.SerializeToString, inventory_dot_inventory__pb2.SetInventoryProductStockRequestResponse.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def CreateNewInventoryProduct(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/CreateNewInventoryProduct', inventory_dot_inventory__pb2.CreateNewInventoryProductRequest.SerializeToString, inventory_dot_inventory__pb2.CreateNewInventoryProductResponse.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def DeleteInventoryProduct(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/DeleteInventoryProduct', inventory_dot_inventory__pb2.DeleteInventoryProductRequest.SerializeToString, inventory_dot_inventory__pb2.DeleteInventoryProductResponse.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def CompensateCreateNewInventoryProduct(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/CompensateCreateNewInventoryProduct', inventory_dot_inventory__pb2.CreateNewInventoryProductRequest.SerializeToString, inventory_dot_inventory__pb2.DeleteInventoryProductResponse.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def XaPrepareCreateInventoryProduct(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/XaPrepareCreateInventoryProduct', inventory_dot_inventory__pb2.XaPrepareCreateInventoryProductRequest.SerializeToString, common_dot_common__pb2.Empty.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def XaCommitCreateInventoryProduct(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/XaCommitCreateInventoryProduct', common_dot_common__pb2.XaBranchRequest.SerializeToString, common_dot_common__pb2.Empty.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
+
+    @staticmethod
+    def XaRollbackCreateInventoryProduct(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hipstershop.InventoryService/XaRollbackCreateInventoryProduct', common_dot_common__pb2.XaBranchRequest.SerializeToString, common_dot_common__pb2.Empty.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)

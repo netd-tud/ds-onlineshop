@@ -6,12 +6,44 @@ resources:
 
 nameSuffix: -naive
 
+labels:
+  - pairs:
+      variant: naive
+    includeSelectors: true
+    includeTemplates: true
+
 patches:
-  - path: naive-patch.yaml
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: warehousemanagement
+      spec:
+        template:
+          spec:
+            containers:
+              - name: server
+                env:
+                  - name: SERVED_FUNCTION
+                    value: "NAIVE"
+                  - name: PORT
+                    value: "50001"
+                  - name: WAREHOUSE_MANAGEMENT_SVC_ADDR
+                    value: "warehousemanagement-naive:50001"
+                readinessProbe:
+                  grpc:
+                    port: 50001
+                livenessProbe:
+                  grpc:
+                    port: 50001
+
   - target:
       kind: Service
-      name: warehouse-management-nodeport
+      name: warehousemanagement
     patch: |-
       - op: replace
-        path: /spec/ports/0/nodePort
-        value: 30051
+        path: /spec/ports/0/port
+        value: 50001
+      - op: replace
+        path: /spec/ports/0/targetPort
+        value: 50001

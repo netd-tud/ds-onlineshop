@@ -2,20 +2,22 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"log"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	commonpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common"
+	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/inventory"
+	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/warehousemanagement"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	pb "github.com/turt1z/microservices-demo/src/client/genproto"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
-	grpcAddress = "ds-exercise-06.netd.cs.tu-dresden.de:30050"
-	mqttBroker  = "tcp://ds-exercise-06.netd.cs.tu-dresden.de:31883"
+	grpcAddress = "ds-exercise-01.netd.cs.tu-dresden.de:30051"
+	mqttBroker  = "tcp://ds-exercise-01.netd.cs.tu-dresden.de:31883"
 )
 
 // MQTT Structural Mappings
@@ -42,21 +44,26 @@ func main() {
 	// =================================================================
 	// gRPC EXECUTION
 	// =================================================================
-	conn, err := grpc.NewClient(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsConfig := &tls.Config{
+		ServerName: "ds-exercise-01.netd.cs.tu-dresden.de",
+	}
+	creds := credentials.NewTLS(tlsConfig)
+
+	conn, err := grpc.NewClient(grpcAddress, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		log.Fatalf("gRPC: Did not connect: %v", err)
 	}
 	defer conn.Close()
 
-	grpcClient := pb.NewWarehouseManagementClient(conn)
+	grpcClient := warehousemanagementpb.NewWarehouseManagementClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	log.Println("--- Calling CreateNewProduct via gRPC ---")
-	createRes, err := grpcClient.CreateNewProductWithDTM(ctx, &pb.CreateWarehouseProductRequest{
+	createRes, err := grpcClient.CreateNewProduct(ctx, &warehousemanagementpb.CreateWarehouseProductRequest{
 		Name:        "Hat",
 		Description: "A high-quality piece of clothing.",
-		PriceUsd: &pb.Money{
+		PriceUsd: &commonpb.Money{
 			CurrencyCode: "USD",
 			Units:        15,
 			Nanos:        990000000,
@@ -71,7 +78,7 @@ func main() {
 	log.Printf("gRPC: Product Created Successfully! ID: %s, Name: %s\n", gRPCProductID, createRes.GetProduct().GetName())
 
 	log.Println("\n--- Calling UpdateProductStock via gRPC ---")
-	updateRes, err := grpcClient.UpdateProductStock(ctx, &pb.ChangeInventoryProductStockRequest{
+	updateRes, err := grpcClient.UpdateProductStock(ctx, &inventorypb.ChangeInventoryProductStockRequest{
 		Id:    gRPCProductID,
 		Delta: 150,
 	})

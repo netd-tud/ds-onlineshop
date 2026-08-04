@@ -2,15 +2,15 @@ import json
 import logging
 import sys
 import grpc
-import os
 
-import demo_pb2 as demo
-import warehousemanagement_pb2 as pb
-import warehousemanagement_pb2_grpc as pb_grpc
+import proto.common.common_pb2 as money_pb
+import proto.inventory.inventory_pb2 as inventory_pb
+import proto.warehousemanagement.warehousemanagement_pb2 as whm_pb
+import proto.warehousemanagement.warehousemanagement_pb2_grpc as whm_pb_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-GRPC_ADDRESS = "ds-exercise-06.netd.cs.tu-dresden.de:30050"
+GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30050"
 CONFIG_FILE = "config.json"
 
 def load_config(file_path):
@@ -28,13 +28,13 @@ def handle_create(stub, data):
     logging.info("--- Calling CreateNewProduct via gRPC ---")
 
     price_data = data.get("price_usd", {})
-    price = demo.Money(
+    price = money_pb.Money(
         currency_code=price_data.get("currency_code", "USD"),
         units=price_data.get("units", 0),
         nanos=price_data.get("nanos", 0)
     )
 
-    request = pb.CreateWarehouseProductRequest(
+    request = whm_pb.CreateWarehouseProductRequest(
         name=data.get("name", ""),
         description=data.get("description", ""),
         price_usd=price,
@@ -43,7 +43,7 @@ def handle_create(stub, data):
     )
 
     try:
-        response = stub.CreateNewProductWithXA(request, timeout=5)
+        response = stub.CreateNewProduct(request, timeout=5)
         logging.info(f"gRPC: Product Created Successfully!")
         logging.info(f"ID: {response.product.id} | Name: {response.product.name}")
     except grpc.RpcError as e:
@@ -57,7 +57,7 @@ def handle_update(stub, data):
         logging.error("gRPC Update Failed: No 'id' provided in 'update_stock' configuration.")
         return
 
-    request = demo.ChangeInventoryProductStockRequest(
+    request = inventory_pb.ChangeInventoryProductStockRequest(
         id=product_id,
         delta=data.get("delta", 0)
     )
@@ -71,15 +71,31 @@ def handle_update(stub, data):
 
 def main():
     config = load_config(CONFIG_FILE)
-    action = config.get("action", "").lower().strip()
+    dt_function = config.get("dt-function", "").lower().strip()
+    if dt_function not in ["naive", "saga", "xa"]:
+        logging.error(f"Invalid distributed transaction function '{dt_function}' in config. Use 'naive', 'saga' or 'xa'")
+        sys.exit(1)
+    else:
+        match dt_function:
+            case "naive":
+                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30051"
+            case "saga":
+                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30052"
+            case "xa":
+                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30053"
 
+    action = config.get("action", "").lower().strip()
     if action not in ["create", "update"]:
         logging.error(f"Invalid action '{action}' in config. Use 'create' or 'update'.")
         sys.exit(1)
 
     logging.info(f"Connecting to gRPC server at {GRPC_ADDRESS}...")
-    with grpc.insecure_channel(GRPC_ADDRESS) as channel:
-        stub = pb_grpc.WarehouseManagementStub(channel)
+
+    channel_credentials = grpc.ssl_channel_credentials()
+    options = [('grpc.ssl_target_name_override', 'ds-exercise-01.netd.cs.tu-dresden.de')]
+
+    with grpc.secure_channel(GRPC_ADDRESS, channel_credentials, options=options) as channel:
+        stub = whm_pb_grpc.WarehouseManagementStub(channel)
 
         if action == "create":
             handle_create(stub, config.get("create_product", {}))

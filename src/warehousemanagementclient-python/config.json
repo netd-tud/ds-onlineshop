@@ -1,4 +1,6 @@
 {
+  "dt-function": "naive",
+
   "action": "create",
 
   "create_product": {

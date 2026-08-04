@@ -1,0 +1,132 @@
+# ==========================================
+# MQTT (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehouse-mqtt
+  namespace: default
+spec:
+  entryPoints:
+    - mqtt
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: mqtt-broker
+          port: 1883
+  tls: {}
+
+---
+# ==========================================
+# LDAP (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: ldap-server
+  namespace: default
+spec:
+  entryPoints:
+    - ldap
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: ldap
+          port: 3890
+  tls: {}
+
+---
+# ==========================================
+# NAIVE - gRPC (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehousemanagement-grpc-naive
+  namespace: default
+spec:
+  entryPoints:
+    - grpc-naive
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: warehousemanagement-naive
+          port: 50001
+  tls: {}
+---
+# ==========================================
+# SAGA - gRPC (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehousemanagement-grpc-saga
+  namespace: default
+spec:
+  entryPoints:
+    - grpc-saga
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: warehousemanagement-saga
+          port: 50002
+  tls: {}
+---
+# ==========================================
+# XA - gRPC (TLS Terminated)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: warehousemanagement-grpc-xa
+  namespace: default
+spec:
+  entryPoints:
+    - grpc-xa
+  routes:
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: warehousemanagement-xa
+          port: 50003
+  tls: {}
+
+---
+# ==========================================
+# DTM UI (Dedicated Port 30789 HTTPS)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dtm-ui-route
+  namespace: default
+spec:
+  entryPoints:
+    - dtmui
+  routes:
+    - match: Host(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      kind: Rule
+      services:
+        - name: dtm-svc
+          port: 36789
+  tls:
+    secretName: vm1-tls-cert
+
+---
+# ==========================================
+# Flink Job UI (Dedicated Port 30181 HTTPS)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: flink-ui
+  namespace: flink
+spec:
+  entryPoints:
+    - flinkui
+  routes:
+    - match: Host(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: flink-jobmanager
+          port: 8081
+  tls:
+    secretName: vm1-tls-cert
