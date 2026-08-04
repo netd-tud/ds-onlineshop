@@ -45,3 +45,8 @@ spec:
         expose: { default: true }
         exposedPort: 30181
         protocol: TCP
+      auth:
+        port: 30060
+        expose: { default: true }
+        exposedPort: 30060
+        protocol: TCP
