@@ -13,10 +13,10 @@ data:
     jobmanager.memory.process.size: 1200m
 
     taskmanager.bind-host: 0.0.0.0
-    taskmanager.numberOfTaskSlots: 2
-    taskmanager.memory.process.size: 2600m
+    taskmanager.numberOfTaskSlots: 4
+    taskmanager.memory.process.size: 4000m
 
-    parallelism.default: 1
+    parallelism.default: 4
     rest.address: flink-jobmanager
     rest.bind-address: 0.0.0.0
 
