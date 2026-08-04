@@ -7,11 +7,15 @@ import proto.common.common_pb2 as money_pb
 import proto.inventory.inventory_pb2 as inventory_pb
 import proto.warehousemanagement.warehousemanagement_pb2 as whm_pb
 import proto.warehousemanagement.warehousemanagement_pb2_grpc as whm_pb_grpc
+import proto.auth.auth_pb2 as auth_pb
+import proto.auth.auth_pb2_grpc as auth_pb_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30050"
 CONFIG_FILE = "config.json"
+
+AUTH_GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30060"
 
 def load_config(file_path):
     try:
@@ -24,7 +28,7 @@ def load_config(file_path):
         logging.error(f"Failed to parse JSON config: {e}")
         sys.exit(1)
 
-def handle_create(stub, data):
+def handle_create(stub, data, jwt):
     logging.info("--- Calling CreateNewProduct via gRPC ---")
 
     price_data = data.get("price_usd", {})
@@ -43,13 +47,17 @@ def handle_create(stub, data):
     )
 
     try:
-        response = stub.CreateNewProduct(request, timeout=5)
+        response = stub.CreateNewProduct(
+            request,
+            timeout=5,
+            metadata=[("authorization", f"Bearer {jwt}")]
+        )
         logging.info(f"gRPC: Product Created Successfully!")
         logging.info(f"ID: {response.product.id} | Name: {response.product.name}")
     except grpc.RpcError as e:
         logging.error(f"gRPC: Could not create product: {e.details()} (Code: {e.code()})")
 
-def handle_update(stub, data):
+def handle_update(stub, data, jwt):
     logging.info("--- Calling UpdateProductStock via gRPC ---")
 
     product_id = data.get("id")
@@ -63,11 +71,21 @@ def handle_update(stub, data):
     )
 
     try:
-        response = stub.UpdateProductStock(request, timeout=5)
+        response = stub.UpdateProductStock(
+            request,
+            timeout=5,
+            metadata=[("authorization", f"Bearer {jwt}")]
+        )
         logging.info(f"gRPC: Stock Updated Successfully!")
         logging.info(f"Product ID: {response.id} | New Stock Level: {response.stock}")
     except grpc.RpcError as e:
         logging.error(f"gRPC: Could not update product stock: {e.details()} (Code: {e.code()})")
+
+def receiveJWT(stub):
+    username = "isabellal"
+    password = "isabellal"
+    response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
+    return response.token
 
 def main():
     config = load_config(CONFIG_FILE)
@@ -89,18 +107,29 @@ def main():
         logging.error(f"Invalid action '{action}' in config. Use 'create' or 'update'.")
         sys.exit(1)
 
-    logging.info(f"Connecting to gRPC server at {GRPC_ADDRESS}...")
-
     channel_credentials = grpc.ssl_channel_credentials()
     options = [('grpc.ssl_target_name_override', 'ds-exercise-01.netd.cs.tu-dresden.de')]
 
+    logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
+    jwt = None
+    with grpc.secure_channel(AUTH_GRPC_ADDRESS, channel_credentials, options=options) as channel:
+        auth_stub = auth_pb_grpc.AuthServiceStub(channel)
+        jwt = receiveJWT(auth_stub)
+        if not jwt:
+            print("Could not acquire JWT token.")
+            sys.exit(1)
+        else:
+            print("Authentication successfully.")
+            print(jwt)
+
+    logging.info(f"Connecting to warehousemanagement gRPC server at {GRPC_ADDRESS}...")
     with grpc.secure_channel(GRPC_ADDRESS, channel_credentials, options=options) as channel:
         stub = whm_pb_grpc.WarehouseManagementStub(channel)
 
         if action == "create":
-            handle_create(stub, config.get("create_product", {}))
+            handle_create(stub, config.get("create_product", {}), jwt)
         elif action == "update":
-            handle_update(stub, config.get("update_stock", {}))
+            handle_update(stub, config.get("update_stock", {}), jwt)
 
 if __name__ == "__main__":
     main()

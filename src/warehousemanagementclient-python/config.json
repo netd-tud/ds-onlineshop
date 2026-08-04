@@ -1,7 +1,7 @@
 {
   "dt-function": "naive",
 
-  "action": "create",
+  "action": "update",
 
   "create_product": {
     "name": "Hat",
@@ -16,7 +16,7 @@
   },
 
   "update_stock": {
-    "id": "wHdh8OXzsu",
-    "delta": -85
+    "id": "OLJCESPC7Z",
+    "delta": 85
   }
 }

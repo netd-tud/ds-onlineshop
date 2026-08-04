@@ -1,0 +1,53 @@
+"""Client and server classes corresponding to protobuf-defined services."""
+import grpc
+import warnings
+from ..auth import auth_pb2 as auth_dot_auth__pb2
+GRPC_GENERATED_VERSION = '1.81.1'
+GRPC_VERSION = grpc.__version__
+_version_not_supported = False
+try:
+    from grpc._utilities import first_version_is_lower
+    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
+except ImportError:
+    _version_not_supported = True
+if _version_not_supported:
+    raise RuntimeError(f'The grpc package installed is at version {GRPC_VERSION},' + ' but the generated code in auth/auth_pb2_grpc.py depends on' + f' grpcio>={GRPC_GENERATED_VERSION}.' + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}' + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.')
+
+class AuthServiceStub:
+    """------------Authentication and authorization services------------------
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Login = channel.unary_unary('/auth.AuthService/Login', request_serializer=auth_dot_auth__pb2.LoginRequest.SerializeToString, response_deserializer=auth_dot_auth__pb2.LoginResponse.FromString, _registered_method=True)
+
+class AuthServiceServicer:
+    """------------Authentication and authorization services------------------
+
+    """
+
+    def Login(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+def add_AuthServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {'Login': grpc.unary_unary_rpc_method_handler(servicer.Login, request_deserializer=auth_dot_auth__pb2.LoginRequest.FromString, response_serializer=auth_dot_auth__pb2.LoginResponse.SerializeToString)}
+    generic_handler = grpc.method_handlers_generic_handler('auth.AuthService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('auth.AuthService', rpc_method_handlers)
+
+class AuthService:
+    """------------Authentication and authorization services------------------
+
+    """
+
+    @staticmethod
+    def Login(request, target, options=(), channel_credentials=None, call_credentials=None, insecure=False, compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/auth.AuthService/Login', auth_dot_auth__pb2.LoginRequest.SerializeToString, auth_dot_auth__pb2.LoginResponse.FromString, options, channel_credentials, insecure, call_credentials, compression, wait_for_ready, timeout, metadata, _registered_method=True)
