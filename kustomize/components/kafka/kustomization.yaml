@@ -3,3 +3,4 @@ kind: Component
 resources:
   - kafkanodepool.yaml
   - kafka.yaml
+  - kafka-topics.yaml
