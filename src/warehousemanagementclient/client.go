@@ -2,21 +2,21 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"log"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	commonpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common"
 	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/inventory"
 	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/warehousemanagement"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
-	grpcAddress = "ds-exercise-01.netd.cs.tu-dresden.de:30050"
+	grpcAddress = "ds-exercise-01.netd.cs.tu-dresden.de:30051"
 	mqttBroker  = "tcp://ds-exercise-01.netd.cs.tu-dresden.de:31883"
 )
 
@@ -44,7 +44,12 @@ func main() {
 	// =================================================================
 	// gRPC EXECUTION
 	// =================================================================
-	conn, err := grpc.NewClient(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsConfig := &tls.Config{
+		ServerName: "ds-exercise-01.netd.cs.tu-dresden.de",
+	}
+	creds := credentials.NewTLS(tlsConfig)
+
+	conn, err := grpc.NewClient(grpcAddress, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		log.Fatalf("gRPC: Did not connect: %v", err)
 	}
