@@ -5,16 +5,27 @@ resources:
   - configmap.yaml
   - jobmanager.yaml
   - taskmanager.yaml
-  - sql-runner-job.yaml
   - postgres.yaml
+  - jobs/stream-runner.yaml
+  - jobs/batch-coproduct.yaml
 
 configMapGenerator:
-  - name: flink-sql-scripts
+  - name: flink-setup-sql
     namespace: flink
     files:
       - sql/00_setup.sql
+  - name: flink-stream-sql
+    namespace: flink
+    files:
       - sql/01_raw_orders.sql
       - sql/10_product_sales_1m.sql
       - sql/11_product_clicks_1m.sql
       - sql/20_view_to_cart_1h.sql
       - sql/21_average_order_value_1h.sql
+  - name: flink-batch-sql
+    namespace: flink
+    files:
+      - sql/80_copurchase.sql
+
+generatorOptions:
+  disableNameSuffixHash: true

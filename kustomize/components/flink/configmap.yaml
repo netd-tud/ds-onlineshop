@@ -13,7 +13,7 @@ data:
     jobmanager.memory.process.size: 1200m
 
     taskmanager.bind-host: 0.0.0.0
-    taskmanager.numberOfTaskSlots: 4
+    taskmanager.numberOfTaskSlots: 6
     taskmanager.memory.process.size: 4000m
 
     parallelism.default: 4

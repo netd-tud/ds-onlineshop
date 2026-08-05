@@ -1,0 +1,100 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: flink-batch-copurchase
+  namespace: flink
+spec:
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          restartPolicy: OnFailure
+          tolerations:
+            - key: dedicated
+              operator: Equal
+              value: flink
+              effect: NoSchedule
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: workload
+                        operator: In
+                        values: ["flink", "fallback"]
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  preference:
+                    matchExpressions:
+                      - key: workload
+                        operator: In
+                        values: ["flink"]
+          initContainers:
+            - name: wait-and-setup
+              image: curlimages/curl:latest
+              command:
+                - sh
+                - -c
+                - |
+                  echo "Downloading required jdbc connectors..."
+                  curl -sL https://repo1.maven.org/maven2/org/apache/flink/flink-connector-jdbc/3.2.0-1.19/flink-connector-jdbc-3.2.0-1.19.jar \
+                    -o /flink-lib/flink-connector-jdbc-3.2.0-1.19.jar
+                  curl -sL https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar \
+                    -o /flink-lib/postgresql-42.7.3.jar
+
+                  echo "Fetching Kafka SQL Connector..."
+                  curl -sL https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/3.2.0-1.19/flink-sql-connector-kafka-3.2.0-1.19.jar \
+                    -o /flink-lib/flink-sql-connector-kafka-3.2.0-1.19.jar
+
+                  echo "Waiting for Flink JobManager REST API..."
+                  until curl -s http://flink-jobmanager:8081/v1/overview > /dev/null; do sleep 2; done
+                  echo "JobManager is ready!"
+              volumeMounts:
+                - name: flink-lib
+                  mountPath: /flink-lib
+          containers:
+            - name: sql-client
+              image: flink:1.19.0
+              command: ["/docker-entrypoint.sh"]
+              args:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+
+                  echo "Building Batch Job..."
+                  # Combine just the setup script and your renamed batch SQL file
+                  cat /opt/flink/sql/setup/00_setup.sql > /tmp/batch_job.sql
+                  echo "" >> /tmp/batch_job.sql
+                  cat /opt/flink/sql/batch/80_copurchase.sql >> /tmp/batch_job.sql
+
+                  echo "--- Submitting Batch Job ---"
+                  /opt/flink/bin/sql-client.sh \
+                    -j /flink-lib/flink-sql-connector-kafka-3.2.0-1.19.jar \
+                    -j /flink-lib/flink-connector-jdbc-3.2.0-1.19.jar \
+                    -j /flink-lib/postgresql-42.7.3.jar \
+                    -f /tmp/batch_job.sql
+
+                  echo "Batch job submitted to Flink successfully!"
+              envFrom:
+                - configMapRef:
+                    name: flink-config
+              volumeMounts:
+                - name: flink-setup-sql
+                  mountPath: /opt/flink/sql/setup
+                - name: flink-batch-sql
+                  mountPath: /opt/flink/sql/batch
+                - name: flink-lib
+                  mountPath: /flink-lib
+          volumes:
+            - name: flink-lib
+              emptyDir: {}
+            - name: flink-setup-sql
+              configMap:
+                name: flink-setup-sql
+            - name: flink-batch-sql
+              configMap:
+                name: flink-batch-sql

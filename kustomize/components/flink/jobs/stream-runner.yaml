@@ -39,7 +39,7 @@ spec:
 
               # 1. Flink JDBC Connector
               curl -sL https://repo1.maven.org/maven2/org/apache/flink/flink-connector-jdbc/3.2.0-1.19/flink-connector-jdbc-3.2.0-1.19.jar \
-              -o /flink-lib/flink-connector-jdbc-3.2.0-1.19.jar
+                -o /flink-lib/flink-connector-jdbc-3.2.0-1.19.jar
 
               # 2. PostgreSQL JDBC Driver
               curl -sL https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar \
@@ -77,9 +77,9 @@ spec:
               # 1. BUILD JOB 1: Raw Orders Stream
               # ==========================================
               echo "Building Job 1 (Raw Orders)..."
-              cat /opt/flink/sql/00_setup.sql > /tmp/job_01_raw.sql
+              cat /opt/flink/sql/setup/00_setup.sql > /tmp/job_01_raw.sql
               echo "" >> /tmp/job_01_raw.sql
-              cat /opt/flink/sql/01_raw_orders.sql >> /tmp/job_01_raw.sql
+              cat /opt/flink/sql/stream/01_raw_orders.sql >> /tmp/job_01_raw.sql
 
               # ==========================================
               # 2. BUILD JOB 2: Combined Metrics
@@ -87,12 +87,12 @@ spec:
               echo "Building Job 2 (Combined Metrics Statement Set)..."
 
               # A. Add Source DDLs
-              cat /opt/flink/sql/00_setup.sql > /tmp/job_02_metrics.sql
+              cat /opt/flink/sql/setup/00_setup.sql > /tmp/job_02_metrics.sql
               echo "" >> /tmp/job_02_metrics.sql
 
               # B. Extract Sink CREATE TABLE DDLs from all files starting with 10 or higher
               echo "-- Sink DDLs" >> /tmp/job_02_metrics.sql
-              for file in $(ls /opt/flink/sql/[1-9][0-9]_*.sql | sort); do
+              for file in $(ls /opt/flink/sql/stream/[1-7][0-9]_*.sql | sort); do
                 echo "-- DDL from $file" >> /tmp/job_02_metrics.sql
                 awk '/CREATE TABLE/,/\);/' "$file" >> /tmp/job_02_metrics.sql
                 echo "" >> /tmp/job_02_metrics.sql
@@ -102,7 +102,7 @@ spec:
               echo "EXECUTE STATEMENT SET" >> /tmp/job_02_metrics.sql
               echo "BEGIN" >> /tmp/job_02_metrics.sql
 
-              for file in $(ls /opt/flink/sql/[1-9][0-9]_*.sql | sort); do
+              for file in $(ls /opt/flink/sql/stream/[1-7][0-9]_*.sql | sort); do
                 echo "-- Query from $file" >> /tmp/job_02_metrics.sql
                 awk '/INSERT INTO/,/;/' "$file" >> /tmp/job_02_metrics.sql
                 echo "" >> /tmp/job_02_metrics.sql
@@ -132,13 +132,18 @@ spec:
             - configMapRef:
                 name: flink-config
           volumeMounts:
-            - name: flink-sql-scripts
-              mountPath: /opt/flink/sql
+            - name: flink-setup-sql
+              mountPath: /opt/flink/sql/setup
+            - name: flink-stream-sql
+              mountPath: /opt/flink/sql/stream
             - name: flink-lib
               mountPath: /flink-lib
       volumes:
         - name: flink-lib
           emptyDir: {}
-        - name: flink-sql-scripts
+        - name: flink-setup-sql
           configMap:
-            name: flink-sql-scripts
+            name: flink-setup-sql
+        - name: flink-stream-sql
+          configMap:
+            name: flink-stream-sql
