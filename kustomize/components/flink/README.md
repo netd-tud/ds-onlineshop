@@ -63,6 +63,12 @@ A Kubernetes batch Job that initializes connector dependencies and submits long-
 - Combines all sql scripts inside the `sql` folder into a single  `combined_jobs.sql` file for execution
 
 ## SQL Analytics Scripts
+- Scripts named `00_*.sql` are setup scripts.
+- Scripts named `0[1-9]_*.sql` are important generic scripts e.g. to persistently store raw data.
+- Scripts named `[1-7][0-9]_*.sql` are stream jobs.
+- Scripts named `[8-9][0-9]_*.sql` are batch jobs.
+
+Flink job execution files can be found under `/jobs`
 
 ### `00_setup.sql`
 Defines the data sources for processing product events:
@@ -87,3 +93,9 @@ Defines the data sources for processing product events:
 ### `21_average_order_value_1h.sql`
 - **Postgres Sink (`order_aov_1h_sink`):** Outputs aggregated results to `order_aov_1h` postgres table.
 - **Continuous Query:** Executes a 1-hour tumbling window aggregation on `ORDER` events, computing the average order value.
+
+For performance and resource reasons are files named `[1-7][0-9]_*.sql` combined and executed in a single flink job.
+
+### `80_copurchase.sql`
+- **Postgres Sink (`product_recommendations_sink`):** Outputs aggregated results to `product_recommendations` postgres table.
+- **Batch Query:** Executes a batch query to compute co-purchase statistics for products based on `ORDER` events, identifying products frequently bought together.
