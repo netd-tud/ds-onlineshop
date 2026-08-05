@@ -30,3 +30,5 @@ data:
     execution.checkpointing.interval: 10s
     execution.checkpointing.mode: EXACTLY_ONCE
     execution.checkpointing.max-concurrent-checkpoints: 1
+
+    pipeline.operator-chaining: false
