@@ -18,10 +18,16 @@ INSERT INTO product_sales_1m_sink
 SELECT
   sku,
   SUM(qty) AS total_units_bought,
-  TUMBLE_START(event_time, INTERVAL '1' MINUTE) AS window_start
-FROM product_events
+  window_start
+FROM TABLE(
+  TUMBLE(
+    DATA => TABLE product_events,
+    TIMECOL => DESCRIPTOR(event_time),
+    SIZE => INTERVAL '1' MINUTE)
+)
 WHERE event_type = 'ORDER'
   AND qty IS NOT NULL
 GROUP BY
   sku,
-  TUMBLE(event_time, INTERVAL '1' MINUTE);
+  window_start,
+  window_end;

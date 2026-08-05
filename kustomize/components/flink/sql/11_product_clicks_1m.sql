@@ -18,9 +18,16 @@ INSERT INTO product_clicks_1m_sink
 SELECT
   sku,
   COUNT(*) AS total_clicks,
-  TUMBLE_START(event_time, INTERVAL '1' MINUTE) AS window_start
-FROM product_events
+  window_start
+FROM TABLE(
+  TUMBLE(
+    DATA => TABLE product_events,
+    TIMECOL => DESCRIPTOR(event_time),
+    SIZE => INTERVAL '1' MINUTE
+  )
+)
 WHERE event_type = 'VIEW'
 GROUP BY
   sku,
-  TUMBLE(event_time, INTERVAL '1' MINUTE);
+  window_start,
+  window_end;
