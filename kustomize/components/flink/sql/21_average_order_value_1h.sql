@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS order_aov_1h_sink (
   'sink.buffer-flush.interval' = '1s'
 );
 
-INSERT INTO order_aov_1h
+INSERT INTO order_aov_1h_sink
 SELECT
   window_start,
   window_end,

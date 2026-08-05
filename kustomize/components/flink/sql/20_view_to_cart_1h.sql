@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS product_view_to_cart_1h_sink (
   'sink.buffer-flush.interval' = '1s'
 );
 
-INSERT INTO product_view_to_cart_1h
+INSERT INTO product_view_to_cart_1h_sink
 SELECT
   window_start,
   window_end,
