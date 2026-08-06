@@ -132,6 +132,11 @@ func (p *productCatalog) parseCatalog() []*productcatalogpb.Product {
 		if err != nil {
 			return []*productcatalogpb.Product{}
 		}
+
+		log.Info("Inserting into database...")
+		if err := loadCatalogIntoPostgres(&p.catalog); err != nil {
+			log.Warn("failed to insert product details into Postgres database: %v", err)
+		}
 	}
 
 	return p.catalog.Products

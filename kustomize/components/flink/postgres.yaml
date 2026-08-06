@@ -16,6 +16,17 @@ metadata:
   namespace: flink
 data:
   init.sql: |
+    CREATE TABLE IF NOT EXISTS products (
+      sku VARCHAR(255) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      picture VARCHAR(255),
+      price_usd_currency_code VARCHAR(3),
+      price_usd_units BIGINT,
+      price_usd_nanos INTEGER,
+      categories TEXT[]
+    );
+
     CREATE TABLE IF NOT EXISTS raw_order_events (
       event_id VARCHAR(255) PRIMARY KEY,
       event_time TIMESTAMPTZ NOT NULL,

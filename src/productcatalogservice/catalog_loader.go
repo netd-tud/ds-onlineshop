@@ -60,6 +60,59 @@ func loadCatalogFromLocalFile(catalog *productcatalogpb.ListProductsResponse) er
 	return nil
 }
 
+func loadCatalogIntoPostgres(catalog *productcatalogpb.ListProductsResponse) error {
+	log.Info("loading catalog into Postgres database...")
+
+	dbAddress := os.Getenv("DB_ADDRESS")
+	dbUser := os.Getenv("DB_USERNAME")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	dbTable := os.Getenv("DB_TABLE")
+
+	dsn := fmt.Sprintf(
+		"postgres://%s:%s@%s/%s?sslmode=disable",
+		dbUser, dbPassword, dbAddress, dbName,
+	)
+
+	pool, err := pgxpool.New(context.Background(), dsn)
+	if err != nil {
+		log.Warnf("failed to set-up pgx pool: %v", err)
+		return err
+	}
+	defer pool.Close()
+
+	// Clear existing data
+	clearQuery := "TRUNCATE TABLE " + dbTable
+	_, err = pool.Exec(context.Background(), clearQuery)
+	if err != nil {
+		log.Warnf("failed to truncate table: %v", err)
+		return err
+	}
+
+	// Insert catalog products
+	for _, product := range catalog.Products {
+		insertQuery := "INSERT INTO " + dbTable + " (sku, name, description, picture, price_usd_currency_code, price_usd_units, price_usd_nanos, categories) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+
+		_, err = pool.Exec(context.Background(), insertQuery,
+			product.Id,
+			product.Name,
+			product.Description,
+			product.Picture,
+			product.PriceUsd.CurrencyCode,
+			product.PriceUsd.Units,
+			product.PriceUsd.Nanos,
+			product.Categories,
+		)
+		if err != nil {
+			log.Warnf("failed to insert product: %v", err)
+			return err
+		}
+	}
+
+	log.Info("successfully loaded catalog into Postgres database")
+	return nil
+}
+
 func getSecretPayload(project, secret, version string) (string, error) {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
