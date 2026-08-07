@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package hipstershop;
 
-option go_package = "github.com/turt1z/microservices-demo/proto/recommendation;recommendationpb";
+option go_package = "github.com/netd-tud/ds-onlineshop/proto/recommendation;recommendationpb";
 
 // ---------------Recommendation service----------
 
