@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/checkoutservice
+module github.com/netd-tud/ds-onlineshop/src/checkoutservice
 
 go 1.26.4
 
@@ -8,7 +8,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/segmentio/kafka-go v0.4.51
 	github.com/sirupsen/logrus v1.9.4
-	github.com/turt1z/microservices-demo/src/shared v0.0.0-20260709095850-ce7972c78a81
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.69.0
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.42.0

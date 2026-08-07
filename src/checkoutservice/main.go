@@ -23,10 +23,10 @@ import (
 
 	"cloud.google.com/go/profiler"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	checkoutpb "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/checkout"
+	"github.com/netd-tud/ds-onlineshop/src/checkoutservice/internal/analytics"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"github.com/sirupsen/logrus"
-	checkoutpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/checkout"
-	"github.com/turt1z/microservices-demo/src/checkoutservice/internal/analytics"
-	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"

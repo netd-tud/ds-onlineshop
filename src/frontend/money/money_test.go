@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	commonpb "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common"
 )
 
 func mmc(u int64, n int32, c string) commonpb.Money {

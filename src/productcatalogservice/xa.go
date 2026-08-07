@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	commonpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/common"
-	productcatalogpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/productcatalog"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/common"
+	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/productcatalog"
 )
 
 func (p *productCatalog) XaPrepareCreateProduct(ctx context.Context, req *productcatalogpb.XaPrepareCreateProductRequest) (*commonpb.Empty, error) {

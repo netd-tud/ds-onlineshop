@@ -8,9 +8,9 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	inventorypb "github.com/netd-tud/ds-onlineshop/src/inventoryservice/genproto/inventory"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"github.com/sirupsen/logrus"
-	inventorypb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto/inventory"
-	shared "github.com/turt1z/microservices-demo/src/shared"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"

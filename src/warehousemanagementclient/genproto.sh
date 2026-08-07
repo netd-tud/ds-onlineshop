@@ -9,12 +9,12 @@ mkdir -p $outdir
 protoc --proto_path=$protodir \
     --go_out=./$outdir --go_opt=paths=source_relative \
     --go-grpc_out=./$outdir --go-grpc_opt=paths=source_relative \
-    --go-grpc_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common \
-    --go_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common \
-    --go-grpc_opt=Mproductcatalog/productcatalog.proto=github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/productcatalog \
-    --go_opt=Mproductcatalog/productcatalog.proto=github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/productcatalog \
-    --go-grpc_opt=Minventory/inventory.proto=github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/inventory \
-    --go_opt=Minventory/inventory.proto=github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/inventory \
+    --go-grpc_opt=Mcommon/common.proto=github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/common \
+    --go_opt=Mcommon/common.proto=github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/common \
+    --go-grpc_opt=Mproductcatalog/productcatalog.proto=github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/productcatalog \
+    --go_opt=Mproductcatalog/productcatalog.proto=github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/productcatalog \
+    --go-grpc_opt=Minventory/inventory.proto=github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/inventory \
+    --go_opt=Minventory/inventory.proto=github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/inventory \
     $protodir/warehousemanagement/warehousemanagement.proto \
     $protodir/common/common.proto \
     $protodir/inventory/inventory.proto \

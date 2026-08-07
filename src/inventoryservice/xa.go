@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	commonpb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto/common"
-	inventorypb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto/inventory"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/inventoryservice/genproto/common"
+	inventorypb "github.com/netd-tud/ds-onlineshop/src/inventoryservice/genproto/inventory"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

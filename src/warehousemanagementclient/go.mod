@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/warehousemanagementclient
+module github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient
 
 go 1.26.4
 

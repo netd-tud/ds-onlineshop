@@ -144,7 +144,7 @@ const file_recommendation_recommendation_proto_rawDesc = "" +
 	"\vproduct_ids\x18\x01 \x03(\tR\n" +
 	"productIds2\x83\x01\n" +
 	"\x15RecommendationService\x12j\n" +
-	"\x13ListRecommendations\x12'.hipstershop.ListRecommendationsRequest\x1a(.hipstershop.ListRecommendationsResponse\"\x00BLZJgithub.com/turt1z/microservices-demo/proto/recommendation;recommendationpbb\x06proto3"
+	"\x13ListRecommendations\x12'.hipstershop.ListRecommendationsRequest\x1a(.hipstershop.ListRecommendationsResponse\"\x00BIZGgithub.com/netd-tud/ds-onlineshop/proto/recommendation;recommendationpbb\x06proto3"
 
 var (
 	file_recommendation_recommendation_proto_rawDescOnce sync.Once

@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/warehousemanagement
+module github.com/netd-tud/ds-onlineshop/src/warehousemanagement
 
 go 1.26.4
 
@@ -7,7 +7,6 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.4
-	github.com/turt1z/microservices-demo/src/shared v0.0.0-20260709095850-ce7972c78a81
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.69.0
 	go.opentelemetry.io/otel v1.44.0
 	google.golang.org/grpc v1.82.0

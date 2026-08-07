@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package hipstershop;
 
-option go_package = "github.com/turt1z/microservices-demo/proto/payment;paymentpb";
+option go_package = "github.com/netd-tud/ds-onlineshop/proto/payment;paymentpb";
 
 import "common/common.proto";
 

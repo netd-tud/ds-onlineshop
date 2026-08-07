@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/rating
+module github.com/netd-tud/ds-onlineshop/src/rating
 
 go 1.26.3
 

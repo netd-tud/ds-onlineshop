@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/authservice
+module github.com/netd-tud/ds-onlineshop/src/authservice
 
 go 1.26.4
 
@@ -6,7 +6,6 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.13
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/sirupsen/logrus v1.9.4
-	github.com/turt1z/microservices-demo/src/shared v0.0.0-20260716075959-15ab3ddc1a69
 	google.golang.org/grpc v1.82.0
 	google.golang.org/protobuf v1.36.11
 )

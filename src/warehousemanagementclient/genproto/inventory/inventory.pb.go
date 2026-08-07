@@ -21,7 +21,7 @@
 package inventorypb
 
 import (
-	common "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common"
+	common "github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -657,7 +657,7 @@ const file_inventory_inventory_proto_rawDesc = "" +
 	"#CompensateCreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a+.hipstershop.DeleteInventoryProductResponse\"\x00\x12l\n" +
 	"\x1fXaPrepareCreateInventoryProduct\x123.hipstershop.XaPrepareCreateInventoryProductRequest\x1a\x12.hipstershop.Empty\"\x00\x12T\n" +
 	"\x1eXaCommitCreateInventoryProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00\x12V\n" +
-	" XaRollbackCreateInventoryProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00BBZ@github.com/turt1z/microservices-demo/proto/inventory;inventorypbb\x06proto3"
+	" XaRollbackCreateInventoryProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00B?Z=github.com/netd-tud/ds-onlineshop/proto/inventory;inventorypbb\x06proto3"
 
 var (
 	file_inventory_inventory_proto_rawDescOnce sync.Once

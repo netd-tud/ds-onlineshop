@@ -21,8 +21,8 @@
 package shippingpb
 
 import (
-	cart "github.com/turt1z/microservices-demo/src/shippingservice/genproto/cart"
-	common "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
+	cart "github.com/netd-tud/ds-onlineshop/src/shippingservice/genproto/cart"
+	common "github.com/netd-tud/ds-onlineshop/src/shippingservice/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -247,7 +247,7 @@ const file_shipping_shipping_proto_rawDesc = "" +
 	"trackingId2\xaa\x01\n" +
 	"\x0fShippingService\x12I\n" +
 	"\bGetQuote\x12\x1c.hipstershop.GetQuoteRequest\x1a\x1d.hipstershop.GetQuoteResponse\"\x00\x12L\n" +
-	"\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse\"\x00B@Z>github.com/turt1z/microservices-demo/proto/shipping;shippingpbb\x06proto3"
+	"\tShipOrder\x12\x1d.hipstershop.ShipOrderRequest\x1a\x1e.hipstershop.ShipOrderResponse\"\x00B=Z;github.com/netd-tud/ds-onlineshop/proto/shipping;shippingpbb\x06proto3"
 
 var (
 	file_shipping_shipping_proto_rawDescOnce sync.Once

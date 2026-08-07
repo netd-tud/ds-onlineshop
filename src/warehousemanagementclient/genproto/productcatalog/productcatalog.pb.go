@@ -21,7 +21,7 @@
 package productcatalogpb
 
 import (
-	common "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common"
+	common "github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -645,7 +645,7 @@ const file_productcatalog_productcatalog_proto_rawDesc = "" +
 	"\x1aCompensateCreateNewProduct\x12$.hipstershop.CreateNewProductRequest\x1a\".hipstershop.DeleteProductResponse\"\x00\x12Z\n" +
 	"\x16XaPrepareCreateProduct\x12*.hipstershop.XaPrepareCreateProductRequest\x1a\x12.hipstershop.Empty\"\x00\x12K\n" +
 	"\x15XaCommitCreateProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00\x12M\n" +
-	"\x17XaRollbackCreateProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00BLZJgithub.com/turt1z/microservices-demo/proto/productcatalog;productcatalogpbb\x06proto3"
+	"\x17XaRollbackCreateProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00BIZGgithub.com/netd-tud/ds-onlineshop/proto/productcatalog;productcatalogpbb\x06proto3"
 
 var (
 	file_productcatalog_productcatalog_proto_rawDescOnce sync.Once

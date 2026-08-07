@@ -27,8 +27,8 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/jackc/pgx/v5/pgxpool"
-	commonpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/common"
-	productcatalogpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/productcatalog"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/common"
+	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/productcatalog"
 )
 
 func loadCatalog(catalog *productcatalogpb.ListProductsResponse) error {

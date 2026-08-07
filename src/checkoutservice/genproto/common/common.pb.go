@@ -278,7 +278,7 @@ const file_common_common_proto_rawDesc = "" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12\x14\n" +
 	"\x05state\x18\x03 \x01(\tR\x05state\x12\x18\n" +
 	"\acountry\x18\x04 \x01(\tR\acountry\x12\x19\n" +
-	"\bzip_code\x18\x05 \x01(\x05R\azipCodeB<Z:github.com/turt1z/microservices-demo/proto/common;commonpbb\x06proto3"
+	"\bzip_code\x18\x05 \x01(\x05R\azipCodeB9Z7github.com/netd-tud/ds-onlineshop/proto/common;commonpbb\x06proto3"
 
 var (
 	file_common_common_proto_rawDescOnce sync.Once

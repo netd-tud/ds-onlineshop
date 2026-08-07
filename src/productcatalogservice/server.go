@@ -25,8 +25,8 @@ import (
 	"syscall"
 	"time"
 
-	productcatalogpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/productcatalog"
-	shared "github.com/turt1z/microservices-demo/src/shared"
+	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/productcatalog"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 

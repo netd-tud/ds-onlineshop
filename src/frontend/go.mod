@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/frontend
+module github.com/netd-tud/ds-onlineshop/src/frontend
 
 go 1.26.4
 
@@ -12,7 +12,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/kafka-go v0.4.51
 	github.com/sirupsen/logrus v1.9.4
-	github.com/turt1z/microservices-demo/src/shared v0.0.0-20260723090514-f1b4567847ab
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.44.0

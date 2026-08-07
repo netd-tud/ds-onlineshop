@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
-	productcatalogpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/productcatalog"
-	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
+	inventorypb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/inventory"
+	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/productcatalog"
+	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/warehousemanagement"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"

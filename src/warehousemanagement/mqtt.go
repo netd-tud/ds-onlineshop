@@ -11,9 +11,9 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	commonpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/common"
-	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
-	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/common"
+	inventorypb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/inventory"
+	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/warehousemanagement"
 )
 
 // MQTT Structural Mappings

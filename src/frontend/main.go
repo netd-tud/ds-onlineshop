@@ -22,13 +22,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/turt1z/microservices-demo/src/frontend/internal/analytics"
+	"github.com/netd-tud/ds-onlineshop/src/frontend/internal/analytics"
 
 	"cloud.google.com/go/profiler"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"github.com/sirupsen/logrus"
-	shared "github.com/turt1z/microservices-demo/src/shared"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"

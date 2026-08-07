@@ -8,9 +8,9 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	commonpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/common"
-	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/inventory"
-	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagementclient/genproto/warehousemanagement"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/common"
+	inventorypb "github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/inventory"
+	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagementclient/genproto/warehousemanagement"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

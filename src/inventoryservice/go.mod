@@ -1,4 +1,4 @@
-module github.com/turt1z/microservices-demo/src/inventoryservice
+module github.com/netd-tud/ds-onlineshop/src/inventoryservice
 
 go 1.26.4
 
@@ -6,7 +6,6 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/golang/protobuf v1.5.4
 	github.com/sirupsen/logrus v1.9.4
-	github.com/turt1z/microservices-demo/src/shared v0.0.0-20260715091515-425d812108a6
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.69.0
 	go.opentelemetry.io/otel v1.44.0
 	google.golang.org/grpc v1.82.0
@@ -29,5 +28,3 @@ require (
 	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 )
-
-replace github.com/turt1z/microservices-demo/src/inventoryservice/genproto => ./genproto

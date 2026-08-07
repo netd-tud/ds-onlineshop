@@ -26,8 +26,8 @@ mkdir -p genproto
 protoc --proto_path=$protodir \
     --go_out=./$outdir --go_opt=paths=source_relative \
     --go-grpc_out=./$outdir --go-grpc_opt=paths=source_relative \
-    --go_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/common \
-    --go-grpc_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/common \
+    --go_opt=Mcommon/common.proto=github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/common \
+    --go-grpc_opt=Mcommon/common.proto=github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/common \
     $protodir/productcatalog/productcatalog.proto \
     $protodir/common/common.proto
 
