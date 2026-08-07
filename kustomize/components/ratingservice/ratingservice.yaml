@@ -29,7 +29,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: ghcr.io/turt1z/microservices-demo/ratingservice:latest
+          image: ghcr.io/netd-tud/ds-onlineshop/ratingservice:latest
           ports:
             - name: http
               containerPort: 50001

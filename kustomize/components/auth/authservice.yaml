@@ -30,7 +30,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: ghcr.io/turt1z/microservices-demo/authservice:latest
+          image: ghcr.io/netd-tud/ds-onlineshop/authservice:latest
           ports:
             - name: http
               containerPort: 50050

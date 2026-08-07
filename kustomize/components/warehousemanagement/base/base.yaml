@@ -30,7 +30,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: ghcr.io/turt1z/microservices-demo/warehousemanagement:latest
+          image: ghcr.io/netd-tud/ds-onlineshop/warehousemanagement:latest
           env:
             - name: PORT
               value: "50000"
