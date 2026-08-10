@@ -21,7 +21,7 @@
 package paymentpb
 
 import (
-	common "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
+	common "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -217,7 +217,7 @@ const file_payment_payment_proto_rawDesc = "" +
 	"\x0eChargeResponse\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId2U\n" +
 	"\x0ePaymentService\x12C\n" +
-	"\x06Charge\x12\x1a.hipstershop.ChargeRequest\x1a\x1b.hipstershop.ChargeResponse\"\x00B>Z<github.com/turt1z/microservices-demo/proto/payment;paymentpbb\x06proto3"
+	"\x06Charge\x12\x1a.hipstershop.ChargeRequest\x1a\x1b.hipstershop.ChargeResponse\"\x00B;Z9github.com/netd-tud/ds-onlineshop/proto/payment;paymentpbb\x06proto3"
 
 var (
 	file_payment_payment_proto_rawDescOnce sync.Once

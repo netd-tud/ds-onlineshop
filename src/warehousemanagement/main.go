@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/dtm-labs/client/workflow"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
+	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/warehousemanagement"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	shared "github.com/turt1z/microservices-demo/src/shared"
-	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"

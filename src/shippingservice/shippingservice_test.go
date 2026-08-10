@@ -20,9 +20,9 @@ import (
 
 	"golang.org/x/net/context"
 
-	cartpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/cart"
-	commonpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
-	shippingpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/shipping"
+	cartpb "github.com/netd-tud/ds-onlineshop/src/shippingservice/genproto/cart"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/shippingservice/genproto/common"
+	shippingpb "github.com/netd-tud/ds-onlineshop/src/shippingservice/genproto/shipping"
 )
 
 // TestGetQuote is a basic check on the GetQuote RPC service.

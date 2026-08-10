@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	commonpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/common"
-	productcatalogpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/productcatalog"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/common"
+	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/productcatalog"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"

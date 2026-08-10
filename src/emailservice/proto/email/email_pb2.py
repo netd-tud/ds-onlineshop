@@ -8,13 +8,13 @@ _runtime_version.ValidateProtobufRuntimeVersion(_runtime_version.Domain.PUBLIC, 
 _sym_db = _symbol_database.Default()
 from ..common import common_pb2 as common_dot_common__pb2
 from ..checkout import checkout_pb2 as checkout_dot_checkout__pb2
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11email/email.proto\x12\x0bhipstershop\x1a\x13common/common.proto\x1a\x17checkout/checkout.proto"V\n\x1cSendOrderConfirmationRequest\x12\r\n\x05email\x18\x01 \x01(\t\x12\'\n\x05order\x18\x02 \x01(\x0b2\x18.hipstershop.OrderResult2h\n\x0cEmailService\x12X\n\x15SendOrderConfirmation\x12).hipstershop.SendOrderConfirmationRequest\x1a\x12.hipstershop.Empty"\x00B:Z8github.com/turt1z/microservices-demo/proto/email;emailpbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11email/email.proto\x12\x0bhipstershop\x1a\x13common/common.proto\x1a\x17checkout/checkout.proto"V\n\x1cSendOrderConfirmationRequest\x12\r\n\x05email\x18\x01 \x01(\t\x12\'\n\x05order\x18\x02 \x01(\x0b2\x18.hipstershop.OrderResult2h\n\x0cEmailService\x12X\n\x15SendOrderConfirmation\x12).hipstershop.SendOrderConfirmationRequest\x1a\x12.hipstershop.Empty"\x00B7Z5github.com/netd-tud/ds-onlineshop/proto/email;emailpbb\x06proto3')
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'email.email_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
     _globals['DESCRIPTOR']._loaded_options = None
-    _globals['DESCRIPTOR']._serialized_options = b'Z8github.com/turt1z/microservices-demo/proto/email;emailpb'
+    _globals['DESCRIPTOR']._serialized_options = b'Z5github.com/netd-tud/ds-onlineshop/proto/email;emailpb'
     _globals['_SENDORDERCONFIRMATIONREQUEST']._serialized_start = 80
     _globals['_SENDORDERCONFIRMATIONREQUEST']._serialized_end = 166
     _globals['_EMAILSERVICE']._serialized_start = 168

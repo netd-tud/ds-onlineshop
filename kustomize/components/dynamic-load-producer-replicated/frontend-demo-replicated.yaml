@@ -31,7 +31,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: ghcr.io/turt1z/microservices-demo/frontend:latest
+          image: ghcr.io/netd-tud/ds-onlineshop/frontend:latest
           ports:
             - containerPort: 8080
           readinessProbe:

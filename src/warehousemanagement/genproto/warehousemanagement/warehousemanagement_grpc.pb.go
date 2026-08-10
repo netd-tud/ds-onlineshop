@@ -8,7 +8,7 @@ package warehousemanagementpb
 
 import (
 	context "context"
-	inventory "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
+	inventory "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/inventory"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

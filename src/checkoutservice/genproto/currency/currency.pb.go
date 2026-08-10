@@ -21,7 +21,7 @@
 package currencypb
 
 import (
-	common "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
+	common "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -146,7 +146,7 @@ const file_currency_currency_proto_rawDesc = "" +
 	"\ato_code\x18\x02 \x01(\tR\x06toCode2\xb7\x01\n" +
 	"\x0fCurrencyService\x12[\n" +
 	"\x16GetSupportedCurrencies\x12\x12.hipstershop.Empty\x1a+.hipstershop.GetSupportedCurrenciesResponse\"\x00\x12G\n" +
-	"\aConvert\x12&.hipstershop.CurrencyConversionRequest\x1a\x12.hipstershop.Money\"\x00B@Z>github.com/turt1z/microservices-demo/proto/currency;currencypbb\x06proto3"
+	"\aConvert\x12&.hipstershop.CurrencyConversionRequest\x1a\x12.hipstershop.Money\"\x00B=Z;github.com/netd-tud/ds-onlineshop/proto/currency;currencypbb\x06proto3"
 
 var (
 	file_currency_currency_proto_rawDescOnce sync.Once

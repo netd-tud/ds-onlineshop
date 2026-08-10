@@ -6,9 +6,9 @@ import (
 	"encoding/base64"
 
 	"github.com/dtm-labs/client/dtmgrpc"
-	inventorypb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
-	productcatalogpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/productcatalog"
-	warehousemanagementpb "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/warehousemanagement"
+	inventorypb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/inventory"
+	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/productcatalog"
+	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/warehousemanagement"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

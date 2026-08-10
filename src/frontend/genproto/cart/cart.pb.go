@@ -21,7 +21,7 @@
 package cartpb
 
 import (
-	common "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
+	common "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -302,7 +302,7 @@ const file_cart_cart_proto_rawDesc = "" +
 	"\vCartService\x12<\n" +
 	"\aAddItem\x12\x1b.hipstershop.AddItemRequest\x1a\x12.hipstershop.Empty\"\x00\x12;\n" +
 	"\aGetCart\x12\x1b.hipstershop.GetCartRequest\x1a\x11.hipstershop.Cart\"\x00\x12@\n" +
-	"\tEmptyCart\x12\x1d.hipstershop.EmptyCartRequest\x1a\x12.hipstershop.Empty\"\x00B8Z6github.com/turt1z/microservices-demo/proto/cart;cartpbb\x06proto3"
+	"\tEmptyCart\x12\x1d.hipstershop.EmptyCartRequest\x1a\x12.hipstershop.Empty\"\x00B5Z3github.com/netd-tud/ds-onlineshop/proto/cart;cartpbb\x06proto3"
 
 var (
 	file_cart_cart_proto_rawDescOnce sync.Once

@@ -19,8 +19,8 @@ import (
 	"os"
 	"testing"
 
-	commonpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/common"
-	productcatalogpb "github.com/turt1z/microservices-demo/src/productcatalogservice/genproto/productcatalog"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/common"
+	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/productcatalog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

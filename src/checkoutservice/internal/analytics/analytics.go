@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/common"
 	"github.com/segmentio/kafka-go"
-	commonpb "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
 )
 
 type ProductEventType string

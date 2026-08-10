@@ -7,9 +7,9 @@
 package warehousemanagementpb
 
 import (
-	common "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/common"
-	inventory "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/inventory"
-	productcatalog "github.com/turt1z/microservices-demo/src/warehousemanagement/genproto/productcatalog"
+	common "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/common"
+	inventory "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/inventory"
+	productcatalog "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/productcatalog"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -161,7 +161,7 @@ const file_warehousemanagement_warehousemanagement_proto_rawDesc = "" +
 	"\aproduct\x18\x01 \x01(\v2\x14.hipstershop.ProductR\aproduct2\xfa\x01\n" +
 	"\x13WarehouseManagement\x12d\n" +
 	"\x12UpdateProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a\x1d.hipstershop.InventoryProduct\x12}\n" +
-	"\x10CreateNewProduct\x123.warehouse.management.CreateWarehouseProductRequest\x1a4.warehouse.management.CreateWarehouseProductResponseBVZTgithub.com/turt1z/microservices-demo/proto/warehousemanagement/warehousemanagementpbb\x06proto3"
+	"\x10CreateNewProduct\x123.warehouse.management.CreateWarehouseProductRequest\x1a4.warehouse.management.CreateWarehouseProductResponseBSZQgithub.com/netd-tud/ds-onlineshop/proto/warehousemanagement/warehousemanagementpbb\x06proto3"
 
 var (
 	file_warehousemanagement_warehousemanagement_proto_rawDescOnce sync.Once

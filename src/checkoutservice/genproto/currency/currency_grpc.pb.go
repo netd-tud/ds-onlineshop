@@ -22,7 +22,7 @@ package currencypb
 
 import (
 	context "context"
-	common "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
+	common "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/common"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

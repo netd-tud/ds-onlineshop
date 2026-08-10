@@ -8,9 +8,9 @@ import (
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/golang-jwt/jwt/v5"
+	authpb "github.com/netd-tud/ds-onlineshop/src/authservice/genproto/auth"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"github.com/sirupsen/logrus"
-	authpb "github.com/turt1z/microservices-demo/src/authservice/genproto/auth"
-	shared "github.com/turt1z/microservices-demo/src/shared"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"

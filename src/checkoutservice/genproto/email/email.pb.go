@@ -21,8 +21,8 @@
 package emailpb
 
 import (
-	checkout "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/checkout"
-	common "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
+	checkout "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/checkout"
+	common "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -98,7 +98,7 @@ const file_email_email_proto_rawDesc = "" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12.\n" +
 	"\x05order\x18\x02 \x01(\v2\x18.hipstershop.OrderResultR\x05order2h\n" +
 	"\fEmailService\x12X\n" +
-	"\x15SendOrderConfirmation\x12).hipstershop.SendOrderConfirmationRequest\x1a\x12.hipstershop.Empty\"\x00B:Z8github.com/turt1z/microservices-demo/proto/email;emailpbb\x06proto3"
+	"\x15SendOrderConfirmation\x12).hipstershop.SendOrderConfirmationRequest\x1a\x12.hipstershop.Empty\"\x00B7Z5github.com/netd-tud/ds-onlineshop/proto/email;emailpbb\x06proto3"
 
 var (
 	file_email_email_proto_rawDescOnce sync.Once

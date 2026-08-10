@@ -29,8 +29,8 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
-	commonpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/common"
-	shippingpb "github.com/turt1z/microservices-demo/src/shippingservice/genproto/shipping"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/shippingservice/genproto/common"
+	shippingpb "github.com/netd-tud/ds-onlineshop/src/shippingservice/genproto/shipping"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 

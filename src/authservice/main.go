@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/golang-jwt/jwt/v5"
-	authpb "github.com/turt1z/microservices-demo/src/authservice/genproto/auth"
+	authpb "github.com/netd-tud/ds-onlineshop/src/authservice/genproto/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"

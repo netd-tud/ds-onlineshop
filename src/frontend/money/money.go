@@ -17,7 +17,7 @@ package money
 import (
 	"errors"
 
-	commonpb "github.com/turt1z/microservices-demo/src/frontend/genproto/common"
+	commonpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common"
 )
 
 const (

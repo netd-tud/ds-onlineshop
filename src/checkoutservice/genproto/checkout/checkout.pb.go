@@ -21,9 +21,9 @@
 package checkoutpb
 
 import (
-	cart "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/cart"
-	common "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/common"
-	payment "github.com/turt1z/microservices-demo/src/checkoutservice/genproto/payment"
+	cart "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/cart"
+	common "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/common"
+	payment "github.com/netd-tud/ds-onlineshop/src/checkoutservice/genproto/payment"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -311,7 +311,7 @@ const file_checkout_checkout_proto_rawDesc = "" +
 	"\x05order\x18\x01 \x01(\v2\x18.hipstershop.OrderResultR\x05order2b\n" +
 	"\x0fCheckoutService\x12O\n" +
 	"\n" +
-	"PlaceOrder\x12\x1e.hipstershop.PlaceOrderRequest\x1a\x1f.hipstershop.PlaceOrderResponse\"\x00B@Z>github.com/turt1z/microservices-demo/proto/checkout;checkoutpbb\x06proto3"
+	"PlaceOrder\x12\x1e.hipstershop.PlaceOrderRequest\x1a\x1f.hipstershop.PlaceOrderResponse\"\x00B=Z;github.com/netd-tud/ds-onlineshop/proto/checkout;checkoutpbb\x06proto3"
 
 var (
 	file_checkout_checkout_proto_rawDescOnce sync.Once

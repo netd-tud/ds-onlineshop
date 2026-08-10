@@ -26,12 +26,12 @@ mkdir -p $outdir
 protoc --proto_path=$protodir \
   --go_out=./$outdir --go_opt=paths=source_relative \
   --go-grpc_out=./$outdir --go-grpc_opt=paths=source_relative \
-  --go_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/frontend/genproto/common \
-  --go-grpc_opt=Mcommon/common.proto=github.com/turt1z/microservices-demo/src/frontend/genproto/common \
-  --go_opt=Mpayment/payment.proto=github.com/turt1z/microservices-demo/src/frontend/genproto/payment \
-  --go-grpc_opt=Mpayment/payment.proto=github.com/turt1z/microservices-demo/src/frontend/genproto/payment \
-  --go_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/frontend/genproto/cart \
-  --go-grpc_opt=Mcart/cart.proto=github.com/turt1z/microservices-demo/src/frontend/genproto/cart \
+  --go_opt=Mcommon/common.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common \
+  --go-grpc_opt=Mcommon/common.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common \
+  --go_opt=Mpayment/payment.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/payment \
+  --go-grpc_opt=Mpayment/payment.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/payment \
+  --go_opt=Mcart/cart.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/cart \
+  --go-grpc_opt=Mcart/cart.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/cart \
   $protodir/auth/auth.proto \
   $protodir/checkout/checkout.proto \
   $protodir/productcatalog/productcatalog.proto \

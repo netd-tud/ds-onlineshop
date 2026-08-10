@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/golang/protobuf/jsonpb"
-	inventorypb "github.com/turt1z/microservices-demo/src/inventoryservice/genproto/inventory"
+	inventorypb "github.com/netd-tud/ds-onlineshop/src/inventoryservice/genproto/inventory"
 )
 
 func loadInventory(inventory *inventorypb.ListInventoryResponse) error {
