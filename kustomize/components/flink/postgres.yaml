@@ -69,7 +69,7 @@ data:
       PRIMARY KEY (sku, window_start)
     );
 
-    CREATE TABLE IF NOT EXISTS order_aov_15m (
+    CREATE TABLE IF NOT EXISTS order_aov_1h (
       currency_code VARCHAR(10) NOT NULL,
       window_start TIMESTAMP NOT NULL,
       window_end TIMESTAMP NOT NULL,
@@ -118,14 +118,26 @@ spec:
           image: postgres:18-alpine
           ports:
             - containerPort: 5432
+          args:
+            - "-c"
+            - "config_file=/etc/postgresql/postgresql.conf"
           envFrom:
             - secretRef:
                 name: postgres-secret
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - su-exec postgres pg_ctl stop -D "$PGDATA" -m fast -t 25
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql
             - name: init-script
               mountPath: /docker-entrypoint-initdb.d
+            - name: config-volume
+              mountPath: /etc/postgresql
           resources:
             requests:
               cpu: 100m
@@ -133,6 +145,11 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          readinessProbe:
+            exec:
+              command: [ "pg_isready", "-U", "user", "-d", "analytics_db" ]
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
@@ -140,6 +157,22 @@ spec:
         - name: init-script
           configMap:
             name: postgres-init-sql
+        - name: config-volume
+          configMap:
+            name: postgres-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: flink
+data:
+  postgresql.conf: |
+    checkpoint_timeout = '5min'
+    checkpoint_completion_target = 0.9
+    min_wal_size = '128MB'
+    max_wal_size = '512MB'
+    listen_addresses = '*'
 ---
 apiVersion: v1
 kind: Service
