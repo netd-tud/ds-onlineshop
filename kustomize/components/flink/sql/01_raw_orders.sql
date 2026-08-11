@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS raw_order_events_sink (
   'table-name' = 'raw_order_events',
   'username' = 'user',
   'password' = 'password',
-  'sink.buffer-flush.max-rows' = '1000',
-  'sink.buffer-flush.interval' = '1s',
+  'sink.buffer-flush.max-rows' = '5000',
+  'sink.buffer-flush.interval' = '30s',
   'sink.max-retries' = '3'
 );
 
