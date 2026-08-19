@@ -5,7 +5,6 @@ metadata:
   labels:
     app: frontend-demo-replicated
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: frontend-demo-replicated

@@ -3,4 +3,5 @@ kind: Component
 
 resources:
   - frontend-demo-replicated.yaml
+  - frontend-demo-replicated-hpa.yaml
   - dynamic-load-producer-deployment-replicated.yaml
