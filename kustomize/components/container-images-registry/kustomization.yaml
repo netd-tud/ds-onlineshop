@@ -42,3 +42,6 @@ images:
 - name: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice
   newName: ghcr.io/netd-tud/ds-onlineshop/recommendationservice
   newTag: latest
+- name: us-central1-docker.pkg.dev/google-samples/microservices-demo/loadgenerator
+  newName: ghcr.io/netd-tud/ds-onlineshop/loadgenerator
+  newTag: latest
