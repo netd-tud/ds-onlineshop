@@ -1,4 +1,10 @@
 {
-  "title": "Monitoring",
-  "uid": "monitoring-managed"
+  "apiVersion": "folder.grafana.app/v1",
+  "kind": "Folder",
+  "metadata": {
+    "name": "monitoring-managed"
+  },
+  "spec": {
+    "title": "Monitoring"
+  }
 }
