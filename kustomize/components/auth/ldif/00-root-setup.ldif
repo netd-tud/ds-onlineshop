@@ -1,3 +1,11 @@
+# Create root
+dn: dc=theonlineshop,dc=com
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: The Online Shop
+dc: theonlineshop
+
 # Create Organizational Units
 dn: ou=groups,dc=theonlineshop,dc=com
 objectClass: organizationalUnit
