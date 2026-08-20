@@ -19,6 +19,28 @@ spec:
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1001
+      initContainers:
+        - name: ldif-assembler
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /var/custom-ldif/custom
+              for f in $(ls /src/*.ldif | sort); do
+                cat "$f" >> /var/custom-ldif/custom/99-bootstrap.ldif
+                # Guarantee one blank line between files
+                printf '\n' >> /var/custom-ldif/custom/99-bootstrap.ldif
+              done
+              while [ "$(tail -c2 /var/custom-ldif/custom/99-bootstrap.ldif | wc -l)" -lt 2 ]; do
+                printf '\n' >> /var/custom-ldif/custom/99-bootstrap.ldif
+              done
+              echo "Assembled $(wc -l < /var/custom-ldif/custom/99-bootstrap.ldif) lines"
+          volumeMounts:
+            - name: ldif-bootstrap-src
+              mountPath: /src
+            - name: ldif-bootstrap-assembled
+              mountPath: /var/custom-ldif/custom
       containers:
         - name: server
           securityContext:
@@ -64,14 +86,14 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/openldap/openldap-data
               name: ldap-storage
-              subPath: data-v62
+              subPath: data-v65
             - mountPath: /etc/openldap/slapd.d
               name: ldap-storage
-              subPath: config-v62
+              subPath: config-v65
             - mountPath: /var/lib/openldap/openldap-backups
               name: backups
             - mountPath: /var/custom-ldif/custom
-              name: ldif-bootstrap-volume
+              name: ldif-bootstrap-assembled
             - mountPath: /opt/acls
               name: acl-ldif-volume
           lifecycle:
@@ -97,9 +119,11 @@ spec:
             claimName: ldap-data-pvc
         - name: backups
           emptyDir: {}
-        - name: ldif-bootstrap-volume
+        - name: ldif-bootstrap-src
           configMap:
             name: ldap-bootstrap-ldif
+        - name: ldif-bootstrap-assembled
+          emptyDir: {}
         - name: acl-ldif-volume
           configMap:
             name: ldap-acl-ldif
