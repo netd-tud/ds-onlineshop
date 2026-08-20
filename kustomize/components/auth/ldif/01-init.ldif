@@ -196,8 +196,60 @@ userPassword: {SSHA}0sWNo4JiUyRWFgaUgXA2xsb3wO/P0GSX
 mail: timos@mailbox.theonlineshop.de
 title: Clothing Manager
 
+# 15. GBP Order Manager
+dn: uid=annas,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: annas
+cn: Anna Schmidt
+givenName: Anna
+sn: Schmidt
+userPassword: {SSHA}QEn2yIyMAcPNbYI6IV6naKlDGSeRvxnu
+# ↑ password: annas
+mail: annas@mailbox.theonlineshop.de
+title: GBP Order Manager
+
+# 16. JPY Order Manager
+dn: uid=johnd,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: johnd
+cn: John Doe
+givenName: John
+sn: Doe
+userPassword: {SSHA}BmdzpfqFP5No6nudqaN8Qm6yM/inUhP/
+# ↑ password: johnd
+mail: johnd@mailbox.theonlineshop.de
+title: JPY Order Manager
+
+# 17. TRY Order Manager
+dn: uid=jasona,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: jasona
+cn: Jason Anderson
+givenName: Jason
+sn: Anderson
+userPassword: {SSHA}7tEtMNxKtWH0NmGJik8DLI2rUA/lCt2W
+# ↑ password: jasona
+mail: jasona@mailbox.theonlineshop.de
+title: TRY Order Manager
+
+# 18. CAD Order Manager
+dn: uid=lamc,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: lamc
+cn: Lam Chau
+givenName: Lam
+sn: Chau
+userPassword: {SSHA}+IixsD9EhUBKQ3U6M7mRm8atF0gIkrHd
+# ↑ password: lamc
+mail: lamc@mailbox.theonlineshop.de
+title: CAD Order Manager
+
 # ==========================================
-# Groups
+# Category Groups
 # ==========================================
 
 dn: cn=inventory-accessories-view,ou=groups,dc=theonlineshop,dc=com
@@ -328,3 +380,43 @@ objectClass: groupOfUniqueNames
 cn: inventory-home-manage
 uniqueMember: uid=leonp,ou=people,dc=theonlineshop,dc=com
 uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
+
+# ==========================================
+# Currency Groups (Regions)
+# ==========================================
+
+dn: cn=currency-eur,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-eur
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-usd,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-usd
+uniqueMember: uid=markus,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-gbp,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-gbp
+uniqueMember: uid=annas,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-jpy,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-jpy
+uniqueMember: uid=johnn,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-try,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-try
+uniqueMember: uid=jasona,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-cad,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-cad
+uniqueMember: uid=lamc,ou=people,dc=theonlineshop,dc=com
