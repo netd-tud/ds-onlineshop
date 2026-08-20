@@ -1,0 +1,35 @@
+dn: cn=currency-eur,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-eur
+uniqueMember: uid=isabellal,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-usd,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-usd
+uniqueMember: uid=markusw,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-gbp,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-gbp
+uniqueMember: uid=annas,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-jpy,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-jpy
+uniqueMember: uid=johnd,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-try,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-try
+uniqueMember: uid=jasona,ou=people,dc=theonlineshop,dc=com
+
+dn: cn=currency-cad,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: currency-cad
+uniqueMember: uid=lamc,ou=people,dc=theonlineshop,dc=com

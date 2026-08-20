@@ -1,0 +1,29 @@
+# Create Organizational Units
+dn: ou=groups,dc=theonlineshop,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+dn: ou=people,dc=theonlineshop,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: people
+
+# Create admins group
+dn: cn=admins,ou=groups,dc=theonlineshop,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+cn: admins
+uniqueMember: uid=admin,ou=people,dc=theonlineshop,dc=com
+
+# Create admin user
+dn: uid=admin,ou=people,dc=theonlineshop,dc=com
+objectClass: person
+objectClass: inetOrgPerson
+uid: admin
+cn: Admin
+givenName: Admin
+sn: Admin
+userPassword: {SSHA}kWfjw33WbgMUgcixU0uY1wTqKCRLF75U
+# ↑ password: admin
+mail: admin@mailbox.theonlineshop.de

@@ -4,7 +4,10 @@ kind: Component
 configMapGenerator:
   - name: ldap-bootstrap-ldif
     files:
-      - 01-init.ldif
+      - 00-root-setup.ldif
+      - 01-users.ldif
+      - 02-category-groups.ldif
+      - 03-currency-groups.ldif
       - 20-readonly.ldif
   - name: ldap-acl-ldif
     files:
