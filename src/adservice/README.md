@@ -18,6 +18,14 @@ If you need to upgrade the version of gradle then run
 ./gradlew wrapper --gradle-version <new-version>
 ```
 
+## Proto Files
+
+Proto files are placed inside `src/adservice/src/main/proto` after running `genproto.sh`:
+
+```
+./genproto.sh
+```
+
 ## Building docker image
 
 From `src/adservice/`, run:
