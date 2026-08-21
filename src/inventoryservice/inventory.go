@@ -183,19 +183,20 @@ func (p *inventory) parseInventory() []*inventorypb.InventoryProduct {
 type inventoryProductWithCategory struct {
 	Id         string   `json:"id"`
 	Stock      int64    `json:"stock"`
+	Severity   string   `json:"severity"`
 	Categories []string `json:"categories"`
 }
 
 func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *inventorypb.InventoryProduct) {
 	stock := product.GetStock()
-	var subTopic string
+	var severity string
 	switch {
 	case stock <= p.thresholds.criticalStock:
-		subTopic = product.GetId() + "/stock/critical"
+		severity = "critical"
 	case stock <= p.thresholds.lowStock:
-		subTopic = product.GetId() + "/stock/low"
+		severity = "low"
 	default:
-		subTopic = product.GetId() + "/stock/normal"
+		severity = "normal"
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
@@ -214,6 +215,7 @@ func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *invent
 	combinedProduct := inventoryProductWithCategory{
 		Id:         product.Id,
 		Stock:      product.Stock,
+		Severity:   severity,
 		Categories: categories,
 	}
 
@@ -221,7 +223,7 @@ func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *invent
 
 	payload, _ := json.Marshal(combinedProduct)
 	for _, category := range combinedProduct.Categories {
-		fullTopic := "inventory/" + category + "/" + subTopic
+		fullTopic := "inventory/" + category + "/" + product.GetId() + "/stock"
 		log.Infof("Publishing event for topic '%s'...", fullTopic)
 		go func(t string, pld []byte) {
 			_ = p.publishEventOverMQTT(brokerAddr, t, pld)
@@ -237,7 +239,7 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 	}
 
 	log.Printf("Publishing event for topic '%s'...", topic)
-	token := p.mqttClient.Publish(topic, 1, false, payload)
+	token := p.mqttClient.Publish(topic, 1, true, payload)
 
 	if finished := token.WaitTimeout(time.Second * 2); !finished {
 		return status.Error(codes.DeadlineExceeded, "MQTT publish timed out")
