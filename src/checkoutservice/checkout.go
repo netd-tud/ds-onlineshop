@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
@@ -123,6 +124,12 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *checkoutpb.Place
 		log.Warnf("failed to send order confirmation to %q: %+v", req.Email, err)
 	} else {
 		log.Infof("order confirmation email sent to %q", req.Email)
+	}
+
+	if err := cs.publishCompletedOrder(ctx, orderResult); err != nil {
+		log.Warnf("failed to publish completed order %q: %+v", orderResult.GetOrderId(), err)
+	} else {
+		log.Infof("completed order published: %q", orderResult.GetOrderId())
 	}
 	resp := &checkoutpb.PlaceOrderResponse{Order: orderResult}
 	return resp, nil
@@ -285,4 +292,33 @@ func (cs *checkoutService) shipOrder(ctx context.Context, address *commonpb.Addr
 		return "", fmt.Errorf("shipment failed: %+v", err)
 	}
 	return resp.GetTrackingId(), nil
+}
+
+func (cs *checkoutService) publishCompletedOrder(ctx context.Context, order *checkoutpb.OrderResult) error {
+	orderData, _ := json.Marshal(order)
+
+	region := order.GetShippingCost().GetCurrencyCode()
+	topic := region + "/checkout/orders/completed"
+
+	return cs.publishEventOverMQTT(topic, orderData)
+}
+
+func (cs *checkoutService) publishEventOverMQTT(topic string, payload []byte) error {
+	log.Infof("Attempting to publish event for topic '%s'...", topic)
+	if cs.mqttClient == nil || !cs.mqttClient.IsConnected() {
+		log.Errorf("MQTT client is not connected")
+		return status.Error(codes.Internal, "MQTT client is not connected")
+	}
+
+	log.Printf("Publishing event for topic '%s'...", topic)
+	token := cs.mqttClient.Publish(topic, 1, false, payload)
+
+	if finished := token.WaitTimeout(time.Second * 2); !finished {
+		return status.Error(codes.DeadlineExceeded, "MQTT publish timed out")
+	}
+	if token.Error() != nil {
+		return status.Errorf(codes.Internal, "MQTT publishing failed: %v", token.Error())
+	}
+	log.Printf("Published event for topic '%s' successfully", topic)
+	return nil
 }
