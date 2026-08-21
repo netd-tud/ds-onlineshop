@@ -1,0 +1,160 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net"
+	"os"
+	"sync"
+	"time"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	notificationpb "github.com/netd-tud/ds-onlineshop/src/notificationservice/genproto/notification"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+)
+
+type notification struct {
+	notificationpb.UnimplementedNotificationServiceServer
+
+	mqttBrokerAddr string
+	mqttClient     mqtt.Client
+
+	thresholds struct {
+		lowStock      int64
+		criticalStock int64
+	}
+
+	mu     sync.RWMutex
+	alerts map[string]*notificationpb.StockAlert
+}
+
+const defaultPort = "50051"
+
+var log *logrus.Logger
+
+func init() {
+	log = logrus.New()
+	log.Level = logrus.DebugLevel
+	log.Formatter = &logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "timestamp",
+			logrus.FieldKeyLevel: "severity",
+			logrus.FieldKeyMsg:   "message",
+		},
+		TimestampFormat: time.RFC3339Nano,
+	}
+	log.Out = os.Stdout
+}
+
+func main() {
+	port := defaultPort
+	if value, ok := os.LookupEnv("PORT"); ok {
+		port = value
+	}
+
+	run(port)
+	select {}
+}
+
+func run(port string) error {
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var srv *grpc.Server
+	srv = grpc.NewServer()
+
+	svc := &notification{
+		thresholds: struct {
+			lowStock      int64
+			criticalStock int64
+		}{lowStock: 10, criticalStock: 3},
+
+		alerts: make(map[string]*notificationpb.StockAlert),
+	}
+
+	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
+
+	opts := mqtt.NewClientOptions().AddBroker(svc.mqttBrokerAddr)
+	opts.SetClientID("inventory-service")
+	opts.SetConnectTimeout(time.Second * 5)
+
+	svc.setupMQTTSubscriber()
+
+	notificationpb.RegisterNotificationServiceServer(srv, svc)
+	healthcheck := health.NewServer()
+	healthpb.RegisterHealthServer(srv, healthcheck)
+	go srv.Serve(listener)
+
+	return nil
+}
+
+func (n *notification) setupMQTTSubscriber() {
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(n.mqttBrokerAddr)
+
+	hostname, _ := os.Hostname()
+	opts.SetClientID("notification-service-client-" + hostname)
+
+	topic := "inventory/+/+/stock"
+	qos := byte(1)
+
+	var stockMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+		n.onStockUpdate(client, msg)
+	}
+
+	opts.OnConnect = func(client mqtt.Client) {
+		log.Println("MQTT connected successfully")
+
+		if token := client.Subscribe(topic, qos, stockMessageHandler); token.Wait() && token.Error() != nil {
+			log.Errorf("Error subscribing to topic %s: %v", topic, token.Error())
+		} else {
+			log.Printf("Successfully subscribed to %s", topic)
+		}
+	}
+
+	opts.OnConnectionLost = func(client mqtt.Client, err error) {
+		log.Printf("MQTT connection lost: %v", err)
+	}
+
+	client := mqtt.NewClient(opts)
+	n.mqttClient = client
+
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		log.Fatalf("Error connecting to MQTT broker: %v", token.Error())
+	}
+
+	log.Printf("Successfully subscribed to %s", topic)
+}
+
+func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
+	var p struct {
+		Id         string   `json:"id"`
+		Stock      int64    `json:"stock"`
+		Severity   string   `json:"severity"`
+		Categories []string `json:"categories"`
+	}
+	if err := json.Unmarshal(msg.Payload(), &p); err != nil {
+		log.WithError(err).Error("Failed to unmarshal MQTT message")
+		return
+	}
+
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	if p.Severity == "normal" {
+		delete(n.alerts, p.Id)
+		return
+	}
+
+	n.alerts[p.Id] = &notificationpb.StockAlert{ProductId: p.Id, Category: p.Categories, Stock: p.Stock, Severity: p.Severity}
+}
+
+func (n *notification) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
+}
