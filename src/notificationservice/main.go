@@ -158,3 +158,26 @@ func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 func (n *notification) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
 }
+
+func (n *notification) ListOpenAlerts(ctx context.Context, req *notificationpb.ListOpenAlertsRequest) (*notificationpb.ListOpenAlertsResponse, error) {
+	reqCats := make(map[string]bool, len(req.GetCategories()))
+	for _, c := range req.GetCategories() {
+		reqCats[c] = true
+	}
+
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+
+	response := &notificationpb.ListOpenAlertsResponse{}
+
+	for _, alert := range n.alerts {
+		for _, cat := range alert.Category {
+			if reqCats[cat] {
+				response.Alerts = append(response.Alerts, alert)
+				break
+			}
+		}
+	}
+
+	return response, nil
+}
