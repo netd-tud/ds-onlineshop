@@ -26,4 +26,6 @@ message ListOpenAlertsResponse { repeated StockAlert alerts = 1; }
 
 message ListRecentOrdersByCurrencyRequest { repeated string currencies = 1; }
 
-message ListRecentOrdersByCurrencyResponse { repeated OrderResult orders = 1; }
+message OrderList { repeated OrderResult orders = 1; }
+
+message ListRecentOrdersByCurrencyResponse { map<string, OrderList> orders_by_currency = 1; }

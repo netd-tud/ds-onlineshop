@@ -222,16 +222,60 @@ func (x *ListRecentOrdersByCurrencyRequest) GetCurrencies() []string {
 	return nil
 }
 
-type ListRecentOrdersByCurrencyResponse struct {
+type OrderList struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	Orders        []*checkout.OrderResult `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *OrderList) Reset() {
+	*x = OrderList{}
+	mi := &file_notification_notification_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OrderList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OrderList) ProtoMessage() {}
+
+func (x *OrderList) ProtoReflect() protoreflect.Message {
+	mi := &file_notification_notification_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OrderList.ProtoReflect.Descriptor instead.
+func (*OrderList) Descriptor() ([]byte, []int) {
+	return file_notification_notification_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *OrderList) GetOrders() []*checkout.OrderResult {
+	if x != nil {
+		return x.Orders
+	}
+	return nil
+}
+
+type ListRecentOrdersByCurrencyResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	OrdersByCurrency map[string]*OrderList  `protobuf:"bytes,1,rep,name=orders_by_currency,json=ordersByCurrency,proto3" json:"orders_by_currency,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
 func (x *ListRecentOrdersByCurrencyResponse) Reset() {
 	*x = ListRecentOrdersByCurrencyResponse{}
-	mi := &file_notification_notification_proto_msgTypes[4]
+	mi := &file_notification_notification_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -243,7 +287,7 @@ func (x *ListRecentOrdersByCurrencyResponse) String() string {
 func (*ListRecentOrdersByCurrencyResponse) ProtoMessage() {}
 
 func (x *ListRecentOrdersByCurrencyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_notification_notification_proto_msgTypes[4]
+	mi := &file_notification_notification_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -256,12 +300,12 @@ func (x *ListRecentOrdersByCurrencyResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use ListRecentOrdersByCurrencyResponse.ProtoReflect.Descriptor instead.
 func (*ListRecentOrdersByCurrencyResponse) Descriptor() ([]byte, []int) {
-	return file_notification_notification_proto_rawDescGZIP(), []int{4}
+	return file_notification_notification_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ListRecentOrdersByCurrencyResponse) GetOrders() []*checkout.OrderResult {
+func (x *ListRecentOrdersByCurrencyResponse) GetOrdersByCurrency() map[string]*OrderList {
 	if x != nil {
-		return x.Orders
+		return x.OrdersByCurrency
 	}
 	return nil
 }
@@ -287,9 +331,14 @@ const file_notification_notification_proto_rawDesc = "" +
 	"!ListRecentOrdersByCurrencyRequest\x12\x1e\n" +
 	"\n" +
 	"currencies\x18\x01 \x03(\tR\n" +
-	"currencies\"V\n" +
-	"\"ListRecentOrdersByCurrencyResponse\x120\n" +
-	"\x06orders\x18\x01 \x03(\v2\x18.hipstershop.OrderResultR\x06orders2\xf3\x01\n" +
+	"currencies\"=\n" +
+	"\tOrderList\x120\n" +
+	"\x06orders\x18\x01 \x03(\v2\x18.hipstershop.OrderResultR\x06orders\"\xf6\x01\n" +
+	"\"ListRecentOrdersByCurrencyResponse\x12s\n" +
+	"\x12orders_by_currency\x18\x01 \x03(\v2E.hipstershop.ListRecentOrdersByCurrencyResponse.OrdersByCurrencyEntryR\x10ordersByCurrency\x1a[\n" +
+	"\x15OrdersByCurrencyEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
+	"\x05value\x18\x02 \x01(\v2\x16.hipstershop.OrderListR\x05value:\x028\x012\xf3\x01\n" +
 	"\x13NotificationService\x12[\n" +
 	"\x0eListOpenAlerts\x12\".hipstershop.ListOpenAlertsRequest\x1a#.hipstershop.ListOpenAlertsResponse\"\x00\x12\x7f\n" +
 	"\x1aListRecentOrdersByCurrency\x12..hipstershop.ListRecentOrdersByCurrencyRequest\x1a/.hipstershop.ListRecentOrdersByCurrencyResponse\"\x00BEZCgithub.com/netd-tud/ds-onlineshop/proto/notification;notificationpbb\x06proto3"
@@ -306,27 +355,31 @@ func file_notification_notification_proto_rawDescGZIP() []byte {
 	return file_notification_notification_proto_rawDescData
 }
 
-var file_notification_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_notification_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_notification_notification_proto_goTypes = []any{
 	(*ListOpenAlertsRequest)(nil),              // 0: hipstershop.ListOpenAlertsRequest
 	(*StockAlert)(nil),                         // 1: hipstershop.StockAlert
 	(*ListOpenAlertsResponse)(nil),             // 2: hipstershop.ListOpenAlertsResponse
 	(*ListRecentOrdersByCurrencyRequest)(nil),  // 3: hipstershop.ListRecentOrdersByCurrencyRequest
-	(*ListRecentOrdersByCurrencyResponse)(nil), // 4: hipstershop.ListRecentOrdersByCurrencyResponse
-	(*checkout.OrderResult)(nil),               // 5: hipstershop.OrderResult
+	(*OrderList)(nil),                          // 4: hipstershop.OrderList
+	(*ListRecentOrdersByCurrencyResponse)(nil), // 5: hipstershop.ListRecentOrdersByCurrencyResponse
+	nil,                          // 6: hipstershop.ListRecentOrdersByCurrencyResponse.OrdersByCurrencyEntry
+	(*checkout.OrderResult)(nil), // 7: hipstershop.OrderResult
 }
 var file_notification_notification_proto_depIdxs = []int32{
 	1, // 0: hipstershop.ListOpenAlertsResponse.alerts:type_name -> hipstershop.StockAlert
-	5, // 1: hipstershop.ListRecentOrdersByCurrencyResponse.orders:type_name -> hipstershop.OrderResult
-	0, // 2: hipstershop.NotificationService.ListOpenAlerts:input_type -> hipstershop.ListOpenAlertsRequest
-	3, // 3: hipstershop.NotificationService.ListRecentOrdersByCurrency:input_type -> hipstershop.ListRecentOrdersByCurrencyRequest
-	2, // 4: hipstershop.NotificationService.ListOpenAlerts:output_type -> hipstershop.ListOpenAlertsResponse
-	4, // 5: hipstershop.NotificationService.ListRecentOrdersByCurrency:output_type -> hipstershop.ListRecentOrdersByCurrencyResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	7, // 1: hipstershop.OrderList.orders:type_name -> hipstershop.OrderResult
+	6, // 2: hipstershop.ListRecentOrdersByCurrencyResponse.orders_by_currency:type_name -> hipstershop.ListRecentOrdersByCurrencyResponse.OrdersByCurrencyEntry
+	4, // 3: hipstershop.ListRecentOrdersByCurrencyResponse.OrdersByCurrencyEntry.value:type_name -> hipstershop.OrderList
+	0, // 4: hipstershop.NotificationService.ListOpenAlerts:input_type -> hipstershop.ListOpenAlertsRequest
+	3, // 5: hipstershop.NotificationService.ListRecentOrdersByCurrency:input_type -> hipstershop.ListRecentOrdersByCurrencyRequest
+	2, // 6: hipstershop.NotificationService.ListOpenAlerts:output_type -> hipstershop.ListOpenAlertsResponse
+	5, // 7: hipstershop.NotificationService.ListRecentOrdersByCurrency:output_type -> hipstershop.ListRecentOrdersByCurrencyResponse
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_notification_notification_proto_init() }
@@ -340,7 +393,7 @@ func file_notification_notification_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_notification_notification_proto_rawDesc), len(file_notification_notification_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

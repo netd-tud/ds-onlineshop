@@ -243,10 +243,10 @@ func (n *notification) ListRecentOrdersByCurrency(ctx context.Context, req *noti
 	defer n.ordersMu.RUnlock()
 
 	response := &notificationpb.ListRecentOrdersByCurrencyResponse{}
-
-	for _, currency := range req.GetCurrency() {
+	response.OrdersByCurrency = make(map[string]*notificationpb.OrderList)
+	for _, currency := range req.GetCurrencies() {
 		if q, exists := n.orderQueues[currency]; exists {
-			response.Orders = append(response.Orders, q.GetAll()...)
+			response.OrdersByCurrency[currency] = &notificationpb.OrderList{Orders: q.GetAll()}
 		}
 	}
 
