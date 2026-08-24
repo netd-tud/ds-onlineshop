@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type notification struct {
@@ -82,6 +84,9 @@ func run(port string) error {
 		}{lowStock: 10, criticalStock: 3},
 
 		alerts: make(map[string]*notificationpb.StockAlert),
+
+		orderQueues:   make(map[string]*OrderQueue),
+		queueCapacity: 20,
 	}
 
 	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
@@ -107,20 +112,31 @@ func (n *notification) setupMQTTSubscriber() {
 	hostname, _ := os.Hostname()
 	opts.SetClientID("notification-service-client-" + hostname)
 
-	topic := "inventory/+/+/stock"
+	stockTopic := "inventory/+/+/stock"
+	orderTopic := "+/checkout/orders/completed"
 	qos := byte(1)
 
 	var stockMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 		n.onStockUpdate(client, msg)
 	}
 
+	var orderMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+		n.onOrderCompleted(client, msg)
+	}
+
 	opts.OnConnect = func(client mqtt.Client) {
 		log.Println("MQTT connected successfully")
 
-		if token := client.Subscribe(topic, qos, stockMessageHandler); token.Wait() && token.Error() != nil {
-			log.Errorf("Error subscribing to topic %s: %v", topic, token.Error())
+		if token := client.Subscribe(stockTopic, qos, stockMessageHandler); token.Wait() && token.Error() != nil {
+			log.Errorf("Error subscribing to topic %s: %v", stockTopic, token.Error())
 		} else {
-			log.Printf("Successfully subscribed to %s", topic)
+			log.Printf("Successfully subscribed to %s", stockTopic)
+		}
+
+		if token := client.Subscribe(orderTopic, qos, orderMessageHandler); token.Wait() && token.Error() != nil {
+			log.Errorf("Error subscribing to topic %s: %v", orderTopic, token.Error())
+		} else {
+			log.Printf("Successfully subscribed to %s", orderTopic)
 		}
 	}
 
@@ -135,7 +151,8 @@ func (n *notification) setupMQTTSubscriber() {
 		log.Fatalf("Error connecting to MQTT broker: %v", token.Error())
 	}
 
-	log.Printf("Successfully subscribed to %s", topic)
+	log.Printf("Successfully subscribed to %s", stockTopic)
+	log.Printf("Successfully subscribed to %s", orderTopic)
 }
 
 func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
@@ -187,7 +204,16 @@ func (n *notification) ListOpenAlerts(ctx context.Context, req *notificationpb.L
 	return response, nil
 }
 
-// TODO: subscribe to order topic and add successful orders to queues
+func (n *notification) onOrderCompleted(_ mqtt.Client, msg mqtt.Message) {
+	order := &checkoutpb.OrderResult{}
+
+	if err := protojson.Unmarshal(msg.Payload(), order); err != nil {
+		log.WithError(err).Error("Failed to unmarshal order MQTT message")
+		return
+	}
+
+	n.PushNewOrder(order)
+}
 
 func (n *notification) PushNewOrder(order *checkoutpb.OrderResult) {
 	currency := order.GetShippingCost().GetCurrencyCode()
