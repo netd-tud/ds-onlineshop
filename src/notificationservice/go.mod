@@ -4,7 +4,6 @@ go 1.26.5
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/envoyproxy/protoc-gen-validate v1.3.3
 	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260821090351-f591ad45b189
 	github.com/sirupsen/logrus v1.10.1
 	google.golang.org/grpc v1.83.1
@@ -17,9 +16,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
-	github.com/lyft/protoc-gen-star/v2 v2.0.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/spf13/afero v1.15.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.70.0 // indirect
 	go.opentelemetry.io/otel v1.45.0 // indirect

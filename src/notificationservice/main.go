@@ -10,6 +10,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	checkoutpb "github.com/netd-tud/ds-onlineshop/src/notificationservice/genproto/checkout"
 	notificationpb "github.com/netd-tud/ds-onlineshop/src/notificationservice/genproto/notification"
 	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"github.com/sirupsen/logrus"
@@ -29,8 +30,12 @@ type notification struct {
 		criticalStock int64
 	}
 
-	mu     sync.RWMutex
-	alerts map[string]*notificationpb.StockAlert
+	alertsMu sync.RWMutex
+	alerts   map[string]*notificationpb.StockAlert
+
+	ordersMu      sync.RWMutex
+	orderQueues   map[string]*OrderQueue
+	queueCapacity int
 }
 
 const defaultPort = "50051"
@@ -145,8 +150,8 @@ func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	n.mu.Lock()
-	defer n.mu.Unlock()
+	n.alertsMu.Lock()
+	defer n.alertsMu.Unlock()
 	if p.Severity == "normal" {
 		delete(n.alerts, p.Id)
 		return
@@ -165,8 +170,8 @@ func (n *notification) ListOpenAlerts(ctx context.Context, req *notificationpb.L
 		reqCats[c] = true
 	}
 
-	n.mu.RLock()
-	defer n.mu.RUnlock()
+	n.alertsMu.RLock()
+	defer n.alertsMu.RUnlock()
 
 	response := &notificationpb.ListOpenAlertsResponse{}
 
@@ -176,6 +181,41 @@ func (n *notification) ListOpenAlerts(ctx context.Context, req *notificationpb.L
 				response.Alerts = append(response.Alerts, alert)
 				break
 			}
+		}
+	}
+
+	return response, nil
+}
+
+// TODO: subscribe to order topic and add successful orders to queues
+
+func (n *notification) PushNewOrder(order *checkoutpb.OrderResult) {
+	currency := order.GetShippingCost().GetCurrencyCode()
+	if currency == "" {
+		currency = "UNKNOWN"
+	}
+
+	n.ordersMu.Lock()
+	defer n.ordersMu.Unlock()
+
+	q, exists := n.orderQueues[currency]
+	if !exists {
+		q = NewOrderQueue(n.queueCapacity)
+		n.orderQueues[currency] = q
+	}
+
+	q.Push(order)
+}
+
+func (n *notification) ListRecentOrdersByCurrency(ctx context.Context, req *notificationpb.ListRecentOrdersByCurrencyRequest) (*notificationpb.ListRecentOrdersByCurrencyResponse, error) {
+	n.ordersMu.RLock()
+	defer n.ordersMu.RUnlock()
+
+	response := &notificationpb.ListRecentOrdersByCurrencyResponse{}
+
+	for _, currency := range req.GetCurrency() {
+		if q, exists := n.orderQueues[currency]; exists {
+			response.Orders = append(response.Orders, q.GetAll()...)
 		}
 	}
 

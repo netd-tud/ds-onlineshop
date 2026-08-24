@@ -4,10 +4,13 @@ package hipstershop;
 
 option go_package = "github.com/netd-tud/ds-onlineshop/proto/notification;notificationpb";
 
+import "checkout/checkout.proto";
+
 // ------------Notification service------------------
 
 service NotificationService {
   rpc ListOpenAlerts(ListOpenAlertsRequest) returns (ListOpenAlertsResponse) {}
+  rpc ListRecentOrdersByCurrency(ListRecentOrdersByCurrencyRequest) returns (ListRecentOrdersByCurrencyResponse) {}
 }
 
 message ListOpenAlertsRequest { repeated string categories = 1; }
@@ -20,3 +23,7 @@ message StockAlert {
 }
 
 message ListOpenAlertsResponse { repeated StockAlert alerts = 1; }
+
+message ListRecentOrdersByCurrencyRequest { repeated string currency = 1; }
+
+message ListRecentOrdersByCurrencyResponse { repeated OrderResult orders = 1; }

@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NotificationService_ListOpenAlerts_FullMethodName = "/hipstershop.NotificationService/ListOpenAlerts"
+	NotificationService_ListOpenAlerts_FullMethodName             = "/hipstershop.NotificationService/ListOpenAlerts"
+	NotificationService_ListRecentOrdersByCurrency_FullMethodName = "/hipstershop.NotificationService/ListRecentOrdersByCurrency"
 )
 
 // NotificationServiceClient is the client API for NotificationService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotificationServiceClient interface {
 	ListOpenAlerts(ctx context.Context, in *ListOpenAlertsRequest, opts ...grpc.CallOption) (*ListOpenAlertsResponse, error)
+	ListRecentOrdersByCurrency(ctx context.Context, in *ListRecentOrdersByCurrencyRequest, opts ...grpc.CallOption) (*ListRecentOrdersByCurrencyResponse, error)
 }
 
 type notificationServiceClient struct {
@@ -47,11 +49,22 @@ func (c *notificationServiceClient) ListOpenAlerts(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *notificationServiceClient) ListRecentOrdersByCurrency(ctx context.Context, in *ListRecentOrdersByCurrencyRequest, opts ...grpc.CallOption) (*ListRecentOrdersByCurrencyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRecentOrdersByCurrencyResponse)
+	err := c.cc.Invoke(ctx, NotificationService_ListRecentOrdersByCurrency_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotificationServiceServer is the server API for NotificationService service.
 // All implementations must embed UnimplementedNotificationServiceServer
 // for forward compatibility.
 type NotificationServiceServer interface {
 	ListOpenAlerts(context.Context, *ListOpenAlertsRequest) (*ListOpenAlertsResponse, error)
+	ListRecentOrdersByCurrency(context.Context, *ListRecentOrdersByCurrencyRequest) (*ListRecentOrdersByCurrencyResponse, error)
 	mustEmbedUnimplementedNotificationServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedNotificationServiceServer struct{}
 
 func (UnimplementedNotificationServiceServer) ListOpenAlerts(context.Context, *ListOpenAlertsRequest) (*ListOpenAlertsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListOpenAlerts not implemented")
+}
+func (UnimplementedNotificationServiceServer) ListRecentOrdersByCurrency(context.Context, *ListRecentOrdersByCurrencyRequest) (*ListRecentOrdersByCurrencyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListRecentOrdersByCurrency not implemented")
 }
 func (UnimplementedNotificationServiceServer) mustEmbedUnimplementedNotificationServiceServer() {}
 func (UnimplementedNotificationServiceServer) testEmbeddedByValue()                             {}
@@ -104,6 +120,24 @@ func _NotificationService_ListOpenAlerts_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NotificationService_ListRecentOrdersByCurrency_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRecentOrdersByCurrencyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).ListRecentOrdersByCurrency(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_ListRecentOrdersByCurrency_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).ListRecentOrdersByCurrency(ctx, req.(*ListRecentOrdersByCurrencyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NotificationService_ServiceDesc is the grpc.ServiceDesc for NotificationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var NotificationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListOpenAlerts",
 			Handler:    _NotificationService_ListOpenAlerts_Handler,
+		},
+		{
+			MethodName: "ListRecentOrdersByCurrency",
+			Handler:    _NotificationService_ListRecentOrdersByCurrency_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

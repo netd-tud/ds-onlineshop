@@ -7,6 +7,7 @@
 package notificationpb
 
 import (
+	checkout "github.com/netd-tud/ds-onlineshop/src/notificationservice/genproto/checkout"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -177,11 +178,99 @@ func (x *ListOpenAlertsResponse) GetAlerts() []*StockAlert {
 	return nil
 }
 
+type ListRecentOrdersByCurrencyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Currency      []string               `protobuf:"bytes,1,rep,name=currency,proto3" json:"currency,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListRecentOrdersByCurrencyRequest) Reset() {
+	*x = ListRecentOrdersByCurrencyRequest{}
+	mi := &file_notification_notification_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListRecentOrdersByCurrencyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListRecentOrdersByCurrencyRequest) ProtoMessage() {}
+
+func (x *ListRecentOrdersByCurrencyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_notification_notification_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListRecentOrdersByCurrencyRequest.ProtoReflect.Descriptor instead.
+func (*ListRecentOrdersByCurrencyRequest) Descriptor() ([]byte, []int) {
+	return file_notification_notification_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListRecentOrdersByCurrencyRequest) GetCurrency() []string {
+	if x != nil {
+		return x.Currency
+	}
+	return nil
+}
+
+type ListRecentOrdersByCurrencyResponse struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Orders        []*checkout.OrderResult `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListRecentOrdersByCurrencyResponse) Reset() {
+	*x = ListRecentOrdersByCurrencyResponse{}
+	mi := &file_notification_notification_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListRecentOrdersByCurrencyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListRecentOrdersByCurrencyResponse) ProtoMessage() {}
+
+func (x *ListRecentOrdersByCurrencyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_notification_notification_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListRecentOrdersByCurrencyResponse.ProtoReflect.Descriptor instead.
+func (*ListRecentOrdersByCurrencyResponse) Descriptor() ([]byte, []int) {
+	return file_notification_notification_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListRecentOrdersByCurrencyResponse) GetOrders() []*checkout.OrderResult {
+	if x != nil {
+		return x.Orders
+	}
+	return nil
+}
+
 var File_notification_notification_proto protoreflect.FileDescriptor
 
 const file_notification_notification_proto_rawDesc = "" +
 	"\n" +
-	"\x1fnotification/notification.proto\x12\vhipstershop\"7\n" +
+	"\x1fnotification/notification.proto\x12\vhipstershop\x1a\x17checkout/checkout.proto\"7\n" +
 	"\x15ListOpenAlertsRequest\x12\x1e\n" +
 	"\n" +
 	"categories\x18\x01 \x03(\tR\n" +
@@ -194,9 +283,14 @@ const file_notification_notification_proto_rawDesc = "" +
 	"\x05stock\x18\x03 \x01(\x03R\x05stock\x12\x1a\n" +
 	"\bseverity\x18\x04 \x01(\tR\bseverity\"I\n" +
 	"\x16ListOpenAlertsResponse\x12/\n" +
-	"\x06alerts\x18\x01 \x03(\v2\x17.hipstershop.StockAlertR\x06alerts2r\n" +
+	"\x06alerts\x18\x01 \x03(\v2\x17.hipstershop.StockAlertR\x06alerts\"?\n" +
+	"!ListRecentOrdersByCurrencyRequest\x12\x1a\n" +
+	"\bcurrency\x18\x01 \x03(\tR\bcurrency\"V\n" +
+	"\"ListRecentOrdersByCurrencyResponse\x120\n" +
+	"\x06orders\x18\x01 \x03(\v2\x18.hipstershop.OrderResultR\x06orders2\xf3\x01\n" +
 	"\x13NotificationService\x12[\n" +
-	"\x0eListOpenAlerts\x12\".hipstershop.ListOpenAlertsRequest\x1a#.hipstershop.ListOpenAlertsResponse\"\x00BEZCgithub.com/netd-tud/ds-onlineshop/proto/notification;notificationpbb\x06proto3"
+	"\x0eListOpenAlerts\x12\".hipstershop.ListOpenAlertsRequest\x1a#.hipstershop.ListOpenAlertsResponse\"\x00\x12\x7f\n" +
+	"\x1aListRecentOrdersByCurrency\x12..hipstershop.ListRecentOrdersByCurrencyRequest\x1a/.hipstershop.ListRecentOrdersByCurrencyResponse\"\x00BEZCgithub.com/netd-tud/ds-onlineshop/proto/notification;notificationpbb\x06proto3"
 
 var (
 	file_notification_notification_proto_rawDescOnce sync.Once
@@ -210,21 +304,27 @@ func file_notification_notification_proto_rawDescGZIP() []byte {
 	return file_notification_notification_proto_rawDescData
 }
 
-var file_notification_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_notification_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_notification_notification_proto_goTypes = []any{
-	(*ListOpenAlertsRequest)(nil),  // 0: hipstershop.ListOpenAlertsRequest
-	(*StockAlert)(nil),             // 1: hipstershop.StockAlert
-	(*ListOpenAlertsResponse)(nil), // 2: hipstershop.ListOpenAlertsResponse
+	(*ListOpenAlertsRequest)(nil),              // 0: hipstershop.ListOpenAlertsRequest
+	(*StockAlert)(nil),                         // 1: hipstershop.StockAlert
+	(*ListOpenAlertsResponse)(nil),             // 2: hipstershop.ListOpenAlertsResponse
+	(*ListRecentOrdersByCurrencyRequest)(nil),  // 3: hipstershop.ListRecentOrdersByCurrencyRequest
+	(*ListRecentOrdersByCurrencyResponse)(nil), // 4: hipstershop.ListRecentOrdersByCurrencyResponse
+	(*checkout.OrderResult)(nil),               // 5: hipstershop.OrderResult
 }
 var file_notification_notification_proto_depIdxs = []int32{
 	1, // 0: hipstershop.ListOpenAlertsResponse.alerts:type_name -> hipstershop.StockAlert
-	0, // 1: hipstershop.NotificationService.ListOpenAlerts:input_type -> hipstershop.ListOpenAlertsRequest
-	2, // 2: hipstershop.NotificationService.ListOpenAlerts:output_type -> hipstershop.ListOpenAlertsResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 1: hipstershop.ListRecentOrdersByCurrencyResponse.orders:type_name -> hipstershop.OrderResult
+	0, // 2: hipstershop.NotificationService.ListOpenAlerts:input_type -> hipstershop.ListOpenAlertsRequest
+	3, // 3: hipstershop.NotificationService.ListRecentOrdersByCurrency:input_type -> hipstershop.ListRecentOrdersByCurrencyRequest
+	2, // 4: hipstershop.NotificationService.ListOpenAlerts:output_type -> hipstershop.ListOpenAlertsResponse
+	4, // 5: hipstershop.NotificationService.ListRecentOrdersByCurrency:output_type -> hipstershop.ListRecentOrdersByCurrencyResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_notification_notification_proto_init() }
@@ -238,7 +338,7 @@ func file_notification_notification_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_notification_notification_proto_rawDesc), len(file_notification_notification_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
