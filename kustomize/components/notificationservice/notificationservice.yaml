@@ -38,6 +38,8 @@ spec:
               value: "50051"
             - name: MQTT_BROKER_ADDR
               value: "mqtt-broker:1883"
+            - name: QUEUE_CAPACITY
+              value: "20"
           readinessProbe:
             grpc:
               port: 50051

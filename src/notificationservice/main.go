@@ -90,6 +90,11 @@ func run(port string) error {
 	}
 
 	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
+	if value, ok := os.LookupEnv("QUEUE_CAPACITY"); ok {
+		if capacity, err := strconv.Atoi(value); err == nil {
+			svc.queueCapacity = capacity
+		}
+	}
 
 	opts := mqtt.NewClientOptions().AddBroker(svc.mqttBrokerAddr)
 	opts.SetClientID("inventory-service")
