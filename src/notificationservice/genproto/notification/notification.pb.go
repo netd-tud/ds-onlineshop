@@ -180,7 +180,7 @@ func (x *ListOpenAlertsResponse) GetAlerts() []*StockAlert {
 
 type ListRecentOrdersByCurrencyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Currency      []string               `protobuf:"bytes,1,rep,name=currency,proto3" json:"currency,omitempty"`
+	Currencies    []string               `protobuf:"bytes,1,rep,name=currencies,proto3" json:"currencies,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -215,9 +215,9 @@ func (*ListRecentOrdersByCurrencyRequest) Descriptor() ([]byte, []int) {
 	return file_notification_notification_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ListRecentOrdersByCurrencyRequest) GetCurrency() []string {
+func (x *ListRecentOrdersByCurrencyRequest) GetCurrencies() []string {
 	if x != nil {
-		return x.Currency
+		return x.Currencies
 	}
 	return nil
 }
@@ -283,9 +283,11 @@ const file_notification_notification_proto_rawDesc = "" +
 	"\x05stock\x18\x03 \x01(\x03R\x05stock\x12\x1a\n" +
 	"\bseverity\x18\x04 \x01(\tR\bseverity\"I\n" +
 	"\x16ListOpenAlertsResponse\x12/\n" +
-	"\x06alerts\x18\x01 \x03(\v2\x17.hipstershop.StockAlertR\x06alerts\"?\n" +
-	"!ListRecentOrdersByCurrencyRequest\x12\x1a\n" +
-	"\bcurrency\x18\x01 \x03(\tR\bcurrency\"V\n" +
+	"\x06alerts\x18\x01 \x03(\v2\x17.hipstershop.StockAlertR\x06alerts\"C\n" +
+	"!ListRecentOrdersByCurrencyRequest\x12\x1e\n" +
+	"\n" +
+	"currencies\x18\x01 \x03(\tR\n" +
+	"currencies\"V\n" +
 	"\"ListRecentOrdersByCurrencyResponse\x120\n" +
 	"\x06orders\x18\x01 \x03(\v2\x18.hipstershop.OrderResultR\x06orders2\xf3\x01\n" +
 	"\x13NotificationService\x12[\n" +
