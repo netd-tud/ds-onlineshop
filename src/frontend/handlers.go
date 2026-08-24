@@ -106,6 +106,31 @@ func computeHeavyLoad(iterations int) string {
 	return fmt.Sprintf("%x", hash)
 }
 
+func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	categories := make([]string, 0, 2)
+	categories = append(categories, "clothing")
+	categories = append(categories, "decoration")
+
+	currencies := make([]string, 0, 2)
+	currencies = append(currencies, "USD")
+	currencies = append(currencies, "EUR")
+
+	productAlerts, _ := fe.getProductAlerts(r.Context(), categories)
+	log.Infof("Product alerts: %v", productAlerts)
+
+	recentOrdersPerCurrency, _ := fe.getRecentOrders(r.Context(), currencies)
+	log.Infof("Recent orders: %v", recentOrdersPerCurrency)
+
+	if err := templates.ExecuteTemplate(w, "notifications", injectCommonTemplateData(r, map[string]any{
+		"stock_alerts": productAlerts,
+		"order_groups": recentOrdersPerCurrency,
+	})); err != nil {
+		log.Error(err)
+	}
+}
+
 type Product struct {
 	Item        *productcatalogpb.Product
 	Stock       int64

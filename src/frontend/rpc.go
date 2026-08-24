@@ -24,6 +24,7 @@ import (
 	commonpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common"
 	currencypb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/currency"
 	inventorypb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/inventory"
+	notificationpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/notification"
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/productcatalog"
 	recommendationpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/recommendation"
 	shippingpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/shipping"
@@ -186,4 +187,22 @@ func (fe *frontendServer) reorderProduct(ctx context.Context, productID string, 
 		return nil, errors.Wrapf(err, "failed to reorder product #%s", productID)
 	}
 	return resp.Product, nil
+}
+
+func (fe *frontendServer) getProductAlerts(ctx context.Context, categories []string) ([]*notificationpb.StockAlert, error) {
+	resp, err := notificationpb.NewNotificationServiceClient(fe.notificationSvcConn).
+		ListOpenAlerts(ctx, &notificationpb.ListOpenAlertsRequest{Categories: categories})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get product alerts")
+	}
+	return resp.GetAlerts(), nil
+}
+
+func (fe *frontendServer) getRecentOrders(ctx context.Context, currencies []string) (map[string]*notificationpb.OrderList, error) {
+	resp, err := notificationpb.NewNotificationServiceClient(fe.notificationSvcConn).
+		ListRecentOrdersByCurrency(ctx, &notificationpb.ListRecentOrdersByCurrencyRequest{Currencies: currencies})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get recent orders")
+	}
+	return resp.GetOrdersByCurrency(), nil
 }

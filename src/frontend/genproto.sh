@@ -32,6 +32,8 @@ protoc --proto_path=$protodir \
   --go-grpc_opt=Mpayment/payment.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/payment \
   --go_opt=Mcart/cart.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/cart \
   --go-grpc_opt=Mcart/cart.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/cart \
+  --go_opt=Mcheckout/checkout.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/checkout \
+  --go-grpc_opt=Mcheckout/checkout.proto=github.com/netd-tud/ds-onlineshop/src/frontend/genproto/checkout \
   $protodir/auth/auth.proto \
   $protodir/checkout/checkout.proto \
   $protodir/productcatalog/productcatalog.proto \
@@ -42,7 +44,8 @@ protoc --proto_path=$protodir \
   $protodir/currency/currency.proto \
   $protodir/shipping/shipping.proto \
   $protodir/recommendation/recommendation.proto \
-  $protodir/inventory/inventory.proto
+  $protodir/inventory/inventory.proto \
+  $protodir/notification/notification.proto
 
 
 # [END gke_frontend_genproto]

@@ -86,6 +86,8 @@ spec:
             value: "inventoryservice:50002"
           - name: AUTH_SERVICE_ADDR
             value: "authservice:50050"
+          - name: NOTIFICATION_SERVICE_ADDR
+            value: "notificationservice:50051"
           # # ENV_PLATFORM: One of: local, gcp, aws, azure, onprem, alibaba
           # # When not set, defaults to "local" unless running in GKE, otherwies auto-sets to gcp
           # - name: ENV_PLATFORM
