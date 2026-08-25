@@ -80,6 +80,28 @@ var CategoriesForClaims = map[string]CategoryAccess{
 	"inventory-home-manage":        {CategoryHome, PermissionWrite},
 }
 
+type Currency int
+
+const (
+	CurrencyAll Currency = iota
+	CurrencyUSD
+	CurrencyEUR
+	CurrencyGBP
+	CurrencyJPY
+	CurrencyCAD
+	CurrencyTRY
+)
+
+var CurrenciesForClaims = map[string]Currency{
+	"admins":       CurrencyAll,
+	"currency-usd": CurrencyUSD,
+	"currency-eur": CurrencyEUR,
+	"currency-gbp": CurrencyGBP,
+	"currency-jpy": CurrencyJPY,
+	"currency-cad": CurrencyCAD,
+	"currency-try": CurrencyTRY,
+}
+
 var defaultPublicMethods = map[string]struct{}{
 	healthpb.Health_Check_FullMethodName: {},
 	healthpb.Health_Watch_FullMethodName: {},
@@ -149,6 +171,16 @@ func ClaimsToCategories(claims *UserClaims) []CategoryAccess {
 		}
 	}
 	return categories
+}
+
+func ClaimsToCurrencies(claims *UserClaims) []Currency {
+	var currencies []Currency
+	for _, role := range claims.Roles {
+		if access, ok := CurrenciesForClaims[role]; ok {
+			currencies = append(currencies, access)
+		}
+	}
+	return currencies
 }
 
 func MustMapEnv(target *string, envKey string) {
