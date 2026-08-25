@@ -81,13 +81,13 @@ var CategoriesForClaims = map[string]CategoryAccess{
 }
 
 var CurrenciesForClaims = map[string][]string{
-	"admins":       {"usd", "eur", "gbp", "jpy", "cad", "try"},
-	"currency-usd": {"usd"},
-	"currency-eur": {"eur"},
-	"currency-gbp": {"gbp"},
-	"currency-jpy": {"jpy"},
-	"currency-cad": {"cad"},
-	"currency-try": {"try"},
+	"admins":       {"USD", "EUR", "GBP", "JPY", "CAD", "TRY"},
+	"currency-usd": {"USD"},
+	"currency-eur": {"EUR"},
+	"currency-gbp": {"GBP"},
+	"currency-jpy": {"JPY"},
+	"currency-cad": {"CAD"},
+	"currency-try": {"TRY"},
 }
 
 var defaultPublicMethods = map[string]struct{}{
