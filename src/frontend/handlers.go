@@ -72,8 +72,9 @@ var (
 	assistantEnabled = "true" == strings.ToLower(os.Getenv("ENABLE_ASSISTANT"))
 	templates        = template.Must(template.New("").
 				Funcs(template.FuncMap{
-			"renderMoney":        renderMoney,
-			"renderCurrencyLogo": renderCurrencyLogo,
+			"renderMoney":         renderMoney,
+			"renderCurrencyLogo":  renderCurrencyLogo,
+			"calculateOrderTotal": calculateOrderTotal,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
@@ -1107,4 +1108,36 @@ func stringinSlice(slice []string, val string) bool {
 		}
 	}
 	return false
+}
+
+func calculateOrderTotal(items []*checkoutpb.OrderItem) *commonpb.Money {
+	if len(items) == 0 {
+		return &commonpb.Money{}
+	}
+
+	var totalUnits int64
+	var totalNanos int64
+	currency := items[0].GetCost().GetCurrencyCode()
+
+	for _, item := range items {
+		cost := item.GetCost()
+		quantity := int64(item.GetItem().GetQuantity())
+		totalUnits += cost.GetUnits() * quantity
+		totalNanos += int64(cost.GetNanos()) * quantity
+	}
+
+	totalUnits += int64(totalNanos / 1_000_000_000)
+	totalNanos = totalNanos % 1_000_000_000
+
+	if totalNanos < 0 {
+		log.WithField("totalNanos", totalNanos).Warn("totalNanos is negative")
+		log.WithField("totalUnits", totalUnits).Warn("totalUnits")
+		log.WithField("items", items).Warn("items in order")
+	}
+
+	return &commonpb.Money{
+		CurrencyCode: currency,
+		Units:        totalUnits,
+		Nanos:        int32(totalNanos),
+	}
 }
