@@ -46,26 +46,9 @@ header > div:nth-child(2) > .container {
   max-width: none;
 }
 
-header .inventory-link {
-  position: relative;
-  display: block;
-  margin-left: 25px;
-  display: flex;
-  flex-flow: column;
-  align-items: center;
-  justify-content: center;
-}
-
-header .profile-link {
-  position: relative;
-  display: block;
-  margin-left: 25px;
-  display: flex;
-  flex-flow: column;
-  align-items: center;
-  justify-content: center;
-}
-
+header .notifications-link,
+header .inventory-link,
+header .profile-link,
 header .cart-link {
   position: relative;
   display: block;
