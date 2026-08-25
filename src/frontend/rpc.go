@@ -28,6 +28,7 @@ import (
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/productcatalog"
 	recommendationpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/recommendation"
 	shippingpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/shipping"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pkg/errors"
@@ -189,7 +190,14 @@ func (fe *frontendServer) reorderProduct(ctx context.Context, productID string, 
 	return resp.Product, nil
 }
 
-func (fe *frontendServer) getProductAlerts(ctx context.Context, categories []string) ([]*notificationpb.StockAlert, error) {
+func (fe *frontendServer) getProductAlerts(ctx context.Context, categoryAccess []shared.CategoryAccess) ([]*notificationpb.StockAlert, error) {
+	categories := make([]string, 0, len(categoryAccess))
+	for _, access := range categoryAccess {
+		if access.Permission == shared.PermissionWrite {
+			categories = append(categories, string(access.Category))
+		}
+	}
+
 	resp, err := notificationpb.NewNotificationServiceClient(fe.notificationSvcConn).
 		ListOpenAlerts(ctx, &notificationpb.ListOpenAlertsRequest{Categories: categories})
 	if err != nil {

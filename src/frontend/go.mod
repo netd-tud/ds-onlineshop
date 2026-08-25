@@ -9,7 +9,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
-	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260807085605-eb2bf4f46f69
+	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260825120315-7b1e3d8292fb
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/kafka-go v0.4.51
 	github.com/sirupsen/logrus v1.9.4

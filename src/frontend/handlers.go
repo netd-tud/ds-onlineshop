@@ -110,19 +110,27 @@ func computeHeavyLoad(iterations int) string {
 func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
-	categories := make([]string, 0, 2)
-	categories = append(categories, "clothing")
-	categories = append(categories, "decoration")
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		log.Warn("unauthenticated access attempt to notifications page: missing cookie")
+		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
+		return
+	}
 
-	currencies := make([]string, 0, 2)
-	currencies = append(currencies, "USD")
-	currencies = append(currencies, "EUR")
+	claims, token, err := fe.claimsFromCookie(cookie)
 
-	productAlerts, _ := fe.getProductAlerts(r.Context(), categories)
-	log.Infof("Product alerts: %v", productAlerts)
+	if err != nil || !token.Valid {
+		fe.invalidateCookie(w, r, cookieAuth, err)
+		return
+	}
 
+	categoryAccess := shared.ClaimsToCategories(claims)
+	log.WithField("categoryAccess", categoryAccess).Info("user category access")
+	currencies := shared.ClaimsToCurrencies(claims)
+	log.WithField("currencies", currencies).Info("user currency access")
+
+	productAlerts, _ := fe.getProductAlerts(r.Context(), categoryAccess)
 	recentOrdersPerCurrency, _ := fe.getRecentOrders(r.Context(), currencies)
-	log.Infof("Recent orders: %v", recentOrdersPerCurrency)
 
 	if err := templates.ExecuteTemplate(w, "notifications", injectCommonTemplateData(r, map[string]any{
 		"stock_alerts": productAlerts,
