@@ -80,26 +80,14 @@ var CategoriesForClaims = map[string]CategoryAccess{
 	"inventory-home-manage":        {CategoryHome, PermissionWrite},
 }
 
-type Currency int
-
-const (
-	CurrencyAll Currency = iota
-	CurrencyUSD
-	CurrencyEUR
-	CurrencyGBP
-	CurrencyJPY
-	CurrencyCAD
-	CurrencyTRY
-)
-
-var CurrenciesForClaims = map[string]Currency{
-	"admins":       CurrencyAll,
-	"currency-usd": CurrencyUSD,
-	"currency-eur": CurrencyEUR,
-	"currency-gbp": CurrencyGBP,
-	"currency-jpy": CurrencyJPY,
-	"currency-cad": CurrencyCAD,
-	"currency-try": CurrencyTRY,
+var CurrenciesForClaims = map[string][]string{
+	"admins":       {"usd", "eur", "gbp", "jpy", "cad", "try"},
+	"currency-usd": {"usd"},
+	"currency-eur": {"eur"},
+	"currency-gbp": {"gbp"},
+	"currency-jpy": {"jpy"},
+	"currency-cad": {"cad"},
+	"currency-try": {"try"},
 }
 
 var defaultPublicMethods = map[string]struct{}{
@@ -173,11 +161,11 @@ func ClaimsToCategories(claims *UserClaims) []CategoryAccess {
 	return categories
 }
 
-func ClaimsToCurrencies(claims *UserClaims) []Currency {
-	var currencies []Currency
+func ClaimsToCurrencies(claims *UserClaims) []string {
+	var currencies []string
 	for _, role := range claims.Roles {
 		if access, ok := CurrenciesForClaims[role]; ok {
-			currencies = append(currencies, access)
+			currencies = append(currencies, access...)
 		}
 	}
 	return currencies
