@@ -123,6 +123,16 @@ func (fe *frontendServer) openAlertsForRequest(w http.ResponseWriter, r *http.Re
 	categories := shared.ClaimsToCategories(claims)
 	productAlerts, _ := fe.getProductAlerts(r.Context(), categories)
 
+	slices.SortFunc(productAlerts, func(a, b *notificationpb.StockAlert) int {
+		if a.Stock < b.Stock {
+			return -1
+		}
+		if a.Stock > b.Stock {
+			return 1
+		}
+		return 0
+	})
+
 	return productAlerts, nil
 }
 
