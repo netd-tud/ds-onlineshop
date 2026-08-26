@@ -107,30 +107,47 @@ func computeHeavyLoad(iterations int) string {
 	return fmt.Sprintf("%x", hash)
 }
 
+func (fe *frontendServer) openAlertsForRequest(w http.ResponseWriter, r *http.Request) ([]*notificationpb.StockAlert, error) {
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		return nil, err
+	}
+	claims, token, err := fe.claimsFromCookie(cookie)
+	if err != nil || !token.Valid {
+		fe.invalidateCookie(w, r, cookieAuth, err)
+		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
+		return nil, fmt.Errorf("invalid session")
+	}
+
+	categories := shared.ClaimsToCategories(claims)
+	productAlerts, _ := fe.getProductAlerts(r.Context(), categories)
+
+	return productAlerts, nil
+}
+
+func (fe *frontendServer) recentOrdersForRequest(w http.ResponseWriter, r *http.Request) (map[string]*notificationpb.OrderList, error) {
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		return nil, err
+	}
+	claims, token, err := fe.claimsFromCookie(cookie)
+	if err != nil || !token.Valid {
+		fe.invalidateCookie(w, r, cookieAuth, err)
+		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
+		return nil, fmt.Errorf("invalid session")
+	}
+
+	currencies := shared.ClaimsToCurrencies(claims)
+	recentOrdersPerCurrency, _ := fe.getRecentOrders(r.Context(), currencies)
+
+	return recentOrdersPerCurrency, nil
+}
+
 func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
-	cookie, err := r.Cookie(cookieAuth)
-	if err != nil {
-		log.Warn("unauthenticated access attempt to notifications page: missing cookie")
-		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
-		return
-	}
-
-	claims, token, err := fe.claimsFromCookie(cookie)
-
-	if err != nil || !token.Valid {
-		fe.invalidateCookie(w, r, cookieAuth, err)
-		return
-	}
-
-	categoryAccess := shared.ClaimsToCategories(claims)
-	log.WithField("categoryAccess", categoryAccess).Info("user category access")
-	currencies := shared.ClaimsToCurrencies(claims)
-	log.WithField("currencies", currencies).Info("user currency access")
-
-	productAlerts, _ := fe.getProductAlerts(r.Context(), categoryAccess)
-	recentOrdersPerCurrency, _ := fe.getRecentOrders(r.Context(), currencies)
+	productAlerts, _ := fe.openAlertsForRequest(w, r)
+	recentOrdersPerCurrency, _ := fe.recentOrdersForRequest(w, r)
 
 	if err := templates.ExecuteTemplate(w, "notifications", injectCommonTemplateData(r, map[string]any{
 		"stock_alerts": productAlerts,
