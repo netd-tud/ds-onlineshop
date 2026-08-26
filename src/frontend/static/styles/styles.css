@@ -728,3 +728,32 @@ the rules below could be extracted.
 .stock-badge--critical { color: #991b1b; background-color: #fee2e2; }
 .stock-badge--empty .stock-badge__dot,
 .stock-badge--critical .stock-badge__dot { background-color: #dc2626; }
+
+.notif-toast:not([open]) { display: none; }
+.notif-toast[open] {
+  display: block;
+  position: fixed;
+  top: 90px;
+  right: 24px;
+  width: 320px;
+  background: #fff;
+  border: 1px solid #111;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  z-index: 1050;
+}
+.notif-toast summary { list-style: none; cursor: pointer; float: right; font-size: 1.25rem; color: #666; }
+.notif-toast summary::-webkit-details-marker { display: none; }
+.notif-toast__title { margin: 0 0 12px; clear: both; }
+.notif-toast__list { list-style: none; padding: 0; margin: 0 0 12px; }
+.notif-toast__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+.notif-toast__item:last-child { border-bottom: none; }
+.notif-toast__product { font-weight: 600; color: #111; }

@@ -38,6 +38,7 @@ import (
 	cartpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/cart"
 	checkoutpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/checkout"
 	commonpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common"
+	notificationpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/notification"
 	paymentpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/payment"
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/productcatalog"
 	"github.com/netd-tud/ds-onlineshop/src/frontend/internal/analytics"
@@ -388,6 +389,16 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		nextTarget = "/"
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "notif_check",
+		Value:    "1",
+		MaxAge:   10,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	log.Warn("Setting notif_check cookie for post-login alerts")
+
 	http.Redirect(w, r, baseUrl+nextTarget, http.StatusFound)
 }
 
@@ -506,13 +517,20 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	plat = platformDetails{}
 	plat.setPlatformDetails(strings.ToLower(env))
 
+	var postLoginAlerts []*notificationpb.StockAlert
+	if _, err := r.Cookie("notif_check"); err == nil {
+		postLoginAlerts, _ = fe.openAlertsForRequest(w, r)
+	}
+	log.Warn("Post-login alerts: %v", postLoginAlerts)
+
 	if err := templates.ExecuteTemplate(w, "home", injectCommonTemplateData(r, map[string]interface{}{
-		"show_currency": true,
-		"currencies":    currencies,
-		"products":      ps,
-		"cart_size":     cartSize(cart),
-		"banner_color":  os.Getenv("BANNER_COLOR"), // illustrates canary deployments
-		"ad":            fe.chooseAd(r.Context(), []string{}, log),
+		"show_currency":     true,
+		"currencies":        currencies,
+		"products":          ps,
+		"cart_size":         cartSize(cart),
+		"banner_color":      os.Getenv("BANNER_COLOR"), // illustrates canary deployments
+		"ad":                fe.chooseAd(r.Context(), []string{}, log),
+		"post_login_alerts": postLoginAlerts,
 	})); err != nil {
 		log.Error(err)
 	}

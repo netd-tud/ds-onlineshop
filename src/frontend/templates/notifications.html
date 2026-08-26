@@ -103,3 +103,24 @@
   {{ template "footer" . }}
 </div>
 {{ end }}
+
+{{ define "postLoginAlerts" }}
+  {{ if $.post_login_alerts }}
+    <details class="notif-toast" open>
+      <summary class="notif-toast__close" title="Dismiss">&times;</summary>
+      <h5 class="notif-toast__title">Notifications</h5>
+      <ul class="notif-toast__list">
+        {{ range $.post_login_alerts }}
+          <li class="notif-toast__item">
+            <span class="notif-toast__product">{{ .ProductId }}</span>
+            <span class="stock-badge stock-badge--{{ .Severity }}">
+              <span class="stock-badge__dot"></span>
+              {{ if eq .Severity "critical" }}Critical{{ else }}Low{{ end }} ({{ .Stock }})
+            </span>
+          </li>
+        {{ end }}
+      </ul>
+      <a href="{{ $.baseUrl }}/notifications" class="btn btn-outline-dark btn-block">Show Alerts</a>
+    </details>
+  {{ end }}
+{{ end }}
