@@ -101,6 +101,9 @@ type frontendServer struct {
 	publicKey *rsa.PublicKey
 
 	analyticsPublisher *analytics.Publisher
+
+	notificationSvcAddr string
+	notificationSvcConn *grpc.ClientConn
 }
 
 func main() {
@@ -169,6 +172,7 @@ func main() {
 	svc.ratingSvcAddr = os.Getenv("RATING_SERVICE_ADDR")
 	svc.inventorySvcAddr = os.Getenv("INVENTORY_SERVICE_ADDR")
 	svc.authSvcAddr = os.Getenv("AUTH_SERVICE_ADDR")
+	svc.notificationSvcAddr = os.Getenv("NOTIFICATION_SERVICE_ADDR")
 
 	shared.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -182,6 +186,9 @@ func main() {
 	}
 	if svc.authSvcAddr != "" {
 		shared.MustConnGRPC(ctx, &svc.authSvcConn, svc.authSvcAddr)
+	}
+	if svc.notificationSvcAddr != "" {
+		shared.MustConnGRPC(ctx, &svc.notificationSvcConn, svc.notificationSvcAddr)
 	}
 
 	r := mux.NewRouter()
@@ -206,6 +213,7 @@ func main() {
 	r.HandleFunc(baseUrl+"/account", svc.accountHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/inventory", svc.inventoryHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/reorder", svc.reorderHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/notifications", svc.notificationHandler).Methods(http.MethodGet)
 
 	analyticsPub := analytics.NewPublisher("frontend-service")
 	defer func() {

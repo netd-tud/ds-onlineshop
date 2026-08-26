@@ -96,11 +96,6 @@ func run(port string) error {
 	ctx := context.Background()
 	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 
-	err = loadInventory(&svc.inventory)
-	if err != nil {
-		log.Fatalf("could not parse inventory: %v", err)
-	}
-
 	opts := mqtt.NewClientOptions().AddBroker(svc.mqttBrokerAddr)
 	opts.SetClientID("inventory-service")
 	opts.SetConnectTimeout(time.Second * 5)
@@ -109,8 +104,16 @@ func run(port string) error {
 	if token := svc.mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		return status.Errorf(codes.Internal, "MQTT: Connection failed: %v", token.Error())
 	}
-
 	log.Debugln("MQTT: Connected successfully to broker")
+
+	err = loadInventory(&svc.inventory)
+	if err != nil {
+		log.Fatalf("could not parse inventory: %v", err)
+	}
+	for _, product := range svc.inventory.Products {
+		log.Info("Publishing initial stock event for product: ", product)
+		svc.publishStockEventOverMQTT(svc.mqttBrokerAddr, product)
+	}
 
 	inventorypb.RegisterInventoryServiceServer(srv, svc)
 	healthcheck := health.NewServer()

@@ -1,0 +1,126 @@
+{{ define "notifications" }}
+{{ template "header" . }}
+<div {{ with $.platform_css }} class="{{.}}" {{ end }}>
+  <span class="platform-flag">{{ $.platform_name }}</span>
+</div>
+
+<main role="main" class="home">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 col-lg-12 px-10-percent">
+        <div class="row px-xl-6 pt-4">
+          <div class="col-12">
+            <h3>Stock Alerts</h3>
+          </div>
+
+          {{ if $.stock_alerts }}
+          {{ range $.stock_alerts }}
+          <div class="col-md-3 col-sm-6 mb-4">
+            <a href="{{ $.baseUrl }}/inventory" class="text-decoration-none text-dark">
+              <div class="card p-3 shadow-sm h-100">
+                <div class="text-muted small text-uppercase mb-1">{{ .Category }}</div>
+                <div class="font-weight-bold mb-2">{{ .ProductId }}</div>
+                <span class="stock-badge stock-badge--{{ .Severity }}">
+                    <span class="stock-badge__dot"></span>
+                    {{ if eq .Severity "critical" }}Critical &mdash; {{ end }}{{ .Stock }} left
+                  </span>
+              </div>
+            </a>
+          </div>
+          {{ end }}
+          {{ else }}
+          <div class="col-12"><p class="text-muted">No open stock alerts right now.</p></div>
+          {{ end }}
+        </div>
+
+        <div class="row px-xl-6 mt-5">
+          <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Recent Orders</h3>
+
+            {{ if $.order_groups }}
+              <div class="btn-group" role="group" aria-label="Currency navigation">
+                {{ range $currency, $orderList := $.order_groups }}
+                  <a href="#orders-{{ $currency }}" class="btn btn-outline-secondary btn-sm">
+                    {{ $currency }}
+                  </a>
+                {{ end }}
+              </div>
+            {{ end }}
+          </div>
+
+          {{ if $.order_groups }}
+            {{ range $currency, $orderList := $.order_groups }}
+              <div id="orders-{{ $currency }}" class="col-12 mb-4 pt-3">
+                <h5>{{ renderCurrencyLogo $currency }} {{ $currency }}</h5>
+                <ul class="list-group shadow-sm">
+                  {{ range $orderList.Orders }}
+                    <li class="list-group-item py-3">
+                      <div class="row align-items-center">
+                        <div class="col-12 col-md-6 col-lg-8 mb-2 mb-md-0 text-truncate">
+                          <span>Order </span>
+                          <span style="display: inline-block;
+                                       background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;
+                                       padding: 0.15rem 0.4rem;
+                                       font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace; font-size: 0.9em;">
+                            {{ .OrderId }}
+                          </span>
+                        </div>
+
+                        <div class="col-12 col-md-3 col-lg-2 mb-2 mb-md-0 d-flex justify-content-between pr-lg-3">
+                          <strong>Items Total:</strong>
+                          <strong>{{ renderMoney (calculateOrderTotal .Items) }}</strong>
+                        </div>
+
+                        <div class="col-12 col-md-3 col-lg-2 text-muted small d-flex justify-content-end align-items-center">
+                          <span class="mr-2">Shipping:</span>
+                          <span>{{ renderMoney .ShippingCost }}</span>
+                        </div>
+
+                      </div>
+                    </li>
+                  {{ end }}
+                </ul>
+              </div>
+            {{ end }}
+          {{ else }}
+            <div class="col-12"><p class="text-muted">No recent orders for your regions.</p></div>
+          {{ end }}
+        </div>
+
+        <!-- Footer for larger screens. -->
+        <div class="row d-none d-lg-block home-desktop-footer-row">
+          <div class="col-12 p-0">
+            {{ template "footer" . }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer for smaller screens. -->
+<div class="d-lg-none">
+  {{ template "footer" . }}
+</div>
+{{ end }}
+
+{{ define "postLoginAlerts" }}
+  {{ if $.post_login_alerts }}
+    <details class="notif-toast" open>
+      <summary class="notif-toast__close" title="Dismiss">&times;</summary>
+      <h5 class="notif-toast__title">Notifications</h5>
+      <ul class="notif-toast__list">
+        {{ range $.post_login_alerts }}
+          <li class="notif-toast__item">
+            <span class="notif-toast__product">{{ .ProductId }}</span>
+            <span class="stock-badge stock-badge--{{ .Severity }}">
+              <span class="stock-badge__dot"></span>
+              {{ if eq .Severity "critical" }}Critical{{ else }}Low{{ end }} ({{ .Stock }})
+            </span>
+          </li>
+        {{ end }}
+      </ul>
+      <a href="{{ $.baseUrl }}/notifications" class="btn btn-outline-dark btn-block">Show Alerts</a>
+    </details>
+  {{ end }}
+{{ end }}

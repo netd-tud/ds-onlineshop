@@ -38,6 +38,7 @@ import (
 	cartpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/cart"
 	checkoutpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/checkout"
 	commonpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/common"
+	notificationpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/notification"
 	paymentpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/payment"
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/frontend/genproto/productcatalog"
 	"github.com/netd-tud/ds-onlineshop/src/frontend/internal/analytics"
@@ -72,8 +73,9 @@ var (
 	assistantEnabled = "true" == strings.ToLower(os.Getenv("ENABLE_ASSISTANT"))
 	templates        = template.Must(template.New("").
 				Funcs(template.FuncMap{
-			"renderMoney":        renderMoney,
-			"renderCurrencyLogo": renderCurrencyLogo,
+			"renderMoney":         renderMoney,
+			"renderCurrencyLogo":  renderCurrencyLogo,
+			"calculateOrderTotal": calculateOrderTotal,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
@@ -104,6 +106,66 @@ func computeHeavyLoad(iterations int) string {
 	}
 
 	return fmt.Sprintf("%x", hash)
+}
+
+func (fe *frontendServer) openAlertsForRequest(w http.ResponseWriter, r *http.Request) ([]*notificationpb.StockAlert, error) {
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		return nil, err
+	}
+	claims, token, err := fe.claimsFromCookie(cookie)
+	if err != nil || !token.Valid {
+		fe.invalidateCookie(w, r, cookieAuth, err)
+		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
+		return nil, fmt.Errorf("invalid session")
+	}
+
+	categories := shared.ClaimsToCategories(claims)
+	productAlerts, _ := fe.getProductAlerts(r.Context(), categories)
+
+	slices.SortFunc(productAlerts, func(a, b *notificationpb.StockAlert) int {
+		if a.Stock < b.Stock {
+			return -1
+		}
+		if a.Stock > b.Stock {
+			return 1
+		}
+		return 0
+	})
+
+	return productAlerts, nil
+}
+
+func (fe *frontendServer) recentOrdersForRequest(w http.ResponseWriter, r *http.Request) (map[string]*notificationpb.OrderList, error) {
+	cookie, err := r.Cookie(cookieAuth)
+	if err != nil {
+		return nil, err
+	}
+	claims, token, err := fe.claimsFromCookie(cookie)
+	if err != nil || !token.Valid {
+		fe.invalidateCookie(w, r, cookieAuth, err)
+		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
+		return nil, fmt.Errorf("invalid session")
+	}
+
+	currencies := shared.ClaimsToCurrencies(claims)
+	recentOrdersPerCurrency, _ := fe.getRecentOrders(r.Context(), currencies)
+
+	return recentOrdersPerCurrency, nil
+}
+
+func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	productAlerts, _ := fe.openAlertsForRequest(w, r)
+	recentOrdersPerCurrency, _ := fe.recentOrdersForRequest(w, r)
+
+	if err := templates.ExecuteTemplate(w, "notifications", injectCommonTemplateData(r, map[string]any{
+		"stock_alerts": productAlerts,
+		"order_groups": recentOrdersPerCurrency,
+	})); err != nil {
+		log.Error(err)
+	}
 }
 
 type Product struct {
@@ -337,6 +399,16 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		nextTarget = "/"
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "notif_check",
+		Value:    "1",
+		MaxAge:   10,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	log.Warn("Setting notif_check cookie for post-login alerts")
+
 	http.Redirect(w, r, baseUrl+nextTarget, http.StatusFound)
 }
 
@@ -455,13 +527,20 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	plat = platformDetails{}
 	plat.setPlatformDetails(strings.ToLower(env))
 
+	var postLoginAlerts []*notificationpb.StockAlert
+	if _, err := r.Cookie("notif_check"); err == nil {
+		postLoginAlerts, _ = fe.openAlertsForRequest(w, r)
+	}
+	log.Warn("Post-login alerts: %v", postLoginAlerts)
+
 	if err := templates.ExecuteTemplate(w, "home", injectCommonTemplateData(r, map[string]interface{}{
-		"show_currency": true,
-		"currencies":    currencies,
-		"products":      ps,
-		"cart_size":     cartSize(cart),
-		"banner_color":  os.Getenv("BANNER_COLOR"), // illustrates canary deployments
-		"ad":            fe.chooseAd(r.Context(), []string{}, log),
+		"show_currency":     true,
+		"currencies":        currencies,
+		"products":          ps,
+		"cart_size":         cartSize(cart),
+		"banner_color":      os.Getenv("BANNER_COLOR"), // illustrates canary deployments
+		"ad":                fe.chooseAd(r.Context(), []string{}, log),
+		"post_login_alerts": postLoginAlerts,
 	})); err != nil {
 		log.Error(err)
 	}
@@ -1082,4 +1161,36 @@ func stringinSlice(slice []string, val string) bool {
 		}
 	}
 	return false
+}
+
+func calculateOrderTotal(items []*checkoutpb.OrderItem) *commonpb.Money {
+	if len(items) == 0 {
+		return &commonpb.Money{}
+	}
+
+	var totalUnits int64
+	var totalNanos int64
+	currency := items[0].GetCost().GetCurrencyCode()
+
+	for _, item := range items {
+		cost := item.GetCost()
+		quantity := int64(item.GetItem().GetQuantity())
+		totalUnits += cost.GetUnits() * quantity
+		totalNanos += int64(cost.GetNanos()) * quantity
+	}
+
+	totalUnits += int64(totalNanos / 1_000_000_000)
+	totalNanos = totalNanos % 1_000_000_000
+
+	if totalNanos < 0 {
+		log.WithField("totalNanos", totalNanos).Warn("totalNanos is negative")
+		log.WithField("totalUnits", totalUnits).Warn("totalUnits")
+		log.WithField("items", items).Warn("items in order")
+	}
+
+	return &commonpb.Money{
+		CurrencyCode: currency,
+		Units:        totalUnits,
+		Nanos:        int32(totalNanos),
+	}
 }

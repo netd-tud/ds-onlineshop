@@ -36,6 +36,7 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func (cs *checkoutService) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
@@ -295,9 +296,15 @@ func (cs *checkoutService) shipOrder(ctx context.Context, address *commonpb.Addr
 }
 
 func (cs *checkoutService) publishCompletedOrder(ctx context.Context, order *checkoutpb.OrderResult) error {
-	orderData, _ := json.Marshal(order)
+	orderData, err := protojson.Marshal(order)
+	if err != nil {
+		return fmt.Errorf("failed to marshal order data: %w", err)
+	}
 
 	region := order.GetShippingCost().GetCurrencyCode()
+	if region == "" {
+		region = "UNKNOWN"
+	}
 	topic := region + "/checkout/orders/completed"
 
 	return cs.publishEventOverMQTT(topic, orderData)
