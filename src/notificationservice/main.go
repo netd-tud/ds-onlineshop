@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -199,7 +200,7 @@ func (n *notification) ListOpenAlerts(ctx context.Context, req *notificationpb.L
 
 	for _, alert := range n.alerts {
 		for _, cat := range alert.Category {
-			if reqCats[cat] {
+			if reqCats[cat] || slices.Contains(req.GetCategories(), "all") {
 				response.Alerts = append(response.Alerts, alert)
 				break
 			}
