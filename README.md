@@ -40,6 +40,7 @@ Find **Protocol Buffers Descriptions** at the [`./protos` directory](/protos).
 | [authservice](/src/authservice)                     | Go            | Handles user authentication and authorization by searching for user information in a LDAP directory. Issues JWT for auth in other services        |
 | [warehousemanagement](/src/warehousemanagement)     | Go            | Acts as a wrapper around inventory- and productcatalogservice and allows to connect and perform operations via gRPC/MQTT from outside the cluster |
 | [dynamic-load-producer](/src/dynamic-load-producer) | Bash          | Creates dynamic load for the monitoring task.                                                                                                     |
+| [notificationservice](/src/notificationservice)     | Go            | Provide low stock alerts and list of recent orders.                                                                                               |
 
 ## Screenshots
 
