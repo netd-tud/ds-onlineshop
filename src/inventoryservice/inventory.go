@@ -253,8 +253,9 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 
 func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims shared.UserClaims) bool {
 	categories := shared.ClaimsToCategories(&claims)
+	log.WithField("categories", categories).Info("Checking user permissions")
 
-	if slices.Contains(categories, shared.CategoryAccess{Category: "admins", Permission: shared.PermissionWrite}) {
+	if slices.Contains(categories, shared.CategoryAccess{Category: "all", Permission: shared.PermissionWrite}) {
 		return true
 	}
 
