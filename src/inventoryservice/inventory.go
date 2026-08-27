@@ -252,13 +252,18 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 }
 
 func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims shared.UserClaims) bool {
+	categories := shared.ClaimsToCategories(&claims)
+
+	if slices.Contains(categories, shared.CategoryAccess{Category: "admins", Permission: shared.PermissionWrite}) {
+		return true
+	}
+
 	product, err := productcatalogpb.NewProductCatalogServiceClient(p.productCatalogSvcConn).GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: productId})
 	if err != nil {
 		log.Errorf("failed to get product from catalog: %v", err)
 		return false
 	}
 
-	categories := shared.ClaimsToCategories(&claims)
 	for _, cat := range product.GetCategories() {
 		target := shared.CategoryAccess{Category: shared.Category(cat), Permission: shared.PermissionWrite}
 		if slices.Contains(categories, target) {
