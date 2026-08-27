@@ -81,9 +81,9 @@ def handle_update(stub, data, jwt):
     except grpc.RpcError as e:
         logging.error(f"gRPC: Could not update product stock: {e.details()} (Code: {e.code()})")
 
-def receiveJWT(stub):
-    username = "isabellal"
-    password = "isabellal"
+def receiveJWT(stub, config):
+    username = config.get("username")
+    password = config.get("password")
     response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
     return response.token
 
@@ -114,7 +114,7 @@ def main():
     jwt = None
     with grpc.secure_channel(AUTH_GRPC_ADDRESS, channel_credentials, options=options) as channel:
         auth_stub = auth_pb_grpc.AuthServiceStub(channel)
-        jwt = receiveJWT(auth_stub)
+        jwt = receiveJWT(auth_stub, config)
         if not jwt:
             print("Could not acquire JWT token.")
             sys.exit(1)
