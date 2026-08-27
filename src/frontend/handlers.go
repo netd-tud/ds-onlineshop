@@ -116,8 +116,7 @@ func (fe *frontendServer) openAlertsForRequest(w http.ResponseWriter, r *http.Re
 	claims, token, err := fe.claimsFromCookie(cookie)
 	if err != nil || !token.Valid {
 		fe.invalidateCookie(w, r, cookieAuth, err)
-		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
-		return nil, fmt.Errorf("invalid session")
+		return nil, err
 	}
 
 	categories := shared.ClaimsToCategories(claims)
@@ -144,8 +143,7 @@ func (fe *frontendServer) recentOrdersForRequest(w http.ResponseWriter, r *http.
 	claims, token, err := fe.claimsFromCookie(cookie)
 	if err != nil || !token.Valid {
 		fe.invalidateCookie(w, r, cookieAuth, err)
-		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
-		return nil, fmt.Errorf("invalid session")
+		return nil, err
 	}
 
 	currencies := shared.ClaimsToCurrencies(claims)
@@ -157,8 +155,18 @@ func (fe *frontendServer) recentOrdersForRequest(w http.ResponseWriter, r *http.
 func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
-	productAlerts, _ := fe.openAlertsForRequest(w, r)
-	recentOrdersPerCurrency, _ := fe.recentOrdersForRequest(w, r)
+	productAlerts, err := fe.openAlertsForRequest(w, r)
+	if err != nil {
+		log.Warn("unauthenticated access attempt for product alerts")
+		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
+		return
+	}
+	recentOrdersPerCurrency, err := fe.recentOrdersForRequest(w, r)
+	if err != nil {
+		log.Warn("unauthenticated access attempt for recent orders")
+		http.Redirect(w, r, baseUrl+"/login?next=/notifications", http.StatusFound)
+		return
+	}
 
 	if err := templates.ExecuteTemplate(w, "notifications", injectCommonTemplateData(r, map[string]any{
 		"stock_alerts": productAlerts,
@@ -188,6 +196,7 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 
 	if err != nil || !token.Valid {
 		fe.invalidateCookie(w, r, cookieAuth, err)
+		http.Redirect(w, r, baseUrl+"/login?next=/inventory", http.StatusFound)
 		return
 	}
 	categoryAccess := shared.ClaimsToCategories(claims)
