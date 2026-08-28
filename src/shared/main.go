@@ -207,3 +207,8 @@ func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 func ContextWithLoadTest(ctx context.Context, loadTest string) context.Context {
 	return context.WithValue(ctx, CtxKeyLoadTest{}, loadTest)
 }
+
+func IsLoadTest(ctx context.Context) bool {
+	_, ok := ctx.Value(CtxKeyLoadTest{}).(string)
+	return ok
+}
