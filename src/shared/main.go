@@ -209,6 +209,16 @@ func ContextWithLoadTest(ctx context.Context, loadTest string) context.Context {
 }
 
 func IsLoadTest(ctx context.Context) bool {
-	_, ok := ctx.Value(CtxKeyLoadTest{}).(string)
-	return ok
+	if loadTest, ok := ctx.Value(CtxKeyLoadTest{}).(string); ok && loadTest == "true" {
+		return true
+	}
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok && len(md[LoadTestHeaderName]) > 0 {
+		if md[LoadTestHeaderName][0] == "true" {
+			return true
+		}
+	}
+
+	return false
 }
