@@ -22,6 +22,10 @@ type contextKey string
 
 const UserContextKey contextKey = "user_info"
 
+type CtxKeyLoadTest struct{}
+
+const LoadTestHeaderName = "x-load-test"
+
 type UserClaims struct {
 	UserID   string   `json:"user_id"`
 	Username string   `json:"username"`
@@ -146,6 +150,16 @@ func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.Unary
 	}
 }
 
+func LoadTestInterceptor() grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if loadTest, ok := ctx.Value(CtxKeyLoadTest{}).(string); ok {
+			ctx = metadata.AppendToOutgoingContext(ctx, LoadTestHeaderName, loadTest)
+		}
+
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
+
 func GetClaims(ctx context.Context) (*UserClaims, bool) {
 	claims, ok := ctx.Value(UserContextKey).(*UserClaims)
 	return claims, ok
@@ -185,8 +199,13 @@ func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	defer cancel()
 	*conn, err = grpc.NewClient(addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+		grpc.WithUnaryInterceptor(LoadTestInterceptor()))
 	if err != nil {
 		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
 	}
+}
+
+func ContextWithLoadTest(ctx context.Context, loadTest string) context.Context {
+	return context.WithValue(ctx, CtxKeyLoadTest{}, loadTest)
 }
