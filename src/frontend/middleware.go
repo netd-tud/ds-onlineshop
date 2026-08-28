@@ -17,10 +17,11 @@ package main
 import (
 	"context"
 	"net/http"
-	"time"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"github.com/sirupsen/logrus"
 )
 
@@ -58,6 +59,11 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	requestID, _ := uuid.NewRandom()
 	ctx = context.WithValue(ctx, ctxKeyRequestID{}, requestID.String())
+
+	if header := r.Header.Get(shared.LoadTestHeaderName); header != "" {
+		log.Debug("LoadTest request")
+		ctx = shared.ContextWithLoadTest(ctx, header)
+	}
 
 	start := time.Now()
 	rr := &responseRecorder{w: w}
