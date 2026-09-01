@@ -137,37 +137,32 @@ func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 
 	n.alerts[p.Id] = &notificationpb.StockAlert{ProductId: p.Id, Category: p.Categories, Stock: p.Stock, Severity: p.Severity, CreatedAt: p.CreatedAt}
 
-	n.triggerNewAlert(p.Id, p.Categories, p.Stock, p.Severity, p.CreatedAt)
-}
-
-func (n *notification) triggerNewAlert(productID string, categories []string, stock int64, severity string, createdAt *timestamppb.Timestamp) {
 	alert := &notificationpb.StockAlert{
-		ProductId: productID,
-		Category:  categories,
-		Stock:     stock,
-		Severity:  severity,
-		CreatedAt: createdAt,
+		ProductId: p.Id,
+		Category:  p.Categories,
+		Stock:     p.Stock,
+		Severity:  p.Severity,
+		CreatedAt: p.CreatedAt,
 	}
 
+	n.triggerNewAlert(alert)
+}
+
+func (n *notification) triggerNewAlert(alert *notificationpb.StockAlert) {
 	n.channelMu.RLock()
 	defer n.channelMu.RUnlock()
 
 	for clientChan, categorySet := range n.subs {
 		sendAlert := false
-		for _, cat := range categories {
+		for _, cat := range alert.GetCategory() {
 			_, sendAlert = categorySet[cat]
 		}
-
-		log.Info("Product categories: ", categories)
-		log.Info("Client subscribed categories: ", categorySet)
-		log.Info("Len of client category set: ", len(categorySet))
-		log.Info("sendAlert: ", sendAlert)
 
 		if sendAlert || len(categorySet) == 0 {
 			select {
 			case clientChan <- alert:
 			default:
-				log.Printf("Client buffer full, dropping alert for %s", productID)
+				log.Printf("Client buffer full, dropping alert for %s", alert.GetProductId())
 			}
 		}
 	}
