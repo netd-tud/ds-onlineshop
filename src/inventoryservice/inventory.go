@@ -22,6 +22,8 @@ import (
 
 type inventory struct {
 	inventorypb.UnimplementedInventoryServiceServer
+
+	stockMu   sync.Mutex
 	inventory inventorypb.ListInventoryResponse
 
 	productCatalogSvcAddr string
@@ -62,6 +64,22 @@ func (p *inventory) GetInventoryProduct(ctx context.Context, req *inventorypb.Ge
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
+func (p *inventory) applyStockDeltaLocked(productID string, delta int64) (*inventorypb.InventoryProduct, error) {
+	for _, product := range p.parseInventory() {
+		if product.GetId() != productID {
+			continue
+		}
+		newStock := product.Stock + delta
+		if newStock < 0 {
+			return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", productID)
+		}
+		product.Stock = newStock
+		p.publishStockEventOverMQTT(p.mqttBrokerAddr, product)
+		return product, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "no product with ID %s", productID)
+}
+
 func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
 	claims, ok := shared.GetClaims(ctx)
 	log.Infof("ChangeInventoryProductStock called for product with ID %s with claims: %v", req.Id, claims)
@@ -74,20 +92,14 @@ func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *invent
 		return nil, status.Error(codes.Unauthenticated, "user not allowed to modify product")
 	}
 
-	inventory := p.parseInventory()
-	for _, product := range inventory {
-		if req.Id == product.Id {
-			newStock := product.Stock + req.Delta
-			if newStock >= 0 {
-				product.Stock = newStock
-				p.publishStockEventOverMQTT(p.mqttBrokerAddr, product)
-				return &inventorypb.ChangeInventoryProductStockResponse{Product: product}, nil
-			} else {
-				return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", req.Id)
-			}
-		}
+	p.stockMu.Lock()
+	defer p.stockMu.Unlock()
+
+	product, err := p.applyStockDeltaLocked(req.GetId(), req.GetDelta())
+	if err != nil {
+		return nil, err
 	}
-	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+	return &inventorypb.ChangeInventoryProductStockResponse{Product: product}, nil
 }
 
 func (p *inventory) SetInventoryProductStock(ctx context.Context, req *inventorypb.SetInventoryProductStockRequest) (*inventorypb.SetInventoryProductStockRequestResponse, error) {
