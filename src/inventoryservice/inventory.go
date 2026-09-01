@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"slices"
 	"strings"
@@ -39,6 +40,9 @@ type inventory struct {
 
 	xaMu      sync.Mutex
 	xaPending map[string]*inventorypb.InventoryProduct
+
+	resolvedAlerts   map[string]time.Time
+	resolvedAlertTTL time.Duration
 }
 
 func (p *inventory) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
@@ -170,6 +174,58 @@ func (p *inventory) DeleteInventoryProduct(ctx context.Context, req *inventorypb
 		}
 	}
 	return &inventorypb.DeleteInventoryProductResponse{}, nil
+}
+
+func (p *inventory) ResolveStockAlert(ctx context.Context, req *inventorypb.ResolveStockAlertRequest) (*inventorypb.ResolveStockAlertResponse, error) {
+	claims, ok := shared.GetClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "failed to resolve user identity data from context")
+	}
+	if !p.userAllowedToModifyProduct(ctx, req.GetProductId(), *claims) {
+		return nil, status.Error(codes.Unauthenticated, "user not allowed to modify product")
+	}
+	if req.GetReorderAmount() <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "reorder_amount must be positive")
+	}
+	if req.GetCreatedAt() == nil {
+		return nil, status.Error(codes.InvalidArgument, "created_at is required")
+	}
+
+	key := fmt.Sprintf("%s|%d", req.GetProductId(), req.GetCreatedAt().AsTime().Unix())
+
+	p.stockMu.Lock()
+	defer p.stockMu.Unlock()
+
+	if _, seen := p.resolvedAlerts[key]; seen {
+		product, err := p.GetInventoryProduct(ctx, &inventorypb.GetInventoryProductRequest{Id: req.GetProductId()})
+		if err != nil {
+			return nil, err
+		}
+		return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: true}, nil
+	}
+
+	product, err := p.applyStockDeltaLocked(req.GetProductId(), req.GetReorderAmount())
+	if err != nil {
+		return nil, err
+	}
+	p.resolvedAlerts[key] = time.Now()
+
+	return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: false}, nil
+}
+
+func (p *inventory) reapResolvedAlerts(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for range ticker.C {
+		cutoff := time.Now().Add(-p.resolvedAlertTTL)
+		p.stockMu.Lock()
+		for key, resolvedAt := range p.resolvedAlerts {
+			if resolvedAt.Before(cutoff) {
+				delete(p.resolvedAlerts, key)
+			}
+		}
+		p.stockMu.Unlock()
+	}
 }
 
 func (p *inventory) CompensateCreateNewInventoryProduct(ctx context.Context, req *inventorypb.CreateNewInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {

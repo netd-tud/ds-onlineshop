@@ -80,6 +80,7 @@ func run(port string) error {
 			"/hipstershop.InventoryService/CreateNewInventoryProduct",
 			"/hipstershop.InventoryService/DeleteInventoryProduct",
 			"/hipstershop.InventoryService/CompensateCreateNewInventoryProduct",
+			"/hipstershop.InventoryService/ResolveStockAlert",
 		)),
 	)
 
@@ -88,7 +89,10 @@ func run(port string) error {
 			lowStock      int64
 			criticalStock int64
 		}{lowStock: 10, criticalStock: 3},
+		resolvedAlerts:   make(map[string]time.Time),
+		resolvedAlertTTL: time.Minute * 30,
 	}
+	go svc.reapResolvedAlerts(time.Minute * 5)
 
 	shared.MustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
