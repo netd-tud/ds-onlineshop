@@ -11,6 +11,7 @@ import "checkout/checkout.proto";
 
 service NotificationService {
   rpc ListOpenAlerts(ListOpenAlertsRequest) returns (ListOpenAlertsResponse) {}
+  rpc StreamStockAlerts(StreamStockAlertsRequest) returns (stream StockAlert) {}
   rpc ListRecentOrdersByCurrency(ListRecentOrdersByCurrencyRequest) returns (ListRecentOrdersByCurrencyResponse) {}
 }
 
@@ -25,6 +26,8 @@ message StockAlert {
 }
 
 message ListOpenAlertsResponse { repeated StockAlert alerts = 1; }
+
+message StreamStockAlertsRequest { repeated string categories = 1; }
 
 message ListRecentOrdersByCurrencyRequest { repeated string currencies = 1; }
 
