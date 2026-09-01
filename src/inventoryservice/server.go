@@ -80,7 +80,6 @@ func run(port string) error {
 			"/hipstershop.InventoryService/CreateNewInventoryProduct",
 			"/hipstershop.InventoryService/DeleteInventoryProduct",
 			"/hipstershop.InventoryService/CompensateCreateNewInventoryProduct",
-			"/hipstershop.InventoryService/ResolveStockAlert",
 		)),
 	)
 
