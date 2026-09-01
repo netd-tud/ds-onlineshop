@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type inventory struct {
@@ -250,11 +249,10 @@ func (p *inventory) parseInventory() []*inventorypb.InventoryProduct {
 }
 
 type inventoryProductWithCategory struct {
-	Id         string                 `json:"id"`
-	Categories []string               `json:"categories"`
-	Stock      int64                  `json:"stock"`
-	Severity   string                 `json:"severity"`
-	Created_at *timestamppb.Timestamp `json:"created_at"`
+	Id         string   `json:"id"`
+	Stock      int64    `json:"stock"`
+	Severity   string   `json:"severity"`
+	Categories []string `json:"categories"`
 }
 
 func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *inventorypb.InventoryProduct) {
@@ -284,13 +282,12 @@ func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *invent
 
 	combinedProduct := inventoryProductWithCategory{
 		Id:         product.Id,
-		Categories: categories,
 		Stock:      product.Stock,
 		Severity:   severity,
-		Created_at: timestamppb.Now(),
+		Categories: categories,
 	}
 
-	log.Info("Publishing combinedProduct: ", combinedProduct)
+	log.Infof("Retrieved following categories for product: %s", combinedProduct.Categories)
 
 	payload, _ := json.Marshal(combinedProduct)
 	for _, category := range combinedProduct.Categories {
