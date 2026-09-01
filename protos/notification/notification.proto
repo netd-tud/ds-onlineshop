@@ -4,6 +4,7 @@ package hipstershop;
 
 option go_package = "github.com/netd-tud/ds-onlineshop/proto/notification;notificationpb";
 
+import "google/protobuf/timestamp.proto";
 import "checkout/checkout.proto";
 
 // ------------Notification service------------------
@@ -20,6 +21,7 @@ message StockAlert {
   repeated string category = 2;
   int64 stock = 3;
   string severity = 4;
+  google.protobuf.Timestamp created_at = 5;
 }
 
 message ListOpenAlertsResponse { repeated StockAlert alerts = 1; }
