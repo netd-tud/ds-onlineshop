@@ -18,6 +18,7 @@ package hipstershop;
 
 option go_package = "github.com/netd-tud/ds-onlineshop/proto/inventory;inventorypb";
 
+import "google/protobuf/timestamp.proto";
 import "common/common.proto";
 
 // ------------Inventory service------------------
@@ -29,6 +30,7 @@ service InventoryService {
   rpc SetInventoryProductStock(SetInventoryProductStockRequest) returns (SetInventoryProductStockRequestResponse) {}
   rpc CreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (CreateNewInventoryProductResponse) {}
   rpc DeleteInventoryProduct(DeleteInventoryProductRequest) returns (DeleteInventoryProductResponse) {}
+  rpc ResolveStockAlert(ResolveStockAlertRequest) returns (ResolveStockAlertResponse) {}
 
 
   // SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
@@ -87,6 +89,17 @@ message DeleteInventoryProductRequest {
 
 message DeleteInventoryProductResponse {
   InventoryProduct product = 1;
+}
+
+message ResolveStockAlertRequest {
+  string product_id = 1;
+  google.protobuf.Timestamp created_at = 2;
+  int64 reorder_amount = 3;
+}
+
+message ResolveStockAlertResponse {
+  InventoryProduct product = 1;
+  bool already_resolved = 2;
 }
 
 message XaPrepareCreateInventoryProductRequest {
