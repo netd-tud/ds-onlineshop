@@ -117,11 +117,10 @@ func (n *notification) setupMQTTSubscriber() {
 
 func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 	var p struct {
-		Id         string                 `json:"id"`
-		Stock      int64                  `json:"stock"`
-		Severity   string                 `json:"severity"`
-		Categories []string               `json:"categories"`
-		CreatedAt  *timestamppb.Timestamp `json:"created_at"`
+		Id         string   `json:"id"`
+		Stock      int64    `json:"stock"`
+		Severity   string   `json:"severity"`
+		Categories []string `json:"categories"`
 	}
 	if err := json.Unmarshal(msg.Payload(), &p); err != nil {
 		log.WithError(err).Error("Failed to unmarshal MQTT message")
@@ -135,15 +134,23 @@ func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	n.alerts[p.Id] = &notificationpb.StockAlert{ProductId: p.Id, Category: p.Categories, Stock: p.Stock, Severity: p.Severity, CreatedAt: p.CreatedAt}
+	var createdAt *timestamppb.Timestamp
+
+	if a, ok := n.alerts[p.Id]; ok {
+		createdAt = a.CreatedAt
+	} else {
+		createdAt = timestamppb.Now()
+	}
 
 	alert := &notificationpb.StockAlert{
 		ProductId: p.Id,
 		Category:  p.Categories,
 		Stock:     p.Stock,
 		Severity:  p.Severity,
-		CreatedAt: p.CreatedAt,
+		CreatedAt: createdAt,
 	}
+
+	n.alerts[p.Id] = alert
 
 	n.triggerNewAlert(alert)
 }
