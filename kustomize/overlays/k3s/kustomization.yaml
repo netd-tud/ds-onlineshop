@@ -19,6 +19,7 @@ components:
 - ../../components/kafka
 - ../../components/flink
 - ../../components/notificationservice
+- ../../components/reorderservice
 
 patches:
   - target:
