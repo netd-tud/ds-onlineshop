@@ -67,6 +67,11 @@ class InventoryServiceStub:
                 request_serializer=inventory_dot_inventory__pb2.DeleteInventoryProductRequest.SerializeToString,
                 response_deserializer=inventory_dot_inventory__pb2.DeleteInventoryProductResponse.FromString,
                 _registered_method=True)
+        self.ResolveStockAlert = channel.unary_unary(
+                '/hipstershop.InventoryService/ResolveStockAlert',
+                request_serializer=inventory_dot_inventory__pb2.ResolveStockAlertRequest.SerializeToString,
+                response_deserializer=inventory_dot_inventory__pb2.ResolveStockAlertResponse.FromString,
+                _registered_method=True)
         self.CompensateCreateNewInventoryProduct = channel.unary_unary(
                 '/hipstershop.InventoryService/CompensateCreateNewInventoryProduct',
                 request_serializer=inventory_dot_inventory__pb2.CreateNewInventoryProductRequest.SerializeToString,
@@ -125,6 +130,12 @@ class InventoryServiceServicer:
         raise NotImplementedError('Method not implemented!')
 
     def DeleteInventoryProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ResolveStockAlert(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -189,6 +200,11 @@ def add_InventoryServiceServicer_to_server(servicer, server):
                     servicer.DeleteInventoryProduct,
                     request_deserializer=inventory_dot_inventory__pb2.DeleteInventoryProductRequest.FromString,
                     response_serializer=inventory_dot_inventory__pb2.DeleteInventoryProductResponse.SerializeToString,
+            ),
+            'ResolveStockAlert': grpc.unary_unary_rpc_method_handler(
+                    servicer.ResolveStockAlert,
+                    request_deserializer=inventory_dot_inventory__pb2.ResolveStockAlertRequest.FromString,
+                    response_serializer=inventory_dot_inventory__pb2.ResolveStockAlertResponse.SerializeToString,
             ),
             'CompensateCreateNewInventoryProduct': grpc.unary_unary_rpc_method_handler(
                     servicer.CompensateCreateNewInventoryProduct,
@@ -375,6 +391,33 @@ class InventoryService:
             '/hipstershop.InventoryService/DeleteInventoryProduct',
             inventory_dot_inventory__pb2.DeleteInventoryProductRequest.SerializeToString,
             inventory_dot_inventory__pb2.DeleteInventoryProductResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ResolveStockAlert(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hipstershop.InventoryService/ResolveStockAlert',
+            inventory_dot_inventory__pb2.ResolveStockAlertRequest.SerializeToString,
+            inventory_dot_inventory__pb2.ResolveStockAlertResponse.FromString,
             options,
             channel_credentials,
             insecure,

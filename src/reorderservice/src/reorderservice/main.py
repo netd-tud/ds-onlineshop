@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import threading
 import heapq
@@ -6,6 +7,8 @@ import itertools
 import logging
 import grpc
 from .generated_proto.notification import notification_pb2, notification_pb2_grpc
+from .generated_proto.inventory import inventory_pb2, inventory_pb2_grpc
+from .generated_proto.auth import auth_pb2, auth_pb2_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -13,10 +16,28 @@ alerts_heap = []
 heap_lock = threading.Lock()
 tie_breaker = itertools.count()
 
+INVENTORY_GRPC_ADDRESS = "inventoryservice:50002"
+
+JWT = None
+
+REORDER_AMOUNT = 0
 
 def resolve_alert(alert: "notification_pb2.StockAlert") -> None:
     """The function called when an alert reaches the time threshold."""
-    logging.info(f"Alert resolved for product: {alert.product_id}")
+    logging.info(f"Alert resolving for product: {alert.product_id}")
+    with grpc.insecure_channel(INVENTORY_GRPC_ADDRESS) as channel:
+        stub = inventory_pb2_grpc.InventoryServiceStub(channel)
+        request = inventory_pb2.ResolveStockAlertRequest(
+            product_id=alert.product_id,
+            created_at=alert.created_at,
+            reorder_amount=REORDER_AMOUNT
+        )
+        logging.info(f"ResolveStockAlert request: {request}")
+        response = stub.ResolveStockAlert(
+            request,
+            metadata=[("authorization", f"Bearer {JWT}")],
+        )
+        logging.info(f"ResolveStockAlert response: {response}")
 
 
 def expiration_worker() -> None:
@@ -41,14 +62,33 @@ def expiration_worker() -> None:
 
 
 def main() -> None:
-    addr = os.environ.get("NOTIFICATION_ADDR", "notificationservice:50051")
+    NOTIFICATION_GRPC_ADDRESS = os.environ.get("NOTIFICATION_ADDR", "notificationservice:50051")
+    AUTH_GRPC_ADDRESS = os.environ.get("AUTH_ADDR", "authservice:50050")
+
+    global INVENTORY_GRPC_ADDRESS
+    INVENTORY_GRPC_ADDRESS= os.environ.get("INVENTORY_ADDR", "inventoryservice:50002")
+
+    global REORDER_AMOUNT
+    REORDER_AMOUNT = os.environ.get("REORDER_AMOUNT", 50)
+
+    logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
+    global JWT
+    with grpc.insecure_channel(AUTH_GRPC_ADDRESS) as channel:
+        auth_stub = auth_pb2_grpc.AuthServiceStub(channel)
+        response = auth_stub.Login(auth_pb2.LoginRequest(username="admin", password="admin"))
+        JWT = response.token
+        if not JWT:
+            print("Could not acquire JWT token.")
+            sys.exit(1)
+        else:
+            print("Authentication successfully.")
+            print(JWT)
 
     worker = threading.Thread(target=expiration_worker, daemon=True)
     worker.start()
 
-    logging.info(f"Connecting to gRPC server at {addr}...")
-    credentials = grpc.ssl_channel_credentials()
-    with grpc.secure_channel(addr, credentials) as channel:
+    logging.info(f"Connecting to gRPC server at {NOTIFICATION_GRPC_ADDRESS}...")
+    with grpc.insecure_channel(NOTIFICATION_GRPC_ADDRESS) as channel:
         stub = notification_pb2_grpc.NotificationServiceStub(channel)
         logging.info(f"Stub: {stub}")
 

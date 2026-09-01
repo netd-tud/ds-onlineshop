@@ -31,8 +31,14 @@ spec:
             readOnlyRootFilesystem: true
           image: ghcr.io/netd-tud/ds-onlineshop/reorderservice:latest
           env:
-            - name: PORT
-              value: "50001"
+            - name: INVENTORY_ADDR
+              value: "inventoryservice:50002"
+            - name: NOTIFICATION_ADDR
+              value: "notificationservice:50051"
+            - name: AUTH_ADDR
+              value: "authservice:50050"
+            - name: ALERT_EXPIRATION_MINUTES
+              value: "1"
           resources:
             requests:
               cpu: 100m
