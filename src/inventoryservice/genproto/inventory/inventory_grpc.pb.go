@@ -34,17 +34,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	InventoryService_ListInventory_FullMethodName                       = "/hipstershop.InventoryService/ListInventory"
-	InventoryService_GetInventoryProduct_FullMethodName                 = "/hipstershop.InventoryService/GetInventoryProduct"
-	InventoryService_ChangeInventoryProductStock_FullMethodName         = "/hipstershop.InventoryService/ChangeInventoryProductStock"
-	InventoryService_SetInventoryProductStock_FullMethodName            = "/hipstershop.InventoryService/SetInventoryProductStock"
-	InventoryService_CreateNewInventoryProduct_FullMethodName           = "/hipstershop.InventoryService/CreateNewInventoryProduct"
-	InventoryService_DeleteInventoryProduct_FullMethodName              = "/hipstershop.InventoryService/DeleteInventoryProduct"
-	InventoryService_ResolveStockAlert_FullMethodName                   = "/hipstershop.InventoryService/ResolveStockAlert"
-	InventoryService_CompensateCreateNewInventoryProduct_FullMethodName = "/hipstershop.InventoryService/CompensateCreateNewInventoryProduct"
-	InventoryService_XaPrepareCreateInventoryProduct_FullMethodName     = "/hipstershop.InventoryService/XaPrepareCreateInventoryProduct"
-	InventoryService_XaCommitCreateInventoryProduct_FullMethodName      = "/hipstershop.InventoryService/XaCommitCreateInventoryProduct"
-	InventoryService_XaRollbackCreateInventoryProduct_FullMethodName    = "/hipstershop.InventoryService/XaRollbackCreateInventoryProduct"
+	InventoryService_ListInventory_FullMethodName                         = "/hipstershop.InventoryService/ListInventory"
+	InventoryService_GetInventoryProduct_FullMethodName                   = "/hipstershop.InventoryService/GetInventoryProduct"
+	InventoryService_ChangeInventoryProductStock_FullMethodName           = "/hipstershop.InventoryService/ChangeInventoryProductStock"
+	InventoryService_SetInventoryProductStock_FullMethodName              = "/hipstershop.InventoryService/SetInventoryProductStock"
+	InventoryService_CreateNewInventoryProduct_FullMethodName             = "/hipstershop.InventoryService/CreateNewInventoryProduct"
+	InventoryService_DeleteInventoryProduct_FullMethodName                = "/hipstershop.InventoryService/DeleteInventoryProduct"
+	InventoryService_ResolveStockAlert_FullMethodName                     = "/hipstershop.InventoryService/ResolveStockAlert"
+	InventoryService_CompensateCreateNewInventoryProduct_FullMethodName   = "/hipstershop.InventoryService/CompensateCreateNewInventoryProduct"
+	InventoryService_CompensateChangeInventoryProductStock_FullMethodName = "/hipstershop.InventoryService/CompensateChangeInventoryProductStock"
+	InventoryService_XaPrepareCreateInventoryProduct_FullMethodName       = "/hipstershop.InventoryService/XaPrepareCreateInventoryProduct"
+	InventoryService_XaCommitCreateInventoryProduct_FullMethodName        = "/hipstershop.InventoryService/XaCommitCreateInventoryProduct"
+	InventoryService_XaRollbackCreateInventoryProduct_FullMethodName      = "/hipstershop.InventoryService/XaRollbackCreateInventoryProduct"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -61,6 +62,9 @@ type InventoryServiceClient interface {
 	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
 	// because DTM resends the original action's request bytes when invoking the compensating transaction.
 	CompensateCreateNewInventoryProduct(ctx context.Context, in *CreateNewInventoryProductRequest, opts ...grpc.CallOption) (*DeleteInventoryProductResponse, error)
+	// SAGA compensation adapter for ChangeInventoryProductStock. Accepts the same payload as ChangeInventoryProductStock
+	// because DTM resends the original action's request bytes when invoking the compensating transaction.
+	CompensateChangeInventoryProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*ChangeInventoryProductStockResponse, error)
 	// XA
 	XaPrepareCreateInventoryProduct(ctx context.Context, in *XaPrepareCreateInventoryProductRequest, opts ...grpc.CallOption) (*common.Empty, error)
 	XaCommitCreateInventoryProduct(ctx context.Context, in *common.XaBranchRequest, opts ...grpc.CallOption) (*common.Empty, error)
@@ -155,6 +159,16 @@ func (c *inventoryServiceClient) CompensateCreateNewInventoryProduct(ctx context
 	return out, nil
 }
 
+func (c *inventoryServiceClient) CompensateChangeInventoryProductStock(ctx context.Context, in *ChangeInventoryProductStockRequest, opts ...grpc.CallOption) (*ChangeInventoryProductStockResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeInventoryProductStockResponse)
+	err := c.cc.Invoke(ctx, InventoryService_CompensateChangeInventoryProductStock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *inventoryServiceClient) XaPrepareCreateInventoryProduct(ctx context.Context, in *XaPrepareCreateInventoryProductRequest, opts ...grpc.CallOption) (*common.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(common.Empty)
@@ -199,6 +213,9 @@ type InventoryServiceServer interface {
 	// SAGA compensation adapter for CreateNewProduct. Accepts the same payload as CreateNewProduct
 	// because DTM resends the original action's request bytes when invoking the compensating transaction.
 	CompensateCreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*DeleteInventoryProductResponse, error)
+	// SAGA compensation adapter for ChangeInventoryProductStock. Accepts the same payload as ChangeInventoryProductStock
+	// because DTM resends the original action's request bytes when invoking the compensating transaction.
+	CompensateChangeInventoryProductStock(context.Context, *ChangeInventoryProductStockRequest) (*ChangeInventoryProductStockResponse, error)
 	// XA
 	XaPrepareCreateInventoryProduct(context.Context, *XaPrepareCreateInventoryProductRequest) (*common.Empty, error)
 	XaCommitCreateInventoryProduct(context.Context, *common.XaBranchRequest) (*common.Empty, error)
@@ -236,6 +253,9 @@ func (UnimplementedInventoryServiceServer) ResolveStockAlert(context.Context, *R
 }
 func (UnimplementedInventoryServiceServer) CompensateCreateNewInventoryProduct(context.Context, *CreateNewInventoryProductRequest) (*DeleteInventoryProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CompensateCreateNewInventoryProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) CompensateChangeInventoryProductStock(context.Context, *ChangeInventoryProductStockRequest) (*ChangeInventoryProductStockResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CompensateChangeInventoryProductStock not implemented")
 }
 func (UnimplementedInventoryServiceServer) XaPrepareCreateInventoryProduct(context.Context, *XaPrepareCreateInventoryProductRequest) (*common.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method XaPrepareCreateInventoryProduct not implemented")
@@ -411,6 +431,24 @@ func _InventoryService_CompensateCreateNewInventoryProduct_Handler(srv interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_CompensateChangeInventoryProductStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeInventoryProductStockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).CompensateChangeInventoryProductStock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_CompensateChangeInventoryProductStock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).CompensateChangeInventoryProductStock(ctx, req.(*ChangeInventoryProductStockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _InventoryService_XaPrepareCreateInventoryProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(XaPrepareCreateInventoryProductRequest)
 	if err := dec(in); err != nil {
@@ -503,6 +541,10 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompensateCreateNewInventoryProduct",
 			Handler:    _InventoryService_CompensateCreateNewInventoryProduct_Handler,
+		},
+		{
+			MethodName: "CompensateChangeInventoryProductStock",
+			Handler:    _InventoryService_CompensateChangeInventoryProductStock_Handler,
 		},
 		{
 			MethodName: "XaPrepareCreateInventoryProduct",

@@ -768,7 +768,8 @@ const file_inventory_inventory_proto_rawDesc = "" +
 	"&XaPrepareCreateInventoryProductRequest\x12\x10\n" +
 	"\x03gid\x18\x01 \x01(\tR\x03gid\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12#\n" +
-	"\rinitial_stock\x18\x03 \x01(\x03R\finitialStock2\xc1\t\n" +
+	"\rinitial_stock\x18\x03 \x01(\x03R\finitialStock2\xd0\n" +
+	"\n" +
 	"\x10InventoryService\x12I\n" +
 	"\rListInventory\x12\x12.hipstershop.Empty\x1a\".hipstershop.ListInventoryResponse\"\x00\x12_\n" +
 	"\x13GetInventoryProduct\x12'.hipstershop.GetInventoryProductRequest\x1a\x1d.hipstershop.InventoryProduct\"\x00\x12\x82\x01\n" +
@@ -777,7 +778,8 @@ const file_inventory_inventory_proto_rawDesc = "" +
 	"\x19CreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a..hipstershop.CreateNewInventoryProductResponse\"\x00\x12s\n" +
 	"\x16DeleteInventoryProduct\x12*.hipstershop.DeleteInventoryProductRequest\x1a+.hipstershop.DeleteInventoryProductResponse\"\x00\x12d\n" +
 	"\x11ResolveStockAlert\x12%.hipstershop.ResolveStockAlertRequest\x1a&.hipstershop.ResolveStockAlertResponse\"\x00\x12\x83\x01\n" +
-	"#CompensateCreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a+.hipstershop.DeleteInventoryProductResponse\"\x00\x12l\n" +
+	"#CompensateCreateNewInventoryProduct\x12-.hipstershop.CreateNewInventoryProductRequest\x1a+.hipstershop.DeleteInventoryProductResponse\"\x00\x12\x8c\x01\n" +
+	"%CompensateChangeInventoryProductStock\x12/.hipstershop.ChangeInventoryProductStockRequest\x1a0.hipstershop.ChangeInventoryProductStockResponse\"\x00\x12l\n" +
 	"\x1fXaPrepareCreateInventoryProduct\x123.hipstershop.XaPrepareCreateInventoryProductRequest\x1a\x12.hipstershop.Empty\"\x00\x12T\n" +
 	"\x1eXaCommitCreateInventoryProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00\x12V\n" +
 	" XaRollbackCreateInventoryProduct\x12\x1c.hipstershop.XaBranchRequest\x1a\x12.hipstershop.Empty\"\x00B?Z=github.com/netd-tud/ds-onlineshop/proto/inventory;inventorypbb\x06proto3"
@@ -830,22 +832,24 @@ var file_inventory_inventory_proto_depIdxs = []int32{
 	9,  // 12: hipstershop.InventoryService.DeleteInventoryProduct:input_type -> hipstershop.DeleteInventoryProductRequest
 	11, // 13: hipstershop.InventoryService.ResolveStockAlert:input_type -> hipstershop.ResolveStockAlertRequest
 	7,  // 14: hipstershop.InventoryService.CompensateCreateNewInventoryProduct:input_type -> hipstershop.CreateNewInventoryProductRequest
-	13, // 15: hipstershop.InventoryService.XaPrepareCreateInventoryProduct:input_type -> hipstershop.XaPrepareCreateInventoryProductRequest
-	16, // 16: hipstershop.InventoryService.XaCommitCreateInventoryProduct:input_type -> hipstershop.XaBranchRequest
-	16, // 17: hipstershop.InventoryService.XaRollbackCreateInventoryProduct:input_type -> hipstershop.XaBranchRequest
-	1,  // 18: hipstershop.InventoryService.ListInventory:output_type -> hipstershop.ListInventoryResponse
-	0,  // 19: hipstershop.InventoryService.GetInventoryProduct:output_type -> hipstershop.InventoryProduct
-	4,  // 20: hipstershop.InventoryService.ChangeInventoryProductStock:output_type -> hipstershop.ChangeInventoryProductStockResponse
-	6,  // 21: hipstershop.InventoryService.SetInventoryProductStock:output_type -> hipstershop.SetInventoryProductStockRequestResponse
-	8,  // 22: hipstershop.InventoryService.CreateNewInventoryProduct:output_type -> hipstershop.CreateNewInventoryProductResponse
-	10, // 23: hipstershop.InventoryService.DeleteInventoryProduct:output_type -> hipstershop.DeleteInventoryProductResponse
-	12, // 24: hipstershop.InventoryService.ResolveStockAlert:output_type -> hipstershop.ResolveStockAlertResponse
-	10, // 25: hipstershop.InventoryService.CompensateCreateNewInventoryProduct:output_type -> hipstershop.DeleteInventoryProductResponse
-	15, // 26: hipstershop.InventoryService.XaPrepareCreateInventoryProduct:output_type -> hipstershop.Empty
-	15, // 27: hipstershop.InventoryService.XaCommitCreateInventoryProduct:output_type -> hipstershop.Empty
-	15, // 28: hipstershop.InventoryService.XaRollbackCreateInventoryProduct:output_type -> hipstershop.Empty
-	18, // [18:29] is the sub-list for method output_type
-	7,  // [7:18] is the sub-list for method input_type
+	3,  // 15: hipstershop.InventoryService.CompensateChangeInventoryProductStock:input_type -> hipstershop.ChangeInventoryProductStockRequest
+	13, // 16: hipstershop.InventoryService.XaPrepareCreateInventoryProduct:input_type -> hipstershop.XaPrepareCreateInventoryProductRequest
+	16, // 17: hipstershop.InventoryService.XaCommitCreateInventoryProduct:input_type -> hipstershop.XaBranchRequest
+	16, // 18: hipstershop.InventoryService.XaRollbackCreateInventoryProduct:input_type -> hipstershop.XaBranchRequest
+	1,  // 19: hipstershop.InventoryService.ListInventory:output_type -> hipstershop.ListInventoryResponse
+	0,  // 20: hipstershop.InventoryService.GetInventoryProduct:output_type -> hipstershop.InventoryProduct
+	4,  // 21: hipstershop.InventoryService.ChangeInventoryProductStock:output_type -> hipstershop.ChangeInventoryProductStockResponse
+	6,  // 22: hipstershop.InventoryService.SetInventoryProductStock:output_type -> hipstershop.SetInventoryProductStockRequestResponse
+	8,  // 23: hipstershop.InventoryService.CreateNewInventoryProduct:output_type -> hipstershop.CreateNewInventoryProductResponse
+	10, // 24: hipstershop.InventoryService.DeleteInventoryProduct:output_type -> hipstershop.DeleteInventoryProductResponse
+	12, // 25: hipstershop.InventoryService.ResolveStockAlert:output_type -> hipstershop.ResolveStockAlertResponse
+	10, // 26: hipstershop.InventoryService.CompensateCreateNewInventoryProduct:output_type -> hipstershop.DeleteInventoryProductResponse
+	4,  // 27: hipstershop.InventoryService.CompensateChangeInventoryProductStock:output_type -> hipstershop.ChangeInventoryProductStockResponse
+	15, // 28: hipstershop.InventoryService.XaPrepareCreateInventoryProduct:output_type -> hipstershop.Empty
+	15, // 29: hipstershop.InventoryService.XaCommitCreateInventoryProduct:output_type -> hipstershop.Empty
+	15, // 30: hipstershop.InventoryService.XaRollbackCreateInventoryProduct:output_type -> hipstershop.Empty
+	19, // [19:31] is the sub-list for method output_type
+	7,  // [7:19] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
 	7,  // [7:7] is the sub-list for extension extendee
 	0,  // [0:7] is the sub-list for field type_name

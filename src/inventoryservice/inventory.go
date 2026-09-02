@@ -106,6 +106,13 @@ func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *invent
 	return &inventorypb.ChangeInventoryProductStockResponse{Product: product}, nil
 }
 
+func (p *inventory) CompensateChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
+	return p.ChangeInventoryProductStock(ctx, &inventorypb.ChangeInventoryProductStockRequest{
+		Id:    req.GetId(),
+		Delta: -req.GetDelta(),
+	})
+}
+
 func (p *inventory) SetInventoryProductStock(ctx context.Context, req *inventorypb.SetInventoryProductStockRequest) (*inventorypb.SetInventoryProductStockRequestResponse, error) {
 	inventory := p.parseInventory()
 	for _, product := range inventory {

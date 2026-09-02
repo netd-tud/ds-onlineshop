@@ -37,6 +37,10 @@ service InventoryService {
   // because DTM resends the original action's request bytes when invoking the compensating transaction.
   rpc CompensateCreateNewInventoryProduct(CreateNewInventoryProductRequest) returns (DeleteInventoryProductResponse) {}
 
+  // SAGA compensation adapter for ChangeInventoryProductStock. Accepts the same payload as ChangeInventoryProductStock
+  // because DTM resends the original action's request bytes when invoking the compensating transaction.
+  rpc CompensateChangeInventoryProductStock(ChangeInventoryProductStockRequest) returns (ChangeInventoryProductStockResponse) {}
+
   // XA
   rpc XaPrepareCreateInventoryProduct(XaPrepareCreateInventoryProductRequest) returns (Empty) {}
   rpc XaCommitCreateInventoryProduct(XaBranchRequest) returns (Empty) {}
