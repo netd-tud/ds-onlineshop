@@ -21,6 +21,8 @@ github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aN
 github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260807085605-eb2bf4f46f69 h1:WIHFlyXdqFcU754stVFENFcGdpOxfU850Eb8bx4qix8=
 github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260807085605-eb2bf4f46f69/go.mod h1:lClL6LHUrDHbcpNP8InAZrSg7Q500sKXDzCyAbREfr4=
+github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260902103343-b27eee6d825c h1:NlNSwCkN1nphJYlz0cPb9cj6ImEf7T2d8OA2qeJAslA=
+github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260902103343-b27eee6d825c/go.mod h1:lClL6LHUrDHbcpNP8InAZrSg7Q500sKXDzCyAbREfr4=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

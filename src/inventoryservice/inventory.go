@@ -327,6 +327,13 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 }
 
 func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims shared.UserClaims) bool {
+	for _, role := range claims.Roles {
+		if role == "SYSTEM_SERVICE" || role == "ADMIN" {
+			log.WithField("role", role).Info("User has system service or admin role, allowing modification")
+			return true
+		}
+	}
+
 	categories := shared.ClaimsToCategories(&claims)
 	log.WithField("categories", categories).Info("Checking user permissions")
 
