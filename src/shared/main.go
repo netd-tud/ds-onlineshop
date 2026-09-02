@@ -122,7 +122,7 @@ func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.Unary
 		exempt[m] = struct{}{}
 	}
 
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		if _, ok := exempt[info.FullMethod]; ok {
 			return handler(ctx, req)
 		}
@@ -141,20 +141,43 @@ func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.Unary
 		if len(tokenParts) != 2 || strings.ToLower(tokenParts[0]) != "bearer" {
 			return nil, status.Error(codes.Unauthenticated, "authorization header format must be Bearer <token>")
 		}
+		rawToken := tokenParts[1]
 
 		claims := &UserClaims{}
-		token, err := jwt.ParseWithClaims(tokenParts[1], claims, func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(rawToken, claims, func(t *jwt.Token) (any, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 			}
 			return pubKey, nil
 		}, jwt.WithLeeway(5*time.Second))
 
-		if err != nil || !token.Valid {
-			return nil, status.Error(codes.Unauthenticated, "invalid or expired token")
+		if err == nil && token.Valid {
+			return handler(context.WithValue(ctx, UserContextKey, claims), req)
 		}
 
-		return handler(context.WithValue(ctx, UserContextKey, claims), req)
+		if len(systemJWTSecret) > 0 {
+			sysClaims := &SystemClaims{}
+			sysToken, err := jwt.ParseWithClaims(rawToken, sysClaims, func(t *jwt.Token) (any, error) {
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+				}
+				return systemJWTSecret, nil
+			}, jwt.WithLeeway(5*time.Second))
+
+			if err == nil && sysToken.Valid {
+				userClaims := &UserClaims{
+					UserID:           sysClaims.ServiceName,
+					Username:         sysClaims.ServiceName,
+					Roles:            sysClaims.Roles,
+					Title:            "SYSTEM",
+					Name:             sysClaims.ServiceName,
+					RegisteredClaims: sysClaims.RegisteredClaims,
+				}
+				return handler(context.WithValue(ctx, UserContextKey, userClaims), req)
+			}
+		}
+
+		return nil, status.Error(codes.Unauthenticated, "invalid or expired token")
 	}
 }
 
