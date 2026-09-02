@@ -66,6 +66,15 @@ spec:
             value: "currencyservice:7000"
           - name: CART_SERVICE_ADDR
             value: "cartservice:7070"
+          - name: INVENTORY_SERVICE_ADDR
+            value: "inventoryservice:50002"
+          - name: DTM_SERVICE_ADDR
+            value: "dtm-svc:36790"
+          - name: SYSTEM_JWT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: system-jwt-secret
+                key: secret
           resources:
             requests:
               cpu: 100m

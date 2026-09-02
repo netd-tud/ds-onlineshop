@@ -80,6 +80,12 @@ type checkoutService struct {
 	paymentSvcAddr string
 	paymentSvcConn *grpc.ClientConn
 
+	inventorySvcAddr string
+	inventorySvcConn *grpc.ClientConn
+
+	dtmSvcAddr string
+	dtmSvcConn *grpc.ClientConn
+
 	mqttBrokerAddr string
 	mqttClient     mqtt.Client
 
@@ -116,6 +122,9 @@ func main() {
 	shared.MustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 	shared.MustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
 	shared.MustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.inventorySvcAddr, "INVENTORY_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.dtmSvcAddr, "DTM_SERVICE_ADDR")
+
 	svc.mqttBrokerAddr = os.Getenv("MQTT_BROKER_ADDR")
 	log.Infof("Broker Addr: %s", svc.mqttBrokerAddr)
 	if svc.mqttBrokerAddr != "" {
@@ -128,6 +137,8 @@ func main() {
 	shared.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	shared.MustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
 	shared.MustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
+	shared.MustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+	shared.MustConnGRPC(ctx, &svc.dtmSvcConn, svc.dtmSvcAddr)
 
 	analyticsProductsPub := analytics.NewPublisher("checkout-service", "product-events")
 	defer func() {
