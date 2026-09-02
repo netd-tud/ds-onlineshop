@@ -35,6 +35,14 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
+var systemJWTSecret = []byte(os.Getenv("SYSTEM_JWT_SECRET"))
+
+type SystemClaims struct {
+	ServiceName string   `json:"service_name"`
+	Roles       []string `json:"roles"`
+	jwt.RegisteredClaims
+}
+
 type Category string
 
 const (
@@ -221,4 +229,41 @@ func IsLoadTest(ctx context.Context) bool {
 	}
 
 	return false
+}
+
+func GenerateSystemToken(serviceName string, roles []string) (string, error) {
+	if len(systemJWTSecret) == 0 {
+		return "", fmt.Errorf("SYSTEM_JWT_SECRET not set")
+	}
+
+	claims := SystemClaims{
+		ServiceName: serviceName,
+		Roles:       roles,
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
+			Issuer:    "system",
+			Subject:   serviceName,
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(systemJWTSecret)
+}
+
+func ValidateSystemToken(tokenString string) (*SystemClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &SystemClaims{}, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return systemJWTSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*SystemClaims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, fmt.Errorf("invalid system token")
 }
