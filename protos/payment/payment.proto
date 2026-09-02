@@ -24,6 +24,7 @@ import "common/common.proto";
 
 service PaymentService {
   rpc Charge(ChargeRequest) returns (ChargeResponse) {}
+  rpc CompensateCharge(ChargeRequest) returns (ChargeResponse) {}
 }
 
 message CreditCardInfo {
