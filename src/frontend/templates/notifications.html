@@ -21,9 +21,9 @@
                 <div class="text-muted small text-uppercase mb-1">{{ .Category }}</div>
                 <div class="font-weight-bold mb-2">{{ .ProductId }}</div>
                 <span class="stock-badge stock-badge--{{ .Severity }}">
-                    <span class="stock-badge__dot"></span>
-                    {{ if eq .Severity "critical" }}Critical &mdash; {{ end }}{{ .Stock }} left
-                  </span>
+                  <span class="stock-badge__dot"></span>
+                  {{ if eq .Severity "critical" }}Critical &mdash; {{ end }}{{ .Stock }} left
+                </span>
               </div>
             </a>
           </div>
