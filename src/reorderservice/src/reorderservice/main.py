@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import time
 import threading
@@ -6,6 +7,8 @@ import heapq
 import itertools
 import logging
 import grpc
+import math
+
 from .generated_proto.notification import notification_pb2, notification_pb2_grpc
 from .generated_proto.inventory import inventory_pb2, inventory_pb2_grpc
 from .generated_proto.auth import auth_pb2, auth_pb2_grpc
@@ -20,17 +23,21 @@ INVENTORY_GRPC_ADDRESS = "inventoryservice:50002"
 
 JWT = None
 
-REORDER_AMOUNT = 0
+REORDER_AMOUNT = {
+    "lowest": 0,
+    "highest": 0,
+}
 
 def resolve_alert(alert: "notification_pb2.StockAlert") -> None:
     """The function called when an alert reaches the time threshold."""
     logging.info(f"Alert resolving for product: {alert.product_id}")
     with grpc.insecure_channel(INVENTORY_GRPC_ADDRESS) as channel:
         stub = inventory_pb2_grpc.InventoryServiceStub(channel)
+        randReorderAmount = random.randint(REORDER_AMOUNT["lowest"], REORDER_AMOUNT["highest"])
         request = inventory_pb2.ResolveStockAlertRequest(
             product_id=alert.product_id,
             created_at=alert.created_at,
-            reorder_amount=REORDER_AMOUNT
+            reorder_amount=randReorderAmount
         )
         logging.info(f"ResolveStockAlert request: {request}")
         response = stub.ResolveStockAlert(
@@ -69,7 +76,10 @@ def main() -> None:
     INVENTORY_GRPC_ADDRESS= os.environ.get("INVENTORY_ADDR", "inventoryservice:50002")
 
     global REORDER_AMOUNT
-    REORDER_AMOUNT = os.environ.get("REORDER_AMOUNT", 50)
+    REORDER_AMOUNT = {
+        "lowest": int(os.environ.get("LOWEST_REORDER_AMOUNT", "30")),
+        "highest": int(os.environ.get("HIGHEST_REORDER_AMOUNT", "100"))
+    }
 
     logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
     global JWT

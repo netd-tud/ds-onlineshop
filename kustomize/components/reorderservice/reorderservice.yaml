@@ -39,6 +39,10 @@ spec:
               value: "authservice:50050"
             - name: ALERT_EXPIRATION_MINUTES
               value: "5"
+            - name: LOWEST_REORDER_AMOUNT
+              value: "30"
+            - name: HIGHEST_REORDER_AMOUNT
+              value: "100"
           resources:
             requests:
               cpu: 100m
