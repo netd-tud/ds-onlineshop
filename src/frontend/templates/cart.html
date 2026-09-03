@@ -24,7 +24,6 @@
     </div>
 
     <main role="main" class="cart-sections">
-
         {{ if eq (len $.items) 0 }}
         <section class="empty-cart-section">
             <h3>Your shopping cart is empty!</h3>
@@ -33,6 +32,12 @@
         </section>
         {{ else }}
         <section class="container">
+            {{ if .error }}
+              <div class="alert alert-danger" role="alert">
+                {{ .error }}
+              </div>
+            {{ end }}
+
             <div class="row">
 
                 <div class="col-lg-6 col-xl-5 offset-xl-1 cart-summary-section">

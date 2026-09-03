@@ -841,7 +841,23 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	totalPrice = money.Must(money.Sum(totalPrice, *shippingCost))
 	year := time.Now().Year()
 
+	var errorMessage string
+
+	if cookie, err := r.Cookie("order_error"); err == nil {
+		errorMessage = cookie.Value
+
+		clearCookie := &http.Cookie{
+			Name:     "order_error",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, clearCookie)
+	}
+
 	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, map[string]interface{}{
+		"error":            errorMessage,
 		"currencies":       currencies,
 		"recommendations":  recommendations,
 		"cart_size":        cartSize(cart),
@@ -913,6 +929,24 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 				Country:       payload.Country},
 		})
 	if err != nil {
+		errStr := err.Error()
+
+		businessFailure := strings.Contains(errStr, "code = Aborted") &&
+			strings.Contains(errStr, "insufficient stock or payment failed")
+
+		if businessFailure {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "order_error",
+				Value:    "Checkout failed: Insufficient stock or payment error.",
+				Path:     "/",
+				MaxAge:   60,
+				HttpOnly: true,
+			})
+
+			http.Redirect(w, r, "/cart", http.StatusSeeOther)
+			return
+		}
+
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to complete the order"), http.StatusInternalServerError)
 		return
 	}
