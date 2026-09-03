@@ -37,8 +37,10 @@ spec:
               value: "notificationservice:50051"
             - name: AUTH_ADDR
               value: "authservice:50050"
-            - name: ALERT_EXPIRATION_MINUTES
-              value: "5"
+            - name: LOW_ALERT_EXPIRATION_MINUTES
+              value: "3"
+            - name: CRITICAL_ALERT_EXPIRATION_MINUTES
+              value: "1"
             - name: LOWEST_REORDER_AMOUNT
               value: "30"
             - name: HIGHEST_REORDER_AMOUNT
