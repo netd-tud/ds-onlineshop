@@ -68,7 +68,8 @@ func run(port string) error {
 	}
 
 	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
-	if value, ok := os.LookupEnv("QUEUE_CAPACITY"); ok {
+
+	if value, ok := os.LookupEnv("ORDER_QUEUE_CAPACITY"); ok {
 		if capacity, err := strconv.Atoi(value); err == nil {
 			svc.queueCapacity = capacity
 		}
