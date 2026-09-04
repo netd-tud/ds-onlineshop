@@ -303,9 +303,31 @@ func (cs *checkoutService) publishCompletedOrder(ctx context.Context, order *che
 	if region == "" {
 		region = "UNKNOWN"
 	}
-	topic := region + "/checkout/orders/completed"
 
-	return cs.publishEventOverMQTT(topic, orderData)
+	categories := make(map[string]struct{})
+	for _, item := range order.GetItems() {
+		for _, cat := range cs.getCategoriesForOrderItem(ctx, item) {
+			categories[cat] = struct{}{}
+		}
+	}
+
+	for cat := range categories {
+		topic := fmt.Sprintf("%s/checkout/orders/completed/%s", region, cat)
+		if err := cs.publishEventOverMQTT(topic, orderData); err != nil {
+			log.Warnf("failed to publish completed order %q for category %q: %+v", order.GetOrderId(), cat, err)
+		}
+	}
+
+	return nil
+}
+
+func (cs *checkoutService) getCategoriesForOrderItem(ctx context.Context, item *checkoutpb.OrderItem) []string {
+	product, err := productcatalogpb.NewProductCatalogServiceClient(cs.productCatalogSvcConn).GetProduct(ctx,
+		&productcatalogpb.GetProductRequest{Id: item.GetItem().GetProductId()})
+	if err != nil {
+		return nil
+	}
+	return product.GetCategories()
 }
 
 func (cs *checkoutService) publishEventOverMQTT(topic string, payload []byte) error {

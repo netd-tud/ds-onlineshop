@@ -73,7 +73,7 @@ func (n *notification) setupMQTTSubscriber() {
 	opts.SetClientID("notification-service-client-" + hostname)
 
 	stockTopic := "inventory/+/+/stock"
-	orderTopic := "+/checkout/orders/completed"
+	orderTopic := "+/checkout/orders/completed/+"
 	qos := byte(1)
 
 	var stockMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {

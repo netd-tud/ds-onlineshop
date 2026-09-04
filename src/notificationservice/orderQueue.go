@@ -1,9 +1,12 @@
 package main
 
-import checkoutpb "github.com/netd-tud/ds-onlineshop/src/notificationservice/genproto/checkout"
+import (
+	checkoutpb "github.com/netd-tud/ds-onlineshop/src/notificationservice/genproto/checkout"
+)
 
 type OrderQueue struct {
 	orders   []*checkoutpb.OrderResult
+	seen     map[string]struct{}
 	next     int
 	count    int
 	capacity int
@@ -17,7 +20,21 @@ func NewOrderQueue(capacity int) *OrderQueue {
 }
 
 func (q *OrderQueue) Push(order *checkoutpb.OrderResult) {
+	orderID := order.GetOrderId()
+	if _, exists := q.seen[orderID]; exists {
+		return
+	}
+
+	if q.count == q.capacity {
+		oldOrder := q.orders[q.next]
+		if oldOrder != nil {
+			delete(q.seen, oldOrder.GetOrderId())
+		}
+	}
+
 	q.orders[q.next] = order
+	q.seen[orderID] = struct{}{}
+
 	q.next = (q.next + 1) % q.capacity
 	if q.count < q.capacity {
 		q.count++
