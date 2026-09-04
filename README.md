@@ -32,19 +32,19 @@ Find **Protocol Buffers Descriptions** at the [`./protos` directory](/protos).
 | [reorderservice](/src/reorderservice)               | Python   | Reorder Products based on streamed Stock Alerts.                                                                                                  |
 
 ### Infrastructure Services
-| Service                                                                   | Image/Version                             | Purpose                                                                                           |
-|---------------------------------------------------------------------------|-------------------------------------------|---------------------------------------------------------------------------------------------------|
-| [MQTT broker](kustomize/base/mqtt-broker.yaml)                            | `eclipse-mosquitto:2.1-alpine`            | Pub/sub message broker for MQTT events                                                            |
-| [LDAP](kustomize/components/auth/ldap.yaml)                               | `osixia/openldap:2.6.10-alpha`            | User Directory service / authentication                                                           |
-| [DTM](kustomize/components/dtm/dtm.yaml)                                  | `yedf/dtm:1.19.0`                         | Distributed transaction coordination (SAGA, XA)                                                   |
-| [cAdvisor](kustomize/components/monitoring/cadvisor-daemonset.yaml)       | `google/cadvisor:0.57`                    | Collects per-container resource metrics and exposes them to Prometheus                            |
-| [Pushgateway](kustomize/components/monitoring/prometheus-deployment.yaml) | `prom/pushgateway:v1.9.0`                 | Relays load values from dynamic-load-producer to Prometheus                                       |
-| [Prometheus](kustomize/components/monitoring/prometheus-deployment.yaml)  | `prom/prometheus:v3.12.0`                 | Metrics collection and storage                                                                    |
-| [Grafana](kustomize/components/monitoring/grafana-deployment.yaml)        | `grafana/grafana:13.1`                    | Dashboards for visualizing load metrics and analytics data                                        |
-| [Kafka (Strimzi)](kustomize/components/kafka)                             | Strimzi `1.1.0`, Kafka `4.3.0`            | Event streaming backbone for analytics pipeline                                                   |
-| [Flink](kustomize/components/flink)                                       | `flink:1.19.0`                            | Stream processing (SQL jobs consuming Kafka, writing to PostgreSQL                                |
-| [PostgreSQL](kustomize/components/flink/postgres.yaml)                    | `postgres:18-alpine`                      | Persistent sink for the Flink analytics pipeline                                                  |
-| [Traefik](kustomize/components/traefik)                                   | `rancher/mirrored-library-traefik:3.6.13` | Ingress controller: HTTP(S) routing and TCP passthrough for non-HTTP protocols (MQTT, LDAP, gRPC) |                                                                     |
+| Service                                                   | Image/Version                             | Purpose                                                                                           |
+|-----------------------------------------------------------|-------------------------------------------|---------------------------------------------------------------------------------------------------|
+| [MQTT broker](kustomize/base/mqtt-broker.yaml)            | `eclipse-mosquitto:2.1-alpine`            | Pub/sub message broker for MQTT events                                                            |
+| [LDAP](kustomize/components/auth/ldap.yaml)               | `osixia/openldap:2.6.10-alpha`            | User Directory service / authentication                                                           |
+| [DTM](kustomize/components/dtm/dtm.yaml)                  | `yedf/dtm:1.19.0`                         | Distributed transaction coordination (SAGA, XA)                                                   |
+| [cAdvisor](kustomize/components/monitoring/cAdvisor)      | `google/cadvisor:0.57`                    | Collects per-container resource metrics and exposes them to Prometheus                            |
+| [Pushgateway](kustomize/components/monitoring/prometheus) | `prom/pushgateway:v1.9.0`                 | Relays load values from dynamic-load-producer to Prometheus                                       |
+| [Prometheus](kustomize/components/monitoring/prometheus)  | `prom/prometheus:v3.12.0`                 | Metrics collection and storage                                                                    |
+| [Grafana](kustomize/components/monitoring/grafana)        | `grafana/grafana:13.1`                    | Dashboards for visualizing load metrics and analytics data                                        |
+| [Kafka (Strimzi)](kustomize/components/kafka)             | Strimzi `1.1.0`, Kafka `4.3.0`            | Event streaming backbone for analytics pipeline                                                   |
+| [Flink](kustomize/components/flink)                       | `flink:1.19.0`                            | Stream processing (SQL jobs consuming Kafka, writing to PostgreSQL                                |
+| [PostgreSQL](kustomize/components/flink/postgres.yaml)    | `postgres:18-alpine`                      | Persistent sink for the Flink analytics pipeline                                                  |
+| [Traefik](kustomize/components/traefik)                   | `rancher/mirrored-library-traefik:3.6.13` | Ingress controller: HTTP(S) routing and TCP passthrough for non-HTTP protocols (MQTT, LDAP, gRPC) |                                                                     |
 
 ### Load Generators
 | Service                                             | Language      | Description                                                                          |

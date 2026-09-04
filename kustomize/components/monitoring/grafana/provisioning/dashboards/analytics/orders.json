@@ -623,7 +623,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT \n  currency_code,\n  SUM(\n    total_revenue * CASE currency_code\n      WHEN 'JPY' THEN 0.0067   -- Adjust exchange rates as needed\n      WHEN 'TRY' THEN 0.030\n      WHEN 'EUR' THEN 1.08\n      WHEN 'GBP' THEN 1.28\n      WHEN 'CAD' THEN 0.73\n      ELSE 1.00\n    END\n  ) AS total_revenue_usd\nFROM order_aov_1h\nWHERE $__timeFilter(window_end)\nGROUP BY currency_code;",
+                        "rawSql": "SELECT \n  currency_code,\n  SUM(\n    total_revenue * CASE currency_code\n      WHEN 'JPY' THEN 0.0067\n      WHEN 'TRY' THEN 0.030\n      WHEN 'EUR' THEN 1.08\n      WHEN 'GBP' THEN 1.28\n      WHEN 'CAD' THEN 0.73\n      ELSE 1.00\n    END\n  ) AS total_revenue_usd\nFROM order_aov_1h\nWHERE $__timeFilter(window_end)\nGROUP BY currency_code;",
                         "sql": {
                           "columns": [
                             {
