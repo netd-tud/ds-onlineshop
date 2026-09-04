@@ -9,7 +9,7 @@ resources:
 configMapGenerator:
   - name: prometheus-config
     files:
-      - prometheus/config/scrape_configs.yaml
+      - prometheus/config/prometheus.yaml
   - name: grafana-datasources
     files:
       - grafana/provisioning/datasources/datasources.yaml
