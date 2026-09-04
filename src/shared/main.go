@@ -22,12 +22,24 @@ type contextKey string
 
 const UserContextKey contextKey = "user_info"
 
+type CtxKeyLoadTest struct{}
+
+const LoadTestHeaderName = "x-load-test"
+
 type UserClaims struct {
 	UserID   string   `json:"user_id"`
 	Username string   `json:"username"`
 	Roles    []string `json:"roles"`
 	Title    string   `json:"title"`
 	Name     string   `json:"name"`
+	jwt.RegisteredClaims
+}
+
+var systemJWTSecret = []byte(os.Getenv("SYSTEM_JWT_SECRET"))
+
+type SystemClaims struct {
+	ServiceName string   `json:"service_name"`
+	Roles       []string `json:"roles"`
 	jwt.RegisteredClaims
 }
 
@@ -110,7 +122,7 @@ func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.Unary
 		exempt[m] = struct{}{}
 	}
 
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		if _, ok := exempt[info.FullMethod]; ok {
 			return handler(ctx, req)
 		}
@@ -129,20 +141,53 @@ func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.Unary
 		if len(tokenParts) != 2 || strings.ToLower(tokenParts[0]) != "bearer" {
 			return nil, status.Error(codes.Unauthenticated, "authorization header format must be Bearer <token>")
 		}
+		rawToken := tokenParts[1]
 
 		claims := &UserClaims{}
-		token, err := jwt.ParseWithClaims(tokenParts[1], claims, func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(rawToken, claims, func(t *jwt.Token) (any, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 			}
 			return pubKey, nil
 		}, jwt.WithLeeway(5*time.Second))
 
-		if err != nil || !token.Valid {
-			return nil, status.Error(codes.Unauthenticated, "invalid or expired token")
+		if err == nil && token.Valid {
+			return handler(context.WithValue(ctx, UserContextKey, claims), req)
 		}
 
-		return handler(context.WithValue(ctx, UserContextKey, claims), req)
+		if len(systemJWTSecret) > 0 {
+			sysClaims := &SystemClaims{}
+			sysToken, err := jwt.ParseWithClaims(rawToken, sysClaims, func(t *jwt.Token) (any, error) {
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+				}
+				return systemJWTSecret, nil
+			}, jwt.WithLeeway(5*time.Second))
+
+			if err == nil && sysToken.Valid {
+				userClaims := &UserClaims{
+					UserID:           sysClaims.ServiceName,
+					Username:         sysClaims.ServiceName,
+					Roles:            sysClaims.Roles,
+					Title:            "SYSTEM",
+					Name:             sysClaims.ServiceName,
+					RegisteredClaims: sysClaims.RegisteredClaims,
+				}
+				return handler(context.WithValue(ctx, UserContextKey, userClaims), req)
+			}
+		}
+
+		return nil, status.Error(codes.Unauthenticated, "invalid or expired token")
+	}
+}
+
+func LoadTestInterceptor() grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if loadTest, ok := ctx.Value(CtxKeyLoadTest{}).(string); ok {
+			ctx = metadata.AppendToOutgoingContext(ctx, LoadTestHeaderName, loadTest)
+		}
+
+		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
@@ -181,12 +226,67 @@ func MustMapEnv(target *string, envKey string) {
 
 func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
-	_, cancel := context.WithTimeout(ctx, time.Second*3)
-	defer cancel()
 	*conn, err = grpc.NewClient(addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()))
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+		grpc.WithUnaryInterceptor(LoadTestInterceptor()))
 	if err != nil {
 		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
 	}
+}
+
+func ContextWithLoadTest(ctx context.Context, loadTest string) context.Context {
+	return context.WithValue(ctx, CtxKeyLoadTest{}, loadTest)
+}
+
+func IsLoadTest(ctx context.Context) bool {
+	if loadTest, ok := ctx.Value(CtxKeyLoadTest{}).(string); ok && loadTest == "true" {
+		return true
+	}
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok && len(md[LoadTestHeaderName]) > 0 {
+		if md[LoadTestHeaderName][0] == "true" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func GenerateSystemToken(serviceName string, roles []string) (string, error) {
+	if len(systemJWTSecret) == 0 {
+		return "", fmt.Errorf("SYSTEM_JWT_SECRET not set")
+	}
+
+	claims := SystemClaims{
+		ServiceName: serviceName,
+		Roles:       roles,
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
+			Issuer:    "system",
+			Subject:   serviceName,
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(systemJWTSecret)
+}
+
+func ValidateSystemToken(tokenString string) (*SystemClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &SystemClaims{}, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return systemJWTSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*SystemClaims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, fmt.Errorf("invalid system token")
 }

@@ -181,3 +181,7 @@ class UserBehavior(TaskSet):
 
 class WebsiteUser(FastHttpUser):
     tasks = [UserBehavior]
+
+    default_headers = {
+        "x-load-test": "true"
+    }

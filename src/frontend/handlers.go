@@ -179,6 +179,7 @@ func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Req
 type Product struct {
 	Item        *productcatalogpb.Product
 	Stock       int64
+	Severity    string
 	Reorderable bool
 }
 
@@ -234,10 +235,13 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 			if cp == nil || cp.Item == nil {
 				continue
 			}
+			severity := severityFromStock(cp.Stock)
+
 			if slices.Contains(categoryAccess, shared.CategoryAccess{shared.CategoryAll, shared.PermissionWrite}) {
 				cp = &Product{
 					Item:        cp.Item,
 					Stock:       cp.Stock,
+					Severity:    severity,
 					Reorderable: true,
 				}
 				tmp = append(tmp, cp)
@@ -250,6 +254,7 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 					cp = &Product{
 						Item:        cp.Item,
 						Stock:       cp.Stock,
+						Severity:    severity,
 						Reorderable: true,
 					}
 				} else if !slices.Contains(categoryAccess, targetRO) {
@@ -618,11 +623,12 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	product := struct {
-		Item    *productcatalogpb.Product
-		Price   *commonpb.Money
-		Ratings *Ratings
-		Stock   int64
-	}{p, price, nil, -1}
+		Item     *productcatalogpb.Product
+		Price    *commonpb.Money
+		Ratings  *Ratings
+		Stock    int64
+		Severity string
+	}{p, price, nil, -1, ""}
 
 	if fe.ratingSvcAddr != "" {
 		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", fe.ratingSvcAddr, p.GetId()))
@@ -646,6 +652,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		} else {
 			log.WithField("stock", stock).Debug("got stock from inventory service")
 			product.Stock = stock
+			product.Severity = severityFromStock(stock)
 		}
 	}
 
@@ -834,7 +841,23 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	totalPrice = money.Must(money.Sum(totalPrice, *shippingCost))
 	year := time.Now().Year()
 
+	var errorMessage string
+
+	if cookie, err := r.Cookie("order_error"); err == nil {
+		errorMessage = cookie.Value
+
+		clearCookie := &http.Cookie{
+			Name:     "order_error",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, clearCookie)
+	}
+
 	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, map[string]interface{}{
+		"error":            errorMessage,
 		"currencies":       currencies,
 		"recommendations":  recommendations,
 		"cart_size":        cartSize(cart),
@@ -906,6 +929,24 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 				Country:       payload.Country},
 		})
 	if err != nil {
+		errStr := err.Error()
+
+		businessFailure := strings.Contains(errStr, "code = Aborted") &&
+			strings.Contains(errStr, "insufficient stock or payment failed")
+
+		if businessFailure {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "order_error",
+				Value:    "Checkout failed: Insufficient stock or payment error.",
+				Path:     "/",
+				MaxAge:   60,
+				HttpOnly: true,
+			})
+
+			http.Redirect(w, r, "/cart", http.StatusSeeOther)
+			return
+		}
+
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to complete the order"), http.StatusInternalServerError)
 		return
 	}
@@ -1201,5 +1242,18 @@ func calculateOrderTotal(items []*checkoutpb.OrderItem) *commonpb.Money {
 		CurrencyCode: currency,
 		Units:        totalUnits,
 		Nanos:        int32(totalNanos),
+	}
+}
+
+func severityFromStock(stock int64) string {
+	switch {
+	case stock == 0:
+		return "critical"
+	case stock < 5:
+		return "critical"
+	case stock < 10:
+		return "low"
+	default:
+		return "available"
 	}
 }

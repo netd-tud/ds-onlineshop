@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"slices"
 	"strings"
@@ -22,6 +23,8 @@ import (
 
 type inventory struct {
 	inventorypb.UnimplementedInventoryServiceServer
+
+	stockMu   sync.Mutex
 	inventory inventorypb.ListInventoryResponse
 
 	productCatalogSvcAddr string
@@ -37,6 +40,9 @@ type inventory struct {
 
 	xaMu      sync.Mutex
 	xaPending map[string]*inventorypb.InventoryProduct
+
+	resolvedAlerts   map[string]time.Time
+	resolvedAlertTTL time.Duration
 }
 
 func (p *inventory) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
@@ -62,6 +68,22 @@ func (p *inventory) GetInventoryProduct(ctx context.Context, req *inventorypb.Ge
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
+func (p *inventory) applyStockDeltaLocked(productID string, delta int64) (*inventorypb.InventoryProduct, error) {
+	for _, product := range p.parseInventory() {
+		if product.GetId() != productID {
+			continue
+		}
+		newStock := product.Stock + delta
+		if newStock < 0 {
+			return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", productID)
+		}
+		product.Stock = newStock
+		p.publishStockEventOverMQTT(p.mqttBrokerAddr, product)
+		return product, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "no product with ID %s", productID)
+}
+
 func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
 	claims, ok := shared.GetClaims(ctx)
 	log.Infof("ChangeInventoryProductStock called for product with ID %s with claims: %v", req.Id, claims)
@@ -74,20 +96,21 @@ func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *invent
 		return nil, status.Error(codes.Unauthenticated, "user not allowed to modify product")
 	}
 
-	inventory := p.parseInventory()
-	for _, product := range inventory {
-		if req.Id == product.Id {
-			newStock := product.Stock + req.Delta
-			if newStock >= 0 {
-				product.Stock = newStock
-				p.publishStockEventOverMQTT(p.mqttBrokerAddr, product)
-				return &inventorypb.ChangeInventoryProductStockResponse{Product: product}, nil
-			} else {
-				return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", req.Id)
-			}
-		}
+	p.stockMu.Lock()
+	defer p.stockMu.Unlock()
+
+	product, err := p.applyStockDeltaLocked(req.GetId(), req.GetDelta())
+	if err != nil {
+		return nil, err
 	}
-	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+	return &inventorypb.ChangeInventoryProductStockResponse{Product: product}, nil
+}
+
+func (p *inventory) CompensateChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
+	return p.ChangeInventoryProductStock(ctx, &inventorypb.ChangeInventoryProductStockRequest{
+		Id:    req.GetId(),
+		Delta: -req.GetDelta(),
+	})
 }
 
 func (p *inventory) SetInventoryProductStock(ctx context.Context, req *inventorypb.SetInventoryProductStockRequest) (*inventorypb.SetInventoryProductStockRequestResponse, error) {
@@ -158,6 +181,58 @@ func (p *inventory) DeleteInventoryProduct(ctx context.Context, req *inventorypb
 		}
 	}
 	return &inventorypb.DeleteInventoryProductResponse{}, nil
+}
+
+func (p *inventory) ResolveStockAlert(ctx context.Context, req *inventorypb.ResolveStockAlertRequest) (*inventorypb.ResolveStockAlertResponse, error) {
+	claims, ok := shared.GetClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "failed to resolve user identity data from context")
+	}
+	if !p.userAllowedToModifyProduct(ctx, req.GetProductId(), *claims) {
+		return nil, status.Error(codes.Unauthenticated, "user not allowed to modify product")
+	}
+	if req.GetReorderAmount() <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "reorder_amount must be positive")
+	}
+	if req.GetCreatedAt() == nil {
+		return nil, status.Error(codes.InvalidArgument, "created_at is required")
+	}
+
+	key := fmt.Sprintf("%s|%d", req.GetProductId(), req.GetCreatedAt().AsTime().Unix())
+
+	p.stockMu.Lock()
+	defer p.stockMu.Unlock()
+
+	if _, seen := p.resolvedAlerts[key]; seen {
+		product, err := p.GetInventoryProduct(ctx, &inventorypb.GetInventoryProductRequest{Id: req.GetProductId()})
+		if err != nil {
+			return nil, err
+		}
+		return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: true}, nil
+	}
+
+	product, err := p.applyStockDeltaLocked(req.GetProductId(), req.GetReorderAmount())
+	if err != nil {
+		return nil, err
+	}
+	p.resolvedAlerts[key] = time.Now()
+
+	return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: false}, nil
+}
+
+func (p *inventory) reapResolvedAlerts(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for range ticker.C {
+		cutoff := time.Now().Add(-p.resolvedAlertTTL)
+		p.stockMu.Lock()
+		for key, resolvedAt := range p.resolvedAlerts {
+			if resolvedAt.Before(cutoff) {
+				delete(p.resolvedAlerts, key)
+			}
+		}
+		p.stockMu.Unlock()
+	}
 }
 
 func (p *inventory) CompensateCreateNewInventoryProduct(ctx context.Context, req *inventorypb.CreateNewInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {
@@ -252,6 +327,13 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 }
 
 func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims shared.UserClaims) bool {
+	for _, role := range claims.Roles {
+		if role == "SYSTEM_SERVICE" || role == "ADMIN" {
+			log.WithField("role", role).Info("User has system service or admin role, allowing modification")
+			return true
+		}
+	}
+
 	categories := shared.ClaimsToCategories(&claims)
 	log.WithField("categories", categories).Info("Checking user permissions")
 

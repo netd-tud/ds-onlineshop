@@ -49,6 +49,17 @@ class HipsterShopServer {
     }
   }
 
+  static CompensateChargeServiceHandler(call, callback) {
+    try {
+      logger.info(`PaymentService#CompensateCharge invoked for amount ${call.request.amount.units}`);
+      // no actual refund logic implemented, just return a stub transaction id
+      callback(null, { transaction_id: "refund-stub-id" });
+    } catch (err) {
+      console.warn(err);
+      callback(err);
+    }
+  }
+
   static CheckHandler(call, callback) {
     callback(null, { status: 'SERVING' });
   }
@@ -88,7 +99,8 @@ class HipsterShopServer {
     this.server.addService(
       hipsterShopPackage.PaymentService.service,
       {
-        charge: HipsterShopServer.ChargeServiceHandler.bind(this)
+        charge: HipsterShopServer.ChargeServiceHandler.bind(this),
+        compensateCharge: HipsterShopServer.CompensateChargeServiceHandler.bind(this)
       }
     );
 

@@ -1,22 +1,11 @@
 {{ define "inventoryStockProduct" }}
-{{ if ge .Stock 0 }}
 <div class="product-stock">
-  {{ if eq .Stock 0 }}
-  <span class="stock-badge stock-badge--empty">
+  <span class="stock-badge stock-badge--{{ .Severity }}">
     <span class="stock-badge__dot"></span>
-    Out of stock
+    {{ if eq .Severity "empty" }}Out of Stock{{ end }}
+    {{ if eq .Severity "critical" }}Only {{ .Stock }} left{{ end }}
+    {{ if eq .Severity "low" }}Still {{ .Stock }} left{{ end }}
+    {{ if eq .Severity "available" }}{{ .Stock }} available{{ end }}
   </span>
-  {{ else if lt .Stock 5 }}
-  <span class="stock-badge stock-badge--low">
-    <span class="stock-badge__dot"></span>
-    Only {{ .Stock }} left
-  </span>
-  {{ else }}
-  <span class="stock-badge stock-badge--available">
-    <span class="stock-badge__dot"></span>
-    {{ .Stock }} available
-  </span>
-  {{ end }}
 </div>
-{{ end }}
 {{ end }}

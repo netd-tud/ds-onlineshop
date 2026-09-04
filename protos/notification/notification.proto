@@ -4,12 +4,14 @@ package hipstershop;
 
 option go_package = "github.com/netd-tud/ds-onlineshop/proto/notification;notificationpb";
 
+import "google/protobuf/timestamp.proto";
 import "checkout/checkout.proto";
 
 // ------------Notification service------------------
 
 service NotificationService {
   rpc ListOpenAlerts(ListOpenAlertsRequest) returns (ListOpenAlertsResponse) {}
+  rpc StreamStockAlerts(StreamStockAlertsRequest) returns (stream StockAlert) {}
   rpc ListRecentOrdersByCurrency(ListRecentOrdersByCurrencyRequest) returns (ListRecentOrdersByCurrencyResponse) {}
 }
 
@@ -20,9 +22,12 @@ message StockAlert {
   repeated string category = 2;
   int64 stock = 3;
   string severity = 4;
+  google.protobuf.Timestamp created_at = 5;
 }
 
 message ListOpenAlertsResponse { repeated StockAlert alerts = 1; }
+
+message StreamStockAlertsRequest { repeated string categories = 1; }
 
 message ListRecentOrdersByCurrencyRequest { repeated string currencies = 1; }
 

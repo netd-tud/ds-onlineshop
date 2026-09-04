@@ -41,6 +41,7 @@ protoc --proto_path=$protodir \
     $protodir/cart/cart.proto \
     $protodir/currency/currency.proto \
     $protodir/email/email.proto \
-    $protodir/shipping/shipping.proto
+    $protodir/shipping/shipping.proto \
+    $protodir/inventory/inventory.proto
 
 # [END gke_checkoutservice_genproto]

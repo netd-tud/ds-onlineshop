@@ -39,6 +39,11 @@ spec:
               value: "productcatalogservice:3550"
             - name: MQTT_BROKER_ADDR
               value: "mqtt-broker:1883"
+            - name: SYSTEM_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: system-jwt-secret
+                  key: secret
           readinessProbe:
             grpc:
               port: 50002

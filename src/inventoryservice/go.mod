@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/golang/protobuf v1.5.4
-	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260807085605-eb2bf4f46f69
+	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260902103343-b27eee6d825c
 	github.com/sirupsen/logrus v1.9.4
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.70.0
 	go.opentelemetry.io/otel v1.45.0

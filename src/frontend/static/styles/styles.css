@@ -709,8 +709,13 @@ the rules below could be extracted.
   width: 80px;
 }
 
+.product-action-row {
+  margin-top: 15px;
+  width: 100%;
+}
+
 .product-stock {
-  display: inline;
+  display: inline-flex;
   align-items: center;
 }
 
