@@ -2,6 +2,8 @@
   "username": "admin",
   "password": "admin",
 
+  "connection-type": "mqtt",
+
   "dt-function": "naive",
 
   "action": "update",
