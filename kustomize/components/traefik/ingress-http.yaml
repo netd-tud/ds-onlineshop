@@ -36,3 +36,42 @@ spec:
                 name: prometheus
                 port:
                   number: 9090
+---
+# ==========================================
+# DTM UI (Dedicated Port 30789 HTTPS)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dtm-ui-route
+  namespace: default
+spec:
+  entryPoints:
+    - dtmui
+  routes:
+    - match: Host(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      kind: Rule
+      services:
+        - name: dtm-svc
+          port: 36789
+  tls:
+    secretName: vm1-tls-cert
+---
+# ==========================================
+# Flink Job UI (Dedicated Port 30181 HTTPS)
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: flink-ui
+  namespace: flink
+spec:
+  entryPoints:
+    - flinkui
+  routes:
+    - match: Host(`ds-exercise-01.netd.cs.tu-dresden.de`)
+      services:
+        - name: flink-jobmanager
+          port: 8081
+  tls:
+    secretName: vm1-tls-cert
