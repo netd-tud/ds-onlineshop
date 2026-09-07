@@ -5,8 +5,6 @@ It provisions an OpenLDAP server for identity storage, a Web Management UI, and 
 that processes user credentials via a Search-and-Bind workflow and issues stateless
 JSON Web Tokens (JWT) for role-based access control.
 
-## Deployment Instructions
-From the `kustomize/` folder at the root level of this repository, execute these commands:
 
 ### Generate Local Cryptographic Key Pair
 ```bash
@@ -17,9 +15,12 @@ openssl genpkey -algorithm RSA -out certs/auth_private.pem -pkeyopt rsa_keygen_b
 openssl rsa -pubout -in certs/auth_private.pem -out certs/auth_public.pem
 ```
 
+## Deployment Instructions
+From inside your desired overlay directory e.g. `kustomize/overlays/k3s` folder at the root level of this repository, execute these commands:
+
 ### Enable the Component
 ```bash
-kustomize edit add component components/auth
+kustomize edit add component ../../components/auth
 ```
 
 This will update the `kustomize/kustomization.yaml` file which could be similar to:
@@ -28,9 +29,9 @@ This will update the `kustomize/kustomization.yaml` file which could be similar 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- base
+- ../../base
 components:
-- components/auth
+- ../../components/auth
 ```
 
 You can locally render these manifests by running `kubectl kustomize .` as well as deploying them by running `kubectl apply -k .`.

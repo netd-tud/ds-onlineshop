@@ -8,21 +8,21 @@ Note: This Kustomize component has not been tested with [other Kustomize Compone
 
 ## Use this component
 
-From the `kustomize/` folder at the root level of this repository, execute this command:
+From inside your desired overlay directory e.g. `kustomize/overlays/k3s` folder at the root level of this repository, execute this command:
 
 ```bash
-kustomize edit add component components/without-loadgenerator
+kustomize edit add component ../../components/without-loadgenerator
 ```
 
-This will update the `kustomize/kustomization.yaml` file which could be similar to:
+This will update the `kustomization.yaml` file which could be similar to:
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- base
+- ../../base
 components:
-- components/without-loadgenerator
+- ../../components/without-loadgenerator
 ```
 
 You can then deploy Online Boutique and this component to your cluster using `kubectl apply -k .`. If you just want to render the YAML manifest (without deploying to your cluster), run `kubectl kustomize .`.
