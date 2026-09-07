@@ -1,9 +1,12 @@
-**Online Boutique** is a cloud-first microservices demo application.  The application is a
+**Online Boutique** is a cloud-first microservices demo application. The application is a
 web-based e-commerce app where users can browse items, add them to the cart, and purchase them.
+
+Furthermore, employees can log in to see the list of inventory items and their stock levels as well as a list of recent
+orders. Based on the employees roles, only a selction of orders and items is shown.
 
 ## Architecture
 
-**Online Boutique** is composed of 14 microservices, written in different languages,
+**Online Boutique** is composed of 16 microservices, written in different languages,
 that communicate with each other mostly over gRPC. These business services are complemented by several
 infrastructure services, along with load generators used to demonstrate the application's behavior under load.
 
