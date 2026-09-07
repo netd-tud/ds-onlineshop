@@ -6,7 +6,7 @@
 
   "dt-function": "naive",
 
-  "action": "update",
+  "action": "create",
 
   "create_product": {
     "name": "Hat",
