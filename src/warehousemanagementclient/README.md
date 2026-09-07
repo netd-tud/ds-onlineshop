@@ -1,11 +1,11 @@
-# Warehouse Management Client (Python)
+# Warehouse Management Client
 
 The Warehouse Management Client connects to the warehousemanagement to execute operations and is supposed to be
 an example/solution of a possible gRPC client implementation.
 
 ## Proto Files
 
-Generated proto files are placed inside `src/warehousemanagementclient-python/proto` after running `genproto.sh`:
+Generated proto files are placed inside `src/warehousemanagementclient/src/warehousemanagementclient/genproto` after running `genproto.sh`:
 
 ```
 ./genproto.sh
@@ -23,9 +23,13 @@ The three options are:
 - saga (use [dtm](../../kustomize/components/dtm) and the saga pattern)
 - xa (use [dtm](../../kustomize/components/dtm) and the xa pattern)
 
-After configuring and going to `src/warehousemanagementclient-python`, run:
+After configuring and going to `src/warehousemanagementclient`, run:
 
-```
-source venv/bin/activate
+```bash
+source .venv/bin/activate
 python client.py
+
+# or if you have uv installed
+
+uv run warehousemanagementclient
 ```

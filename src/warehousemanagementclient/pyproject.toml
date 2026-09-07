@@ -1,0 +1,22 @@
+[project]
+name = "warehousemanagementclient"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Florian", email = "florian.zenkel@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "grpcio>=1.83.1",
+    "grpcio-tools>=1.83.1",
+    "paho-mqtt>=2.1.0",
+    "setuptools>=84.0.0",
+]
+
+[project.scripts]
+warehousemanagementclient = "warehousemanagementclient.main:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"

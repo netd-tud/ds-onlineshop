@@ -3,12 +3,12 @@ import logging
 import sys
 import grpc
 
-import proto.common.common_pb2 as money_pb
-import proto.inventory.inventory_pb2 as inventory_pb
-import proto.warehousemanagement.warehousemanagement_pb2 as whm_pb
-import proto.warehousemanagement.warehousemanagement_pb2_grpc as whm_pb_grpc
-import proto.auth.auth_pb2 as auth_pb
-import proto.auth.auth_pb2_grpc as auth_pb_grpc
+from .genproto.common import common_pb2 as money_pb
+from .genproto.inventory import inventory_pb2 as inventory_pb
+from .genproto.warehousemanagement import warehousemanagement_pb2 as whm_pb
+from .genproto.warehousemanagement import warehousemanagement_pb2_grpc as whm_pb_grpc
+from .genproto.auth import auth_pb2 as auth_pb
+from .genproto.auth import auth_pb2_grpc as auth_pb_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
