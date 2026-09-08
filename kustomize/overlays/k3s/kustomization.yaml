@@ -4,8 +4,6 @@ resources:
 - ../../base
 
 components:
-- ../../components/container-images-registry
-
 - ../../components/traefik
 
 - ../../components/ratingservice
