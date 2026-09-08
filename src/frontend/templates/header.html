@@ -87,18 +87,23 @@
                     </a>
                     {{ end }}
 
+                    {{ if $.notification_enabled }}
                     <a href="{{ $.baseUrl }}/notifications" class="notifications-link">
                       <img src="{{ $.baseUrl }}/static/icons/NotificationIcon.svg" alt="Notification Icon" class="logo" title="Notifications" />
                     </a>
+                    {{ end }}
 
+                    {{ if $.inventory_enabled }}
                     <a href="{{ $.baseUrl }}/inventory" class="inventory-link">
                       <img src="{{ $.baseUrl }}/static/icons/InventoryIcon.svg" alt="Inventory icon" class="logo" title="Inventory" />
                     </a>
+                    {{ end }}
 
+                    {{ if $.auth_enabled }}
                     <a href="{{ $.baseUrl }}/profile" class="profile-link">
                       <img src="{{ $.baseUrl }}/static/icons/AccountIcon.svg" alt="Account icon" class="logo" title="Account" />
                     </a>
-
+                    {{ end }}
 
                     <a href="{{ $.baseUrl }}/cart" class="cart-link">
                         <img src="{{ $.baseUrl }}/static/icons/Hipster_CartIcon.svg" alt="Cart icon" class="logo" title="Cart" />

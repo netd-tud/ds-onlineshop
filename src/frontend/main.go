@@ -181,14 +181,26 @@ func main() {
 	shared.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 	shared.MustConnGRPC(ctx, &svc.checkoutSvcConn, svc.checkoutSvcAddr)
 	shared.MustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
-	if svc.inventorySvcAddr != "" {
-		shared.MustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
-	}
+
 	if svc.authSvcAddr != "" {
 		shared.MustConnGRPC(ctx, &svc.authSvcConn, svc.authSvcAddr)
+		authEnabled = true
+	}
+	if svc.inventorySvcAddr != "" {
+		if authEnabled == false {
+			log.Info("Inventory service can't be enabled without auth service. Please provide AUTH_SERVICE_ADDR.")
+			os.Exit(1)
+		}
+		shared.MustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+		inventoryEnabled = true
 	}
 	if svc.notificationSvcAddr != "" {
+		if authEnabled == false {
+			log.Info("Notification service can't be enabled without auth service. Please provide AUTH_SERVICE_ADDR.")
+			os.Exit(1)
+		}
 		shared.MustConnGRPC(ctx, &svc.notificationSvcConn, svc.notificationSvcAddr)
+		notificationEnabled = true
 	}
 
 	r := mux.NewRouter()
@@ -208,12 +220,22 @@ func main() {
 	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
 	r.HandleFunc(baseUrl+"/product-meta/{ids}", svc.getProductByID).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/bot", svc.chatBotHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl+"/profile", svc.profileHandler).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodGet, http.MethodPost)
-	r.HandleFunc(baseUrl+"/account", svc.accountHandler).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl+"/inventory", svc.inventoryHandler).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl+"/reorder", svc.reorderHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl+"/notifications", svc.notificationHandler).Methods(http.MethodGet)
+
+	if authEnabled == true {
+		log.Warn("Auth service is enabled. Login, profile and account pages are available.")
+		r.HandleFunc(baseUrl+"/profile", svc.profileHandler).Methods(http.MethodGet)
+		r.HandleFunc(baseUrl+"/login", svc.loginHandler).Methods(http.MethodGet, http.MethodPost)
+		r.HandleFunc(baseUrl+"/account", svc.accountHandler).Methods(http.MethodGet)
+	}
+	if inventoryEnabled == true {
+		log.Warn("Inventory service is enabled. Inventory page and reorders are available.")
+		r.HandleFunc(baseUrl+"/inventory", svc.inventoryHandler).Methods(http.MethodGet)
+		r.HandleFunc(baseUrl+"/reorder", svc.reorderHandler).Methods(http.MethodPost)
+	}
+	if notificationEnabled == true {
+		log.Warn("Notification service is enabled. Notification pages are available.")
+		r.HandleFunc(baseUrl+"/notifications", svc.notificationHandler).Methods(http.MethodGet)
+	}
 
 	analyticsPub := analytics.NewPublisher("frontend-service")
 	defer func() {

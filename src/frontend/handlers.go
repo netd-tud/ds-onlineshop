@@ -71,8 +71,13 @@ var (
 	frontendMessage  = strings.TrimSpace(os.Getenv("FRONTEND_MESSAGE"))
 	isCymbalBrand    = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
 	assistantEnabled = "true" == strings.ToLower(os.Getenv("ENABLE_ASSISTANT"))
-	templates        = template.Must(template.New("").
-				Funcs(template.FuncMap{
+
+	authEnabled         = false
+	inventoryEnabled    = false
+	notificationEnabled = false
+
+	templates = template.Must(template.New("").
+			Funcs(template.FuncMap{
 			"renderMoney":         renderMoney,
 			"renderCurrencyLogo":  renderCurrencyLogo,
 			"calculateOrderTotal": calculateOrderTotal,
@@ -547,6 +552,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Warn("Post-login alerts: %v", postLoginAlerts)
 
+	log.Warn("Home handler called, auth is ", authEnabled)
 	if err := templates.ExecuteTemplate(w, "home", injectCommonTemplateData(r, map[string]interface{}{
 		"show_currency":     true,
 		"currencies":        currencies,
@@ -1127,19 +1133,22 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 	}
 }
 
-func injectCommonTemplateData(r *http.Request, payload map[string]interface{}) map[string]interface{} {
-	data := map[string]interface{}{
-		"session_id":        sessionID(r),
-		"request_id":        r.Context().Value(ctxKeyRequestID{}),
-		"user_currency":     currentCurrency(r),
-		"platform_css":      plat.css,
-		"platform_name":     plat.provider,
-		"is_cymbal_brand":   isCymbalBrand,
-		"assistant_enabled": assistantEnabled,
-		"deploymentDetails": deploymentDetailsMap,
-		"frontendMessage":   frontendMessage,
-		"currentYear":       time.Now().Year(),
-		"baseUrl":           baseUrl,
+func injectCommonTemplateData(r *http.Request, payload map[string]any) map[string]any {
+	data := map[string]any{
+		"session_id":           sessionID(r),
+		"request_id":           r.Context().Value(ctxKeyRequestID{}),
+		"user_currency":        currentCurrency(r),
+		"platform_css":         plat.css,
+		"platform_name":        plat.provider,
+		"is_cymbal_brand":      isCymbalBrand,
+		"assistant_enabled":    assistantEnabled,
+		"auth_enabled":         authEnabled,
+		"inventory_enabled":    inventoryEnabled,
+		"notification_enabled": notificationEnabled,
+		"deploymentDetails":    deploymentDetailsMap,
+		"frontendMessage":      frontendMessage,
+		"currentYear":          time.Now().Year(),
+		"baseUrl":              baseUrl,
 	}
 
 	for k, v := range payload {
