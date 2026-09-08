@@ -150,6 +150,8 @@ func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 		CreatedAt: createdAt,
 	}
 
+	log.Info("New stock alert: ", alert.GetProductId(), " - Severity: ", alert.GetSeverity(), " - Stock: ", alert.GetStock())
+
 	n.alerts[p.Id] = alert
 
 	n.triggerNewAlert(alert)

@@ -15,6 +15,7 @@ type OrderQueue struct {
 func NewOrderQueue(capacity int) *OrderQueue {
 	return &OrderQueue{
 		orders:   make([]*checkoutpb.OrderResult, capacity),
+		seen:     make(map[string]struct{}),
 		capacity: capacity,
 	}
 }
@@ -24,6 +25,8 @@ func (q *OrderQueue) Push(order *checkoutpb.OrderResult) {
 	if _, exists := q.seen[orderID]; exists {
 		return
 	}
+
+	log.Info("Adding order to queue: ", orderID)
 
 	if q.count == q.capacity {
 		oldOrder := q.orders[q.next]
