@@ -82,8 +82,16 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *checkoutpb.Place
 		total = money.Must(money.Sum(total, multPrice))
 	}
 
-	if err := cs.placeOrderSaga(prep.orderItems, &total, req.CreditCard); err != nil {
-		return nil, status.Errorf(codes.Internal, "order saga failed: %+v", err)
+	if cs.inventorySvcAddr != "" && cs.dtmSvcAddr != "" {
+		if err := cs.placeOrderSaga(prep.orderItems, &total, req.CreditCard); err != nil {
+			return nil, status.Errorf(codes.Internal, "order saga failed: %+v", err)
+		}
+	} else {
+		txID, err := cs.chargeCard(ctx, &total, req.CreditCard)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to charge card: %+v", err)
+		}
+		log.Infof("payment went through (transaction_id: %s)", txID)
 	}
 
 	shippingTrackingID, err := cs.shipOrder(ctx, req.Address, prep.cartItems)

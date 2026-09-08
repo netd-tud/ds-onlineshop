@@ -122,14 +122,6 @@ func main() {
 	shared.MustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 	shared.MustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
 	shared.MustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
-	shared.MustMapEnv(&svc.inventorySvcAddr, "INVENTORY_SERVICE_ADDR")
-	shared.MustMapEnv(&svc.dtmSvcAddr, "DTM_SERVICE_ADDR")
-
-	svc.mqttBrokerAddr = os.Getenv("MQTT_BROKER_ADDR")
-	log.Infof("Broker Addr: %s", svc.mqttBrokerAddr)
-	if svc.mqttBrokerAddr != "" {
-		svc.mqttClient = svc.initializeMQTTClient()
-	}
 
 	shared.MustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -137,8 +129,29 @@ func main() {
 	shared.MustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	shared.MustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
 	shared.MustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
-	shared.MustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
-	shared.MustConnGRPC(ctx, &svc.dtmSvcConn, svc.dtmSvcAddr)
+
+	svc.dtmSvcAddr = os.Getenv("DTM_SERVICE_ADDR")
+	if svc.dtmSvcAddr != "" {
+		shared.MustConnGRPC(ctx, &svc.dtmSvcConn, svc.dtmSvcAddr)
+	}
+
+	svc.inventorySvcAddr = os.Getenv("INVENTORY_SERVICE_ADDR")
+	if svc.inventorySvcAddr != "" {
+		if svc.dtmSvcAddr == "" {
+			log.Error("Invalid configuration: INVENTORY_SERVICE_ADDR requires DTM_SERVICE_ADDR to enable distributed transactions. Set both variables or leave both unset.")
+			return
+		}
+		log.Warn("INVENTORY_SERVICE_ADDR is set, will decrement inventory stock on checkout.")
+		shared.MustConnGRPC(ctx, &svc.inventorySvcConn, svc.inventorySvcAddr)
+	} else {
+		log.Warn("INVENTORY_SERVICE_ADDR is not set, will not decrement inventory stock on checkout.")
+	}
+
+	svc.mqttBrokerAddr = os.Getenv("MQTT_BROKER_ADDR")
+	log.Infof("Broker Addr: %s", svc.mqttBrokerAddr)
+	if svc.mqttBrokerAddr != "" {
+		svc.mqttClient = svc.initializeMQTTClient()
+	}
 
 	analyticsProductsPub := analytics.NewPublisher("checkout-service", "product-events")
 	defer func() {
