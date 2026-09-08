@@ -7,6 +7,11 @@ TaskManager worker nodes, and an automated SQL Runner Job to submit continuous F
 ### Check Running Jobs:
 Port `:30181` to view active streaming jobs in the Flink Web UI
 
+## Prerequisites & Dependencies
+This service requires a running Kafka instance to consume event streams.
+- `components/kafka` (kustomize component)
+  - Topics needed: `product-events`, `order-events`
+
 ## Quick Start
 
 From inside your desired overlay directory e.g. `kustomize/overlays/k3s` folder at the root level of this repository, execute this command:
@@ -23,6 +28,7 @@ kind: Kustomization
 resources:
 - ../../base
 components:
+- ../../components/kafka
 - ../../components/flink
 ```
 

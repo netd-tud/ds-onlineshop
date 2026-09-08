@@ -9,6 +9,10 @@ All three versions can be access over the following ports
 - `30052`: Saga Implementation
 - `30053`: XA Implementation
 
+## Prerequisites & Dependencies
+This service requires a running dtm instance to register distributed transactions.
+- `components/dtm` (kustomize component)
+
 ## Quick Start
 
 From inside your desired overlay directory e.g. `kustomize/overlays/k3s` folder at the root level of this repository, execute this command:
@@ -25,6 +29,7 @@ kind: Kustomization
 resources:
 - ../../base
 components:
+- ../../components/dtm
 - ../../components/warehousemanagement
 ```
 

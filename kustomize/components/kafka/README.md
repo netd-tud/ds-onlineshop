@@ -33,3 +33,6 @@ kubectl apply -k kustomize/infra/strimzi-operator
 ```
 
 Microservices reach kafka at this address: `analytics-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092`
+
+The kafka component is mainly supposed to be used in combination with the [flink component](../flink) to aggregate
+streaming event data for real-time analytical insights .

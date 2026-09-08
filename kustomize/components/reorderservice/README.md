@@ -3,6 +3,10 @@
 This component adds a reorderservice, which connects to the notificationservice to retrieve StockAlerts and reorder products
 by using an RPC in inventoryservice.
 
+## Prerequisites & Dependencies
+This service requires a running notificationservice instance stream stock alerts.
+- `components/notificationservice` (kustomize component)
+
 ## Quick Start
 
 From inside your desired overlay directory e.g. `kustomize/overlays/k3s` folder at the root level of this repository, execute this command:
@@ -19,6 +23,7 @@ kind: Kustomization
 resources:
 - ../../base
 components:
+- ../../components/notificationservice
 - ../../components/reorderservice
 ```
 
