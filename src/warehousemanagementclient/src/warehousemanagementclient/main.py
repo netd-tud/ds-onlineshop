@@ -6,12 +6,12 @@ import sys
 import grpc
 import paho.mqtt.client as mqtt
 
-from .genproto.common import common_pb2 as money_pb
-from .genproto.inventory import inventory_pb2 as inventory_pb
-from .genproto.warehousemanagement import warehousemanagement_pb2 as whm_pb
-from .genproto.warehousemanagement import warehousemanagement_pb2_grpc as whm_pb_grpc
-from .genproto.auth import auth_pb2 as auth_pb
-from .genproto.auth import auth_pb2_grpc as auth_pb_grpc
+from warehousemanagementclient.genproto.common import common_pb2 as money_pb
+from warehousemanagementclient.genproto.inventory import inventory_pb2 as inventory_pb
+from warehousemanagementclient.genproto.warehousemanagement import warehousemanagement_pb2 as whm_pb
+from warehousemanagementclient.genproto.warehousemanagement import warehousemanagement_pb2_grpc as whm_pb_grpc
+from warehousemanagementclient.genproto.auth import auth_pb2 as auth_pb
+from warehousemanagementclient.genproto.auth import auth_pb2_grpc as auth_pb_grpc
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 

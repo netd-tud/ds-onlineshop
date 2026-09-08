@@ -31,7 +31,7 @@ After configuring and going to `src/warehousemanagementclient`, run:
 
 ```bash
 source .venv/bin/activate
-python client.py
+warehousemanagementclient
 
 # or if you have uv installed
 
