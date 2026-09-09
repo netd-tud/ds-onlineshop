@@ -112,12 +112,10 @@ def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> s
         return None
 
 
-def mqtt_execution(config=None):
-    if config.get("action", "").lower().strip() != "create":
-        logging.error("MQTT: Only 'create' action is supported for MQTT execution.")
-        return
-
+def mqtt_execution(config: Dict[str, Any]):
+    action = config.get("action", "").lower().strip()
     logging.info("--- MQTT PUBLISHING ---")
+
     try:
         mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="warehousemanagement_client")
     except AttributeError:
@@ -133,35 +131,48 @@ def mqtt_execution(config=None):
     logging.info("MQTT: Connected successfully to broker")
 
     try:
-        create_topic = "inventory/create-item"
-        product_data = config.get("create_product", {}) if config else {}
-        price_data = product_data.get("price_usd", {})
-
-        new_product_payload = {
-            "name": product_data.get("name", ""),
-            "description": product_data.get("description", ""),
-            "price_usd": {
-                "currency_code": price_data.get("currency_code", ""),
-                "units": price_data.get("units", 0),
-                "nanos": price_data.get("nanos", 0),
-            },
-            "categories": product_data.get("categories", []),
-            "initial_stock": product_data.get("initial_stock", 0),
-        }
-
-        create_bytes = json.dumps(new_product_payload)
-        logging.info(
-            f"MQTT: Publishing creation request for '{new_product_payload['name']}' to topic '{create_topic}'...")
-        token = mqtt_client.publish(create_topic, create_bytes, qos=1)
-        token.wait_for_publish(timeout=5)
-
-        if token.is_published():
-            logging.info("MQTT: Creation request published successfully")
-        else:
-            logging.error("MQTT: Publishing creation failed")
+        if action == "create":
+            handle_create_mqtt(mqtt_client, config)
+        elif action == "update":
+            handle_update_mqtt(mqtt_client, config)
     finally:
         mqtt_client.loop_stop()
         mqtt_client.disconnect()
+        logging.info("MQTT: Disconnected from broker")
+
+
+def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any]):
+    create_topic = "inventory/create-item"
+    product_data = config.get("create_product", {}) if config else {}
+    price_data = product_data.get("price_usd", {})
+
+    new_product_payload = {
+        "name": product_data.get("name", ""),
+        "description": product_data.get("description", ""),
+        "price_usd": {
+            "currency_code": price_data.get("currency_code", ""),
+            "units": price_data.get("units", 0),
+            "nanos": price_data.get("nanos", 0),
+        },
+        "categories": product_data.get("categories", []),
+        "initial_stock": product_data.get("initial_stock", 0),
+    }
+
+    create_bytes = json.dumps(new_product_payload)
+    logging.info(
+        f"MQTT: Publishing creation request for '{new_product_payload['name']}' to topic '{create_topic}'...")
+    token = client.publish(create_topic, create_bytes, qos=1)
+    token.wait_for_publish(timeout=5)
+
+    if token.is_published():
+        logging.info("MQTT: Creation request published successfully")
+    else:
+        logging.error("MQTT: Publishing creation failed")
+
+
+def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any]):
+    logging.error("MQTT: Update action is not implemented.")
+    sys.exit(1)
 
 
 def main():
