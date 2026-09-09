@@ -2,12 +2,12 @@ package main
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"net"
 	"os"
 
 	"github.com/golang-jwt/jwt/v5"
 	authpb "github.com/netd-tud/ds-onlineshop/src/authservice/genproto/auth"
+	shared "github.com/netd-tud/ds-onlineshop/src/shared"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -27,7 +27,7 @@ type AuthServer struct {
 
 func main() {
 	var privateKeyPath string
-	mustMapEnv(&privateKeyPath, "JWT_PRIVATE_KEY_PATH")
+	shared.MustMapEnv(&privateKeyPath, "JWT_PRIVATE_KEY_PATH")
 
 	privKeyBytes, err := os.ReadFile(privateKeyPath)
 	if err != nil {
@@ -41,11 +41,11 @@ func main() {
 	svc := &AuthServer{
 		privateKey: privKey,
 	}
-	mustMapEnv(&svc.ldapURL, "LDAP_SERVICE_ADDR")
-	mustMapEnv(&svc.adminDN, "LDAP_ADMIN_DN")
-	mustMapEnv(&svc.adminPass, "LDAP_ADMIN_PASS")
-	mustMapEnv(&svc.baseDN, "LDAP_BASE_DN")
-	mustMapEnv(&svc.port, "PORT")
+	shared.MustMapEnv(&svc.ldapURL, "LDAP_SERVICE_ADDR")
+	shared.MustMapEnv(&svc.adminDN, "LDAP_ADMIN_DN")
+	shared.MustMapEnv(&svc.adminPass, "LDAP_ADMIN_PASS")
+	shared.MustMapEnv(&svc.baseDN, "LDAP_BASE_DN")
+	shared.MustMapEnv(&svc.port, "PORT")
 
 	log.Infof("Server Config: %s", svc)
 
@@ -63,12 +63,4 @@ func main() {
 	if err := srv.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-}
-
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		panic(fmt.Sprintf("environment variable %q not set", envKey))
-	}
-	*target = v
 }
