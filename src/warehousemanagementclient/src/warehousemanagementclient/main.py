@@ -46,18 +46,7 @@ def create_secure_channel(target_address: str) -> grpc.Channel:
     return grpc.secure_channel(target_address, credentials, options=options)
 
 
-def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str):
-    logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
-    with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
-        auth_stub = auth_pb_grpc.AuthServiceStub(channel)
-        jwt = receive_jwt(auth_stub, config)
-
-        if not jwt:
-            logging.error("Could not acquire JWT token. Exiting.")
-            sys.exit(1)
-
-        logging.info(f"Authenticated successfully. Token: {jwt[:5]}...{jwt[-5:]}")
-
+def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: str):
     logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
     with create_secure_channel(grpc_address) as channel:
         stub = whm_pb_grpc.WarehouseManagementStub(channel)
@@ -134,7 +123,7 @@ def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> s
         return None
 
 
-def mqtt_execution(config: Dict[str, Any]):
+def mqtt_execution(config: Dict[str, Any], jwt: str):
     action = config.get("action", "").lower().strip()
     logging.info("--- MQTT PUBLISHING ---")
 
@@ -154,16 +143,16 @@ def mqtt_execution(config: Dict[str, Any]):
 
     try:
         if action == "create":
-            handle_create_mqtt(mqtt_client, config)
+            handle_create_mqtt(mqtt_client, config, jwt)
         elif action == "update":
-            handle_update_mqtt(mqtt_client, config)
+            handle_update_mqtt(mqtt_client, config, jwt)
     finally:
         mqtt_client.loop_stop()
         mqtt_client.disconnect()
         logging.info("MQTT: Disconnected from broker")
 
 
-def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any]):
+def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
     create_topic = "inventory/create-item"
     product_data = config.get("create_product", {}) if config else {}
     price_data = product_data.get("price_usd", {})
@@ -178,6 +167,7 @@ def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any]):
         },
         "categories": product_data.get("categories", []),
         "initial_stock": product_data.get("initial_stock", 0),
+        "token": jwt
     }
 
     create_bytes = json.dumps(new_product_payload)
@@ -192,9 +182,26 @@ def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any]):
         logging.error("MQTT: Publishing creation failed")
 
 
-def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any]):
-    logging.error("MQTT: Update action is not implemented.")
-    sys.exit(1)
+def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
+    update_topic = "inventory/update-product-stock"
+    update_data = config.get("update_stock", {}) if config else {}
+
+    update_payload = {
+        "id": update_data.get("id", ""),
+        "delta": update_data.get("delta", 0),
+        "token": jwt
+    }
+
+    update_bytes = json.dumps(update_payload)
+    logging.info(
+        f"MQTT: Publishing update request for product '{update_payload['id']}' to topic '{update_topic}'...")
+    token = client.publish(update_topic, update_bytes, qos=1)
+    token.wait_for_publish(timeout=5)
+
+    if token.is_published():
+        logging.info("MQTT: Update request published successfully")
+    else:
+        logging.error("MQTT: Publishing update failed")
 
 
 def main():
@@ -217,11 +224,22 @@ def main():
         logging.error(f"Invalid connection type '{connection_type}' in config. Use 'grpc' or 'mqtt'.")
         sys.exit(1)
 
+    logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
+    with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
+        auth_stub = auth_pb_grpc.AuthServiceStub(channel)
+        jwt = receive_jwt(auth_stub, config)
+
+        if not jwt:
+            logging.error("Could not acquire JWT token. Exiting.")
+            sys.exit(1)
+
+        logging.info(f"Authenticated successfully. Token: {jwt[:5]}...{jwt[-5:]}")
+
     if connection_type == "mqtt":
-        mqtt_execution(config)
+        mqtt_execution(config, jwt)
         return
     elif connection_type == "grpc":
-        grpc_execution(config, action, grpc_address)
+        grpc_execution(config, action, grpc_address, jwt)
         return
 
 if __name__ == "__main__":
