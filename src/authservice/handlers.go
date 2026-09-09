@@ -16,11 +16,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type UserDetails struct {
-	DN    string
+// userDetails holds the core identity and authorization metadata for an
+// authenticated user, retrieved from the LDAP directory.
+type userDetails struct {
+	// DN is the distinguished name of the user in the LDAP directory.
+	DN string
+	// Roles is a list of roles associated with the user.
 	Roles []string
+	// Title is the job title of the user.
 	Title string
-	Name  string
+	// Name is the users full common name (cn).
+	Name string
 }
 
 var log *logrus.Logger
@@ -39,15 +45,23 @@ func init() {
 	log.Out = os.Stdout
 }
 
-func (as *AuthServer) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+func (as *authServer) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
 }
 
-func (as *AuthServer) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
+func (as *authServer) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
-func (as *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
+// Login authenticates a user against the configured LDAP directory and issues a signed JWT.
+//
+// It validates that both username and password are present in the request, looks up the
+// user record and associated groups, verifies the supplied password, and then creates a
+// JWT containing the user identity and role metadata.
+//
+// If authentication fails, the user cannot be resolved, or token generation issues occur,
+// it returns an unauthenticated gRPC status error.
+func (as *authServer) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	if req.Username == "" || req.Password == "" {
 		return nil, status.Error(codes.InvalidArgument, "username and password required")
 	}
@@ -89,7 +103,13 @@ func (as *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*aut
 	}, nil
 }
 
-func (as *AuthServer) lookupUser(username string) (*UserDetails, error) {
+// lookupUser connects to the LDAP directory using admin credentials to search for
+// a user by their uid.
+//
+// It verifies that exactly one user matches the provided username, retrieves their
+// core attributes (DN, title, cn), and fetches their associated roles via a
+// secondary group lookup.
+func (as *authServer) lookupUser(username string) (*userDetails, error) {
 	l, err := ldap.DialURL(as.ldapURL)
 	if err != nil {
 		return nil, err
@@ -136,7 +156,7 @@ func (as *AuthServer) lookupUser(username string) (*UserDetails, error) {
 		return nil, err
 	}
 
-	return &UserDetails{
+	return &userDetails{
 		DN:    userEntry.DN,
 		Roles: roles,
 		Title: userEntry.GetAttributeValue("title"),
@@ -144,7 +164,9 @@ func (as *AuthServer) lookupUser(username string) (*UserDetails, error) {
 	}, nil
 }
 
-func (as *AuthServer) verifyPassword(userDN string, password string) error {
+// verifyPassword connects to the LDAP directory using the provided credentials
+// to verify the correctness of the password
+func (as *authServer) verifyPassword(userDN string, password string) error {
 	l, err := ldap.DialURL(as.ldapURL)
 	if err != nil {
 		return err
@@ -161,7 +183,11 @@ func (as *AuthServer) verifyPassword(userDN string, password string) error {
 	return nil
 }
 
-func (as *AuthServer) lookupGroups(userDN string) ([]string, error) {
+// lookupGroups connects to the LDAP directory using admin credentials to search for
+// groups that the user is a member of.
+//
+// It extracts the cn attribute of each group found and aggregates them in a list.
+func (as *authServer) lookupGroups(userDN string) ([]string, error) {
 	l, err := ldap.DialURL(as.ldapURL)
 	if err != nil {
 		return nil, err

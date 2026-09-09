@@ -13,7 +13,9 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
-type AuthServer struct {
+// authServer implements the authentication service and keeps the
+// configuration needed to validate LDAP credentials and sign JWTs.
+type authServer struct {
 	authpb.UnimplementedAuthServiceServer
 	privateKey *rsa.PrivateKey
 
@@ -25,6 +27,9 @@ type AuthServer struct {
 	port string
 }
 
+// main initializes the authentication service, loads the JWT signing key,
+// configures the LDAP backend from environment variables, and starts the gRPC
+// server.
 func main() {
 	var privateKeyPath string
 	shared.MustMapEnv(&privateKeyPath, "JWT_PRIVATE_KEY_PATH")
@@ -38,7 +43,7 @@ func main() {
 		log.Fatalf("failed to parse private key: %v", err)
 	}
 
-	svc := &AuthServer{
+	svc := &authServer{
 		privateKey: privKey,
 	}
 	shared.MustMapEnv(&svc.ldapURL, "LDAP_SERVICE_ADDR")
