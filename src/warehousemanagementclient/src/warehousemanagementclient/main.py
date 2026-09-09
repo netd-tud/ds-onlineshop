@@ -104,8 +104,12 @@ def handle_update(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any
 def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> str:
     username = config.get("username")
     password = config.get("password")
-    response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
-    return response.token
+    try:
+        response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
+        return response.token
+    except grpc.RpcError as e:
+        logging.error(f"Auth failed: {e.details()}")
+        return None
 
 
 def mqtt_execution(config=None):
