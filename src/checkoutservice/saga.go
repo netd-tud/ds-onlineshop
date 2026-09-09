@@ -14,7 +14,7 @@ import (
 )
 
 func (cs *checkoutService) placeOrderSaga(items []*checkoutpb.OrderItem, amount *commonpb.Money, cc *paymentpb.CreditCardInfo) error {
-	systemToken, err := shared.GenerateSystemToken("checkout-service", []string{"SYSTEM_SERVICE"})
+	systemToken, err := shared.GenerateSystemToken("checkout-service")
 	if err != nil {
 		return err
 	}

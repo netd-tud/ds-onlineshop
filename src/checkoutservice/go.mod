@@ -7,7 +7,7 @@ require (
 	github.com/dtm-labs/client v1.18.7
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/google/uuid v1.6.0
-	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260902103343-b27eee6d825c
+	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260909081846-07a0efd5ba25
 	github.com/segmentio/kafka-go v0.4.51
 	github.com/sirupsen/logrus v1.9.4
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.70.0
