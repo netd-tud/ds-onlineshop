@@ -254,14 +254,14 @@ func IsLoadTest(ctx context.Context) bool {
 	return false
 }
 
-func GenerateSystemToken(serviceName string, roles []string) (string, error) {
+func GenerateSystemToken(serviceName string) (string, error) {
 	if len(systemJWTSecret) == 0 {
 		return "", fmt.Errorf("SYSTEM_JWT_SECRET not set")
 	}
 
 	claims := SystemClaims{
 		ServiceName: serviceName,
-		Roles:       roles,
+		Roles:       []string{"SYSTEM_SERVICE"},
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
