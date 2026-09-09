@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import grpc
 import paho.mqtt.client as mqtt
+from typing import Dict, Any, Optional
 
 from warehousemanagementclient.genproto.common import common_pb2 as money_pb
 from warehousemanagementclient.genproto.inventory import inventory_pb2 as inventory_pb
@@ -26,8 +27,8 @@ DT_PORTS = {
     "xa": 30053
 }
 
-def load_config(file_path):
 
+def load_config(file_path: Path) -> Dict[str, Any]:
     try:
         with open(file_path, "r") as f:
             return json.load(f)
@@ -38,7 +39,6 @@ def load_config(file_path):
         logging.error(f"Failed to parse JSON config: {e}")
         sys.exit(1)
 
-def handle_create(stub, data, jwt):
 
 def create_secure_channel(target_address):
     credentials = grpc.ssl_channel_credentials()
@@ -46,6 +46,7 @@ def create_secure_channel(target_address):
     return grpc.secure_channel(target_address, credentials, options=options)
 
 
+def handle_create(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
     logging.info("--- Calling CreateNewProduct via gRPC ---")
 
     price_data = data.get("price_usd", {})
@@ -74,8 +75,8 @@ def create_secure_channel(target_address):
     except grpc.RpcError as e:
         logging.error(f"gRPC: Could not create product: {e.details()} (Code: {e.code()})")
 
-def handle_update(stub, data, jwt):
 
+def handle_update(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
     logging.info("--- Calling UpdateProductStock via gRPC ---")
 
     product_id = data.get("id")
@@ -99,8 +100,8 @@ def handle_update(stub, data, jwt):
     except grpc.RpcError as e:
         logging.error(f"gRPC: Could not update product stock: {e.details()} (Code: {e.code()})")
 
-def receiveJWT(stub, config):
 
+def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> str:
     username = config.get("username")
     password = config.get("password")
     response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
