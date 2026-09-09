@@ -10,10 +10,11 @@ spec:
   entryPoints:
     - mqtt
   routes:
-    - match: HostSNI(`*`)
+    - match: HostSNI(`ds-exercise-01.netd.cs.tu-dresden.de`)
       services:
         - name: mqtt-broker
           port: 1883
+  tls: {}
 
 ---
 # ==========================================
