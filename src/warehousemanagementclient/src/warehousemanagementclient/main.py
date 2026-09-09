@@ -46,7 +46,29 @@ def create_secure_channel(target_address: str) -> grpc.Channel:
     return grpc.secure_channel(target_address, credentials, options=options)
 
 
-def handle_create(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
+def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str):
+    logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
+    with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
+        auth_stub = auth_pb_grpc.AuthServiceStub(channel)
+        jwt = receive_jwt(auth_stub, config)
+
+        if not jwt:
+            logging.error("Could not acquire JWT token. Exiting.")
+            sys.exit(1)
+
+        logging.info(f"Authenticated successfully. Token: {jwt[:5]}...{jwt[-5:]}")
+
+    logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
+    with create_secure_channel(grpc_address) as channel:
+        stub = whm_pb_grpc.WarehouseManagementStub(channel)
+
+        if action == "create":
+            handle_create_grpc(stub, config.get("create_product", {}), jwt)
+        elif action == "update":
+            handle_update_grpc(stub, config.get("update_stock", {}), jwt)
+
+
+def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
     logging.info("--- Calling CreateNewProduct via gRPC ---")
 
     price_data = data.get("price_usd", {})
@@ -76,7 +98,7 @@ def handle_create(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any
         logging.error(f"gRPC: Could not create product: {e.details()} (Code: {e.code()})")
 
 
-def handle_update(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
+def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
     logging.info("--- Calling UpdateProductStock via gRPC ---")
 
     product_id = data.get("id")
@@ -198,27 +220,9 @@ def main():
     if connection_type == "mqtt":
         mqtt_execution(config)
         return
-
-    logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
-    with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
-        auth_stub = auth_pb_grpc.AuthServiceStub(channel)
-        jwt = receive_jwt(auth_stub, config)
-
-        if not jwt:
-            logging.error("Could not acquire JWT token. Exiting.")
-            sys.exit(1)
-
-        logging.info(f"Authenticated successfully. Token: {jwt[:5]}...{jwt[-5:]}")
-
-    logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
-    with create_secure_channel(grpc_address) as channel:
-        stub = whm_pb_grpc.WarehouseManagementStub(channel)
-
-        if action == "create":
-            handle_create(stub, config.get("create_product", {}), jwt)
-        elif action == "update":
-            handle_update(stub, config.get("update_stock", {}), jwt)
-
+    elif connection_type == "grpc":
+        grpc_execution(config, action, grpc_address)
+        return
 
 if __name__ == "__main__":
     main()
