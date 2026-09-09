@@ -59,6 +59,8 @@ func init() {
 	log.Out = os.Stdout
 }
 
+// checkoutService implements the checkout service and keeps the
+// configuration needed to connect to different services.
 type checkoutService struct {
 	checkoutpb.UnimplementedCheckoutServiceServer
 
@@ -93,6 +95,8 @@ type checkoutService struct {
 	analyticsOrderPublisher    *analytics.Publisher
 }
 
+// main initializes the checkout service, configures connections to other services,
+// initializes the mqtt publisher and starts the gRPC server.
 func main() {
 	ctx := context.Background()
 	if os.Getenv("ENABLE_TRACING") == "1" {

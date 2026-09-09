@@ -47,6 +47,8 @@ func (cs *checkoutService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.H
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
+// PlaceOrder prepares the cart for checkout, charges the customer, ships the
+// items, and publishes the resulting order and analytics events.
 func (cs *checkoutService) PlaceOrder(ctx context.Context, req *checkoutpb.PlaceOrderRequest) (*checkoutpb.PlaceOrderResponse, error) {
 	log.Infof("[PlaceOrder] user_id=%q user_currency=%q", req.UserId, req.UserCurrency)
 
@@ -142,12 +144,16 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *checkoutpb.Place
 	return resp, nil
 }
 
+// orderPrep contains the items, cart snapshot, and localized shipping cost
+// calculated for a single checkout.
 type orderPrep struct {
 	orderItems            []*checkoutpb.OrderItem
 	cartItems             []*cartpb.CartItem
 	shippingCostLocalized *commonpb.Money
 }
 
+// prepareOrderItemsAndShippingQuoteFromCart prepares the order items and shipping quote
+// for a single checkout and creates an order preparation.
 func (cs *checkoutService) prepareOrderItemsAndShippingQuoteFromCart(ctx context.Context, userID, userCurrency string, address *commonpb.Address) (orderPrep, error) {
 	var out orderPrep
 	cartItems, err := cs.getUserCart(ctx, userID)
@@ -173,6 +179,8 @@ func (cs *checkoutService) prepareOrderItemsAndShippingQuoteFromCart(ctx context
 	return out, nil
 }
 
+// quoteShipping requests a shipping quote for the given cart items and
+// address from the shipping service. The returned amount is in USD.
 func (cs *checkoutService) quoteShipping(ctx context.Context, address *commonpb.Address, items []*cartpb.CartItem) (*commonpb.Money, error) {
 	shippingQuote, err := shippingpb.NewShippingServiceClient(cs.shippingSvcConn).
 		GetQuote(ctx, &shippingpb.GetQuoteRequest{
@@ -184,6 +192,8 @@ func (cs *checkoutService) quoteShipping(ctx context.Context, address *commonpb.
 	return shippingQuote.GetCostUsd(), nil
 }
 
+// getUserCart retrieves the current cart contents for the user from the cart service
+// and return the contained CartItems
 func (cs *checkoutService) getUserCart(ctx context.Context, userID string) ([]*cartpb.CartItem, error) {
 	cart, err := cartpb.NewCartServiceClient(cs.cartSvcConn).GetCart(ctx, &cartpb.GetCartRequest{UserId: userID})
 	if err != nil {
@@ -192,6 +202,7 @@ func (cs *checkoutService) getUserCart(ctx context.Context, userID string) ([]*c
 	return cart.GetItems(), nil
 }
 
+// emptyUserCart connects to the cart service and empties the cart for the given userID.
 func (cs *checkoutService) emptyUserCart(ctx context.Context, userID string) error {
 	if _, err := cartpb.NewCartServiceClient(cs.cartSvcConn).EmptyCart(ctx, &cartpb.EmptyCartRequest{UserId: userID}); err != nil {
 		return fmt.Errorf("failed to empty user cart during checkout: %+v", err)
@@ -199,6 +210,9 @@ func (cs *checkoutService) emptyUserCart(ctx context.Context, userID string) err
 	return nil
 }
 
+// prepOrderItems uses the list of CartItems to aggregate a list of OrderItem.
+// It connects to the product catalog service to retrieve product price in USD.
+// It then converts the price to the user's currency and returns a list of OrderItem.
 func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*cartpb.CartItem, userCurrency string) ([]*checkoutpb.OrderItem, error) {
 	out := make([]*checkoutpb.OrderItem, len(items))
 	cl := productcatalogpb.NewProductCatalogServiceClient(cs.productCatalogSvcConn)
@@ -219,6 +233,7 @@ func (cs *checkoutService) prepOrderItems(ctx context.Context, items []*cartpb.C
 	return out, nil
 }
 
+// convertCurrency connects to the currency service to convert money to the specified currency
 func (cs *checkoutService) convertCurrency(ctx context.Context, from *commonpb.Money, toCurrency string) (*commonpb.Money, error) {
 	result, err := currencypb.NewCurrencyServiceClient(cs.currencySvcConn).Convert(context.TODO(), &currencypb.CurrencyConversionRequest{
 		From:   from,
@@ -229,6 +244,7 @@ func (cs *checkoutService) convertCurrency(ctx context.Context, from *commonpb.M
 	return result, err
 }
 
+// chargeCard connects to the payment service to charge the specified payment option.
 func (cs *checkoutService) chargeCard(ctx context.Context, amount *commonpb.Money, paymentInfo *paymentpb.CreditCardInfo) (string, error) {
 	paymentResp, err := paymentpb.NewPaymentServiceClient(cs.paymentSvcConn).Charge(ctx, &paymentpb.ChargeRequest{
 		Amount:     amount,
@@ -239,6 +255,7 @@ func (cs *checkoutService) chargeCard(ctx context.Context, amount *commonpb.Mone
 	return paymentResp.GetTransactionId(), nil
 }
 
+// initializeMQTTClient initializes a new mqtt client which connects to the broker specified in checkoutService.
 func (cs *checkoutService) initializeMQTTClient() mqtt.Client {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s", cs.mqttBrokerAddr))
@@ -257,6 +274,8 @@ func (cs *checkoutService) initializeMQTTClient() mqtt.Client {
 	return client
 }
 
+// sendOrderConfirmation sends the confirmation for a completed order
+// either via MQTT if mqttBrokerAddr is specified or gRPC.
 func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email string, order *checkoutpb.OrderResult) error {
 	if cs.mqttBrokerAddr != "" {
 		return cs.sendOrderConfirmationMQTT(ctx, email, order)
@@ -264,6 +283,8 @@ func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email stri
 	return cs.sendOrderConfirmationgRPC(ctx, email, order)
 }
 
+// sendOrderConfirmationMQTT sends the order confirmation via MQTT.
+// It used the mqttClient to publish a message to orders/checkout-complete topic.
 func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email string, order *checkoutpb.OrderResult) error {
 	type OrderEvent struct {
 		Email string `json:"email"`
@@ -284,6 +305,8 @@ func (cs *checkoutService) sendOrderConfirmationMQTT(ctx context.Context, email 
 	return nil
 }
 
+// sendOrderConfirmationgRPC sends the order confirmation via gRPC.
+// It connects to the email service using gRPC.
 func (cs *checkoutService) sendOrderConfirmationgRPC(ctx context.Context, email string, order *checkoutpb.OrderResult) error {
 	_, err := emailpb.NewEmailServiceClient(cs.emailSvcConn).SendOrderConfirmation(ctx, &emailpb.SendOrderConfirmationRequest{
 		Email: email,
@@ -291,6 +314,7 @@ func (cs *checkoutService) sendOrderConfirmationgRPC(ctx context.Context, email 
 	return err
 }
 
+// shipOrder connects to the shipping service to initiate the shipment of the order.
 func (cs *checkoutService) shipOrder(ctx context.Context, address *commonpb.Address, items []*cartpb.CartItem) (string, error) {
 	resp, err := shippingpb.NewShippingServiceClient(cs.shippingSvcConn).ShipOrder(ctx, &shippingpb.ShipOrderRequest{
 		Address: address,
@@ -301,6 +325,7 @@ func (cs *checkoutService) shipOrder(ctx context.Context, address *commonpb.Addr
 	return resp.GetTrackingId(), nil
 }
 
+// publishCompletedOrder publishes an order complete MQTT message for each category of the completed order.
 func (cs *checkoutService) publishCompletedOrder(ctx context.Context, order *checkoutpb.OrderResult) error {
 	orderData, err := protojson.Marshal(order)
 	if err != nil {
@@ -329,6 +354,8 @@ func (cs *checkoutService) publishCompletedOrder(ctx context.Context, order *che
 	return nil
 }
 
+// getCategoriesForOrderItems retrieves all Categories of the specified product
+// from the catalog service.
 func (cs *checkoutService) getCategoriesForOrderItem(ctx context.Context, item *checkoutpb.OrderItem) []string {
 	product, err := productcatalogpb.NewProductCatalogServiceClient(cs.productCatalogSvcConn).GetProduct(ctx,
 		&productcatalogpb.GetProductRequest{Id: item.GetItem().GetProductId()})
@@ -338,6 +365,8 @@ func (cs *checkoutService) getCategoriesForOrderItem(ctx context.Context, item *
 	return product.GetCategories()
 }
 
+// publishEventOverMQTT publishes the specified payload to the specified MQTT topic using the mqttClient.
+// It checks if the client is connected and handles errors appropriately.
 func (cs *checkoutService) publishEventOverMQTT(topic string, payload []byte) error {
 	log.Infof("Attempting to publish event for topic '%s'...", topic)
 	if cs.mqttClient == nil || !cs.mqttClient.IsConnected() {

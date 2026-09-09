@@ -13,6 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// placeOrderSaga uses the saga pattern to decrement the inventory product stock of products
+// in the order and charge the payment option afterward.
+// It ensures correct execution if services return an error or the checkout service crashes.
 func (cs *checkoutService) placeOrderSaga(items []*checkoutpb.OrderItem, amount *commonpb.Money, cc *paymentpb.CreditCardInfo) error {
 	systemToken, err := shared.GenerateSystemToken("checkout-service")
 	if err != nil {
