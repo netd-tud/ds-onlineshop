@@ -15,15 +15,19 @@ from warehousemanagementclient.genproto.auth import auth_pb2_grpc as auth_pb_grp
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30050"
+BASE_HOST = "ds-exercise-01.netd.cs.tu-dresden.de"
+AUTH_GRPC_ADDRESS = f"{BASE_HOST}:30060"
+MQTT_BROKER_PORT = 31883
 CONFIG_FILE = Path(__file__).parent / "config.json"
 
-AUTH_GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30060"
-
-MQTT_BROKER_HOST = "ds-exercise-01.netd.cs.tu-dresden.de"
-MQTT_BROKER_PORT = 31883
+DT_PORTS = {
+    "naive": 30051,
+    "saga": 30052,
+    "xa": 30053
+}
 
 def load_config(file_path):
+
     try:
         with open(file_path, "r") as f:
             return json.load(f)
@@ -35,6 +39,13 @@ def load_config(file_path):
         sys.exit(1)
 
 def handle_create(stub, data, jwt):
+
+def create_secure_channel(target_address):
+    credentials = grpc.ssl_channel_credentials()
+    options = [('grpc.ssl_target_name_override', BASE_HOST)]
+    return grpc.secure_channel(target_address, credentials, options=options)
+
+
     logging.info("--- Calling CreateNewProduct via gRPC ---")
 
     price_data = data.get("price_usd", {})
@@ -64,6 +75,7 @@ def handle_create(stub, data, jwt):
         logging.error(f"gRPC: Could not create product: {e.details()} (Code: {e.code()})")
 
 def handle_update(stub, data, jwt):
+
     logging.info("--- Calling UpdateProductStock via gRPC ---")
 
     product_id = data.get("id")
@@ -88,10 +100,12 @@ def handle_update(stub, data, jwt):
         logging.error(f"gRPC: Could not update product stock: {e.details()} (Code: {e.code()})")
 
 def receiveJWT(stub, config):
+
     username = config.get("username")
     password = config.get("password")
     response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
     return response.token
+
 
 def mqtt_execution(config=None):
     if config.get("action", "").lower().strip() != "create":
@@ -105,7 +119,7 @@ def mqtt_execution(config=None):
         mqtt_client = mqtt.Client(client_id="warehousemanagement_client")
 
     try:
-        mqtt_client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT, keepalive=60)
+        mqtt_client.connect(BASE_HOST, MQTT_BROKER_PORT, keepalive=60)
     except Exception as e:
         logging.error(f"MQTT: Connection failed: {e}")
         return
@@ -131,7 +145,8 @@ def mqtt_execution(config=None):
         }
 
         create_bytes = json.dumps(new_product_payload)
-        logging.info(f"MQTT: Publishing creation request for '{new_product_payload['name']}' to topic '{create_topic}'...")
+        logging.info(
+            f"MQTT: Publishing creation request for '{new_product_payload['name']}' to topic '{create_topic}'...")
         token = mqtt_client.publish(create_topic, create_bytes, qos=1)
         token.wait_for_publish(timeout=5)
 
@@ -143,24 +158,16 @@ def mqtt_execution(config=None):
         mqtt_client.loop_stop()
         mqtt_client.disconnect()
 
-def main():
-    global GRPC_ADDRESS
-    global AUTH_GRPC_ADDRESS
 
+def main():
     config = load_config(CONFIG_FILE)
 
     dt_function = config.get("dt-function", "").lower().strip()
-    if dt_function not in ["naive", "saga", "xa"]:
-        logging.error(f"Invalid distributed transaction function '{dt_function}' in config. Use 'naive', 'saga' or 'xa'")
+    if dt_function not in DT_PORTS:
+        logging.error(f"Invalid distributed transaction function '{dt_function}'. Use 'naive', 'saga' or 'xa'")
         sys.exit(1)
-    else:
-        match dt_function:
-            case "naive":
-                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30051"
-            case "saga":
-                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30052"
-            case "xa":
-                GRPC_ADDRESS = "ds-exercise-01.netd.cs.tu-dresden.de:30053"
+
+    grpc_address = f"{BASE_HOST}:{DT_PORTS[dt_function]}"
 
     action = config.get("action", "").lower().strip()
     if action not in ["create", "update"]:
@@ -176,29 +183,25 @@ def main():
         mqtt_execution(config)
         return
 
-    channel_credentials = grpc.ssl_channel_credentials()
-    options = [('grpc.ssl_target_name_override', 'ds-exercise-01.netd.cs.tu-dresden.de')]
-
     logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
-    jwt = None
-    with grpc.secure_channel(AUTH_GRPC_ADDRESS, channel_credentials, options=options) as channel:
+    with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
         auth_stub = auth_pb_grpc.AuthServiceStub(channel)
         jwt = receiveJWT(auth_stub, config)
         if not jwt:
-            print("Could not acquire JWT token.")
+            logging.error("Could not acquire JWT token. Exiting.")
             sys.exit(1)
-        else:
-            print("Authentication successfully.")
-            print(jwt)
 
-    logging.info(f"Connecting to warehousemanagement gRPC server at {GRPC_ADDRESS}...")
-    with grpc.secure_channel(GRPC_ADDRESS, channel_credentials, options=options) as channel:
+        logging.info(f"Authenticated successfully. Token: {jwt[:5]}...{jwt[-5:]}")
+
+    logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
+    with create_secure_channel(grpc_address) as channel:
         stub = whm_pb_grpc.WarehouseManagementStub(channel)
 
         if action == "create":
             handle_create(stub, config.get("create_product", {}), jwt)
         elif action == "update":
             handle_update(stub, config.get("update_stock", {}), jwt)
+
 
 if __name__ == "__main__":
     main()
