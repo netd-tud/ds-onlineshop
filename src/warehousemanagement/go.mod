@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/dtm-labs/client v1.18.7
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260807085605-eb2bf4f46f69
+	github.com/netd-tud/ds-onlineshop/src/shared v0.0.0-20260909081846-07a0efd5ba25
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.4
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.70.0

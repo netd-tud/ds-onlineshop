@@ -14,6 +14,7 @@ import (
 	commonpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/common"
 	inventorypb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/inventory"
 	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/warehousemanagement"
+	"google.golang.org/grpc/metadata"
 )
 
 // MQTT Structural Mappings
@@ -29,11 +30,13 @@ type MqttCreateProductPayload struct {
 	PriceUsd     MqttMoney `json:"price_usd"`
 	Categories   []string  `json:"categories"`
 	InitialStock int64     `json:"initial_stock"`
+	Token        string    `json:"token"`
 }
 
 type MqttUpdateStockPayload struct {
 	ID    string `json:"id"`
 	Delta int64  `json:"delta"`
+	Token string `json:"token"`
 }
 
 var mqttMsgChan = make(chan mqtt.Message)
@@ -70,7 +73,7 @@ func processMsg(ctx context.Context, input <-chan mqtt.Message) chan mqtt.Messag
 	return out
 }
 
-func setupMqttServer(svc *warehouseManagement) {
+func setupMqttSubscriber(svc *warehouseManagement) {
 	createTopic := "inventory/create-item"
 	updateTopic := "inventory/update-product-stock"
 
@@ -94,6 +97,7 @@ func setupMqttServer(svc *warehouseManagement) {
 
 		for msg := range finalChan {
 			reqCtx, reqCancel := context.WithTimeout(ctx, 5*time.Second)
+			defer reqCancel()
 
 			switch msg.Topic() {
 			case createTopic:
@@ -116,6 +120,9 @@ func setupMqttServer(svc *warehouseManagement) {
 					InitialStock: payload.InitialStock,
 				}
 
+				if payload.Token != "" {
+					reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
+				}
 				resp, err := svc.CreateNewProduct(reqCtx, grpcReq)
 				if err != nil {
 					log.Errorf("MQTT Worker: CreateNewProduct execution failed: %v", err)
@@ -138,6 +145,9 @@ func setupMqttServer(svc *warehouseManagement) {
 					Delta: payload.Delta,
 				}
 
+				if payload.Token != "" {
+					reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
+				}
 				resp, err := svc.UpdateProductStock(reqCtx, grpcReq)
 				if err != nil {
 					log.Errorf("MQTT Worker: UpdateProductStock execution failed: %v", err)
