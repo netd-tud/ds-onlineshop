@@ -2,6 +2,7 @@ import json
 import logging
 from pathlib import Path
 
+import ssl
 import sys
 import grpc
 import paho.mqtt.client as mqtt
@@ -131,6 +132,8 @@ def mqtt_execution(config: Dict[str, Any], jwt: str):
         mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="warehousemanagement_client")
     except AttributeError:
         mqtt_client = mqtt.Client(client_id="warehousemanagement_client")
+
+    mqtt_client.tls_set()
 
     try:
         mqtt_client.connect(BASE_HOST, MQTT_BROKER_PORT, keepalive=60)
