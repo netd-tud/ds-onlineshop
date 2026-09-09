@@ -40,7 +40,7 @@ def load_config(file_path: Path) -> Dict[str, Any]:
         sys.exit(1)
 
 
-def create_secure_channel(target_address):
+def create_secure_channel(target_address: str) -> grpc.Channel:
     credentials = grpc.ssl_channel_credentials()
     options = [('grpc.ssl_target_name_override', BASE_HOST)]
     return grpc.secure_channel(target_address, credentials, options=options)
@@ -51,7 +51,7 @@ def handle_create(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any
 
     price_data = data.get("price_usd", {})
     price = money_pb.Money(
-        currency_code=price_data.get("currency_code", "USD"),
+        currency_code=price_data.get("currency_code", ""),
         units=price_data.get("units", 0),
         nanos=price_data.get("nanos", 0)
     )
@@ -134,15 +134,15 @@ def mqtt_execution(config=None):
         price_data = product_data.get("price_usd", {})
 
         new_product_payload = {
-            "name": product_data.get("name", "Lighter"),
-            "description": product_data.get("description", "Simple, light Lighter."),
+            "name": product_data.get("name", ""),
+            "description": product_data.get("description", ""),
             "price_usd": {
-                "currency_code": price_data.get("currency_code", "USD"),
-                "units": price_data.get("units", 1),
-                "nanos": price_data.get("nanos", 500000000),
+                "currency_code": price_data.get("currency_code", ""),
+                "units": price_data.get("units", 0),
+                "nanos": price_data.get("nanos", 0),
             },
-            "categories": product_data.get("categories", ["utility"]),
-            "initial_stock": product_data.get("initial_stock", 50),
+            "categories": product_data.get("categories", []),
+            "initial_stock": product_data.get("initial_stock", 0),
         }
 
         create_bytes = json.dumps(new_product_payload)
@@ -187,7 +187,8 @@ def main():
     logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
     with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
         auth_stub = auth_pb_grpc.AuthServiceStub(channel)
-        jwt = receiveJWT(auth_stub, config)
+        jwt = receive_jwt(auth_stub, config)
+
         if not jwt:
             logging.error("Could not acquire JWT token. Exiting.")
             sys.exit(1)
