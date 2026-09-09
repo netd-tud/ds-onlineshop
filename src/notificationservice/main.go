@@ -53,7 +53,7 @@ func run(port string) error {
 	var srv *grpc.Server
 	srv = grpc.NewServer()
 
-	svc := &notification{
+	svc := &notificationService{
 		thresholds: struct {
 			lowStock      int64
 			criticalStock int64

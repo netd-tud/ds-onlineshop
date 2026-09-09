@@ -89,21 +89,21 @@ func (as *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*aut
 	}, nil
 }
 
-func (s *AuthServer) lookupUser(username string) (*UserDetails, error) {
-	l, err := ldap.DialURL(s.ldapURL)
+func (as *AuthServer) lookupUser(username string) (*UserDetails, error) {
+	l, err := ldap.DialURL(as.ldapURL)
 	if err != nil {
 		return nil, err
 	}
 	defer l.Close()
 
-	err = l.Bind(s.adminDN, s.adminPass)
+	err = l.Bind(as.adminDN, as.adminPass)
 	if err != nil {
 		log.Errorf("Admin bind failed: %v", err)
 		return nil, fmt.Errorf("admin bind failed: %w", err)
 	}
 
 	searchRequest := ldap.NewSearchRequest(
-		s.baseDN,
+		as.baseDN,
 		ldap.ScopeWholeSubtree,
 		ldap.NeverDerefAliases,
 		0,
@@ -130,7 +130,7 @@ func (s *AuthServer) lookupUser(username string) (*UserDetails, error) {
 
 	userEntry := sr.Entries[0]
 
-	roles, err := s.lookupGroups(userEntry.DN)
+	roles, err := as.lookupGroups(userEntry.DN)
 	if err != nil {
 		log.Errorf("Group lookup failed: %v", err)
 		return nil, err
@@ -144,8 +144,8 @@ func (s *AuthServer) lookupUser(username string) (*UserDetails, error) {
 	}, nil
 }
 
-func (s *AuthServer) verifyPassword(userDN string, password string) error {
-	l, err := ldap.DialURL(s.ldapURL)
+func (as *AuthServer) verifyPassword(userDN string, password string) error {
+	l, err := ldap.DialURL(as.ldapURL)
 	if err != nil {
 		return err
 	}
@@ -161,14 +161,14 @@ func (s *AuthServer) verifyPassword(userDN string, password string) error {
 	return nil
 }
 
-func (s *AuthServer) lookupGroups(userDN string) ([]string, error) {
-	l, err := ldap.DialURL(s.ldapURL)
+func (as *AuthServer) lookupGroups(userDN string) ([]string, error) {
+	l, err := ldap.DialURL(as.ldapURL)
 	if err != nil {
 		return nil, err
 	}
 	defer l.Close()
 
-	err = l.Bind(s.adminDN, s.adminPass)
+	err = l.Bind(as.adminDN, as.adminPass)
 	if err != nil {
 		log.Errorf("Admin bind failed: %v", err)
 		return nil, fmt.Errorf("admin bind failed: %w", err)

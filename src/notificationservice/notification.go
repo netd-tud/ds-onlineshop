@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type notification struct {
+type notificationService struct {
 	notificationpb.UnimplementedNotificationServiceServer
 
 	mqttBrokerAddr string
@@ -38,22 +38,22 @@ type notification struct {
 	subs      map[chan *notificationpb.StockAlert]map[string]struct{}
 }
 
-func (n *notification) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+func (ns *notificationService) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
 }
 
-func (n *notification) ListOpenAlerts(ctx context.Context, req *notificationpb.ListOpenAlertsRequest) (*notificationpb.ListOpenAlertsResponse, error) {
+func (ns *notificationService) ListOpenAlerts(ctx context.Context, req *notificationpb.ListOpenAlertsRequest) (*notificationpb.ListOpenAlertsResponse, error) {
 	reqCats := make(map[string]bool, len(req.GetCategories()))
 	for _, c := range req.GetCategories() {
 		reqCats[c] = true
 	}
 
-	n.alertsMu.RLock()
-	defer n.alertsMu.RUnlock()
+	ns.alertsMu.RLock()
+	defer ns.alertsMu.RUnlock()
 
 	response := &notificationpb.ListOpenAlertsResponse{}
 
-	for _, alert := range n.alerts {
+	for _, alert := range ns.alerts {
 		for _, cat := range alert.Category {
 			if reqCats[cat] || slices.Contains(req.GetCategories(), "all") {
 				response.Alerts = append(response.Alerts, alert)
@@ -65,9 +65,9 @@ func (n *notification) ListOpenAlerts(ctx context.Context, req *notificationpb.L
 	return response, nil
 }
 
-func (n *notification) setupMQTTSubscriber() {
+func (ns *notificationService) setupMQTTSubscriber() {
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(n.mqttBrokerAddr)
+	opts.AddBroker(ns.mqttBrokerAddr)
 
 	hostname, _ := os.Hostname()
 	opts.SetClientID("notification-service-client-" + hostname)
@@ -77,11 +77,11 @@ func (n *notification) setupMQTTSubscriber() {
 	qos := byte(1)
 
 	var stockMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-		n.onStockUpdate(client, msg)
+		ns.onStockUpdate(client, msg)
 	}
 
 	var orderMessageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-		n.onOrderCompleted(client, msg)
+		ns.onOrderCompleted(client, msg)
 	}
 
 	opts.OnConnect = func(client mqtt.Client) {
@@ -105,7 +105,7 @@ func (n *notification) setupMQTTSubscriber() {
 	}
 
 	client := mqtt.NewClient(opts)
-	n.mqttClient = client
+	ns.mqttClient = client
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		log.Fatalf("Error connecting to MQTT broker: %v", token.Error())
@@ -115,7 +115,7 @@ func (n *notification) setupMQTTSubscriber() {
 	log.Printf("Successfully subscribed to %s", orderTopic)
 }
 
-func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
+func (ns *notificationService) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 	var p struct {
 		Id         string   `json:"id"`
 		Stock      int64    `json:"stock"`
@@ -127,16 +127,16 @@ func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	n.alertsMu.Lock()
-	defer n.alertsMu.Unlock()
+	ns.alertsMu.Lock()
+	defer ns.alertsMu.Unlock()
 	if p.Severity == "normal" {
-		delete(n.alerts, p.Id)
+		delete(ns.alerts, p.Id)
 		return
 	}
 
 	var createdAt *timestamppb.Timestamp
 
-	if a, ok := n.alerts[p.Id]; ok {
+	if a, ok := ns.alerts[p.Id]; ok {
 		createdAt = a.CreatedAt
 	} else {
 		createdAt = timestamppb.Now()
@@ -152,16 +152,16 @@ func (n *notification) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 
 	log.Info("New stock alert: ", alert.GetProductId(), " - Severity: ", alert.GetSeverity(), " - Stock: ", alert.GetStock())
 
-	n.alerts[p.Id] = alert
+	ns.alerts[p.Id] = alert
 
-	n.triggerNewAlert(alert)
+	ns.triggerNewAlert(alert)
 }
 
-func (n *notification) triggerNewAlert(alert *notificationpb.StockAlert) {
-	n.channelMu.RLock()
-	defer n.channelMu.RUnlock()
+func (ns *notificationService) triggerNewAlert(alert *notificationpb.StockAlert) {
+	ns.channelMu.RLock()
+	defer ns.channelMu.RUnlock()
 
-	for clientChan, categorySet := range n.subs {
+	for clientChan, categorySet := range ns.subs {
 		sendAlert := false
 		for _, cat := range alert.GetCategory() {
 			_, sendAlert = categorySet[cat]
@@ -177,7 +177,7 @@ func (n *notification) triggerNewAlert(alert *notificationpb.StockAlert) {
 	}
 }
 
-func (n *notification) StreamStockAlerts(req *notificationpb.StreamStockAlertsRequest, stream grpc.ServerStreamingServer[notificationpb.StockAlert]) error {
+func (ns *notificationService) StreamStockAlerts(req *notificationpb.StreamStockAlertsRequest, stream grpc.ServerStreamingServer[notificationpb.StockAlert]) error {
 	clientChan := make(chan *notificationpb.StockAlert, 100)
 
 	categorySet := make(map[string]struct{})
@@ -186,14 +186,14 @@ func (n *notification) StreamStockAlerts(req *notificationpb.StreamStockAlertsRe
 	}
 	log.Info("Client subscribed to categories: ", req.GetCategories())
 
-	n.channelMu.Lock()
-	n.subs[clientChan] = categorySet
-	n.channelMu.Unlock()
+	ns.channelMu.Lock()
+	ns.subs[clientChan] = categorySet
+	ns.channelMu.Unlock()
 
 	defer func() {
-		n.channelMu.Lock()
-		delete(n.subs, clientChan)
-		n.channelMu.Unlock()
+		ns.channelMu.Lock()
+		delete(ns.subs, clientChan)
+		ns.channelMu.Unlock()
 	}()
 
 	for {
@@ -209,7 +209,7 @@ func (n *notification) StreamStockAlerts(req *notificationpb.StreamStockAlertsRe
 
 }
 
-func (n *notification) onOrderCompleted(_ mqtt.Client, msg mqtt.Message) {
+func (ns *notificationService) onOrderCompleted(_ mqtt.Client, msg mqtt.Message) {
 	order := &checkoutpb.OrderResult{}
 
 	if err := protojson.Unmarshal(msg.Payload(), order); err != nil {
@@ -217,35 +217,35 @@ func (n *notification) onOrderCompleted(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	n.PushNewOrder(order)
+	ns.PushNewOrder(order)
 }
 
-func (n *notification) PushNewOrder(order *checkoutpb.OrderResult) {
+func (ns *notificationService) PushNewOrder(order *checkoutpb.OrderResult) {
 	currency := order.GetShippingCost().GetCurrencyCode()
 	if currency == "" {
 		currency = "UNKNOWN"
 	}
 
-	n.ordersMu.Lock()
-	defer n.ordersMu.Unlock()
+	ns.ordersMu.Lock()
+	defer ns.ordersMu.Unlock()
 
-	q, exists := n.orderQueues[currency]
+	q, exists := ns.orderQueues[currency]
 	if !exists {
-		q = NewOrderQueue(n.queueCapacity)
-		n.orderQueues[currency] = q
+		q = NewOrderQueue(ns.queueCapacity)
+		ns.orderQueues[currency] = q
 	}
 
 	q.Push(order)
 }
 
-func (n *notification) ListRecentOrdersByCurrency(ctx context.Context, req *notificationpb.ListRecentOrdersByCurrencyRequest) (*notificationpb.ListRecentOrdersByCurrencyResponse, error) {
-	n.ordersMu.RLock()
-	defer n.ordersMu.RUnlock()
+func (ns *notificationService) ListRecentOrdersByCurrency(ctx context.Context, req *notificationpb.ListRecentOrdersByCurrencyRequest) (*notificationpb.ListRecentOrdersByCurrencyResponse, error) {
+	ns.ordersMu.RLock()
+	defer ns.ordersMu.RUnlock()
 
 	response := &notificationpb.ListRecentOrdersByCurrencyResponse{}
 	response.OrdersByCurrency = make(map[string]*notificationpb.OrderList)
 	for _, currency := range req.GetCurrencies() {
-		if q, exists := n.orderQueues[currency]; exists {
+		if q, exists := ns.orderQueues[currency]; exists {
 			response.OrdersByCurrency[currency] = &notificationpb.OrderList{Orders: q.GetAll()}
 		}
 	}

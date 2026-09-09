@@ -134,7 +134,7 @@ func run(port string) string {
 
 	srv = grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
 
-	svc := &productCatalog{}
+	svc := &productCatalogService{}
 	products := svc.parseCatalog()
 	if len(products) == 0 {
 		log.Fatalf("list of parsed products is empty")

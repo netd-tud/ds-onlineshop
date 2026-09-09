@@ -26,11 +26,11 @@ import (
 )
 
 var (
-	mockProductCatalog *productCatalog
+	mockProductCatalog *productCatalogService
 )
 
 func TestMain(m *testing.M) {
-	mockProductCatalog = &productCatalog{
+	mockProductCatalog = &productCatalogService{
 		catalog: productcatalogpb.ListProductsResponse{
 			Products: []*productcatalogpb.Product{},
 		},

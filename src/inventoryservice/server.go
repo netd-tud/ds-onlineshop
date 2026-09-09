@@ -83,7 +83,7 @@ func run(port string) error {
 		)),
 	)
 
-	svc := &inventory{
+	svc := &inventoryService{
 		thresholds: struct {
 			lowStock      int64
 			criticalStock int64

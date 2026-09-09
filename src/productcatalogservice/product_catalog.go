@@ -29,31 +29,31 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type productCatalog struct {
+type productCatalogService struct {
 	productcatalogpb.UnimplementedProductCatalogServiceServer
 	catalog   productcatalogpb.ListProductsResponse
 	xaMu      sync.Mutex
 	xaPending map[string]*productcatalogpb.Product
 }
 
-func (p *productCatalog) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+func (pcs *productCatalogService) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
 }
 
-func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
+func (pcs *productCatalogService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
-func (p *productCatalog) ListProducts(context.Context, *commonpb.Empty) (*productcatalogpb.ListProductsResponse, error) {
+func (pcs *productCatalogService) ListProducts(context.Context, *commonpb.Empty) (*productcatalogpb.ListProductsResponse, error) {
 	time.Sleep(extraLatency)
 
-	return &productcatalogpb.ListProductsResponse{Products: p.parseCatalog()}, nil
+	return &productcatalogpb.ListProductsResponse{Products: pcs.parseCatalog()}, nil
 }
 
-func (p *productCatalog) GetProduct(ctx context.Context, req *productcatalogpb.GetProductRequest) (*productcatalogpb.Product, error) {
+func (pcs *productCatalogService) GetProduct(ctx context.Context, req *productcatalogpb.GetProductRequest) (*productcatalogpb.Product, error) {
 	time.Sleep(extraLatency)
 
-	catalog := p.parseCatalog()
+	catalog := pcs.parseCatalog()
 	for _, product := range catalog {
 		if req.Id == product.Id {
 			return product, nil
@@ -63,11 +63,11 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *productcatalogpb.G
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
-func (p *productCatalog) SearchProducts(ctx context.Context, req *productcatalogpb.SearchProductsRequest) (*productcatalogpb.SearchProductsResponse, error) {
+func (pcs *productCatalogService) SearchProducts(ctx context.Context, req *productcatalogpb.SearchProductsRequest) (*productcatalogpb.SearchProductsResponse, error) {
 	time.Sleep(extraLatency)
 
 	var ps []*productcatalogpb.Product
-	for _, product := range p.parseCatalog() {
+	for _, product := range pcs.parseCatalog() {
 		if strings.Contains(strings.ToLower(product.Name), strings.ToLower(req.Query)) ||
 			strings.Contains(strings.ToLower(product.Description), strings.ToLower(req.Query)) {
 			ps = append(ps, product)
@@ -77,7 +77,7 @@ func (p *productCatalog) SearchProducts(ctx context.Context, req *productcatalog
 	return &productcatalogpb.SearchProductsResponse{Results: ps}, nil
 }
 
-func (p *productCatalog) CreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.CreateNewProductResponse, error) {
+func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.CreateNewProductResponse, error) {
 	if req.Id == "" {
 		newId, _ := generateID(10)
 		req.Id = newId
@@ -90,16 +90,16 @@ func (p *productCatalog) CreateNewProduct(ctx context.Context, req *productcatal
 		PriceUsd:    req.PriceUsd,
 		Categories:  req.Categories,
 	}
-	p.catalog.Products = append(p.parseCatalog(), product)
+	pcs.catalog.Products = append(pcs.parseCatalog(), product)
 	log.Infof("Product created: %s", product.Id)
 	return &productcatalogpb.CreateNewProductResponse{Product: product}, nil
 }
 
-func (p *productCatalog) DeleteProduct(ctx context.Context, req *productcatalogpb.DeleteProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
-	catalog := p.parseCatalog()
+func (pcs *productCatalogService) DeleteProduct(ctx context.Context, req *productcatalogpb.DeleteProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
+	catalog := pcs.parseCatalog()
 	for i, product := range catalog {
 		if req.GetId() == product.GetId() {
-			p.catalog.Products = append(catalog[:i], catalog[i+1:]...)
+			pcs.catalog.Products = append(catalog[:i], catalog[i+1:]...)
 			log.Infof("Product deleted: %s", product.Id)
 			return &productcatalogpb.DeleteProductResponse{Product: product}, nil
 		}
@@ -107,8 +107,8 @@ func (p *productCatalog) DeleteProduct(ctx context.Context, req *productcatalogp
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
-func (p *productCatalog) CompensateCreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
-	res, err := p.DeleteProduct(ctx, &productcatalogpb.DeleteProductRequest{Id: req.GetId()})
+func (pcs *productCatalogService) CompensateCreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
+	res, err := pcs.DeleteProduct(ctx, &productcatalogpb.DeleteProductRequest{Id: req.GetId()})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to compensate create product: %v", err)
 	}
@@ -126,18 +126,18 @@ func generateID(length int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b)[:length], nil
 }
 
-func (p *productCatalog) parseCatalog() []*productcatalogpb.Product {
-	if reloadCatalog || len(p.catalog.Products) == 0 {
-		err := loadCatalog(&p.catalog)
+func (pcs *productCatalogService) parseCatalog() []*productcatalogpb.Product {
+	if reloadCatalog || len(pcs.catalog.Products) == 0 {
+		err := loadCatalog(&pcs.catalog)
 		if err != nil {
 			return []*productcatalogpb.Product{}
 		}
 
 		log.Info("Inserting into database...")
-		if err := loadCatalogIntoPostgres(&p.catalog); err != nil {
+		if err := loadCatalogIntoPostgres(&pcs.catalog); err != nil {
 			log.Warn("failed to insert product details into Postgres database: %v", err)
 		}
 	}
 
-	return p.catalog.Products
+	return pcs.catalog.Products
 }

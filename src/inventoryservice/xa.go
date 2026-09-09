@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (p *inventory) XaPrepareCreateInventoryProduct(ctx context.Context, req *inventorypb.XaPrepareCreateInventoryProductRequest) (*commonpb.Empty, error) {
+func (is *inventoryService) XaPrepareCreateInventoryProduct(ctx context.Context, req *inventorypb.XaPrepareCreateInventoryProductRequest) (*commonpb.Empty, error) {
 	configPath := "/var/behavior-config/FAIL_INVENTORY"
 
 	configValue, _ := getConfigValue(configPath)
@@ -20,13 +20,13 @@ func (p *inventory) XaPrepareCreateInventoryProduct(ctx context.Context, req *in
 		}
 	}
 
-	p.xaMu.Lock()
-	defer p.xaMu.Unlock()
+	is.xaMu.Lock()
+	defer is.xaMu.Unlock()
 
-	if p.xaPending == nil {
-		p.xaPending = map[string]*inventorypb.InventoryProduct{}
+	if is.xaPending == nil {
+		is.xaPending = map[string]*inventorypb.InventoryProduct{}
 	}
-	if _, exists := p.xaPending[req.Gid]; exists {
+	if _, exists := is.xaPending[req.Gid]; exists {
 		// retried prepare for a gid already staged -> idempotent no-op
 		return &commonpb.Empty{}, nil
 	}
@@ -34,35 +34,35 @@ func (p *inventory) XaPrepareCreateInventoryProduct(ctx context.Context, req *in
 		return nil, status.Error(codes.Aborted, "initial stock cannot be negative")
 	}
 
-	p.xaPending[req.Gid] = &inventorypb.InventoryProduct{Id: req.Id, Stock: req.InitialStock}
+	is.xaPending[req.Gid] = &inventorypb.InventoryProduct{Id: req.Id, Stock: req.InitialStock}
 	log.Infof("XA: inventory product %s prepared for gid %s", req.Id, req.Gid)
 	return &commonpb.Empty{}, nil
 }
 
-func (p *inventory) XaCommitCreateInventoryProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
-	p.xaMu.Lock()
-	defer p.xaMu.Unlock()
+func (is *inventoryService) XaCommitCreateInventoryProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
+	is.xaMu.Lock()
+	defer is.xaMu.Unlock()
 
-	product, ok := p.xaPending[req.Gid]
+	product, ok := is.xaPending[req.Gid]
 	if !ok {
 		// retried commit for a gid already committed -> idempotent no-op
 		return &commonpb.Empty{}, nil
 	}
-	p.inventory.Products = append(p.parseInventory(), product)
-	delete(p.xaPending, req.Gid)
+	is.inventory.Products = append(is.parseInventory(), product)
+	delete(is.xaPending, req.Gid)
 	log.Infof("XA: inventory product %s committed for gid %s", product.Id, req.Gid)
 	return &commonpb.Empty{}, nil
 }
 
-func (p *inventory) XaRollbackCreateInventoryProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
-	p.xaMu.Lock()
-	defer p.xaMu.Unlock()
+func (is *inventoryService) XaRollbackCreateInventoryProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
+	is.xaMu.Lock()
+	defer is.xaMu.Unlock()
 
 	// retried rollback for a gid already rolled back -> idempotent no-op
-	if _, ok := p.xaPending[req.Gid]; !ok {
+	if _, ok := is.xaPending[req.Gid]; !ok {
 		return &commonpb.Empty{}, nil
 	}
-	delete(p.xaPending, req.Gid)
+	delete(is.xaPending, req.Gid)
 	log.Infof("XA: rolled back gid %s", req.Gid)
 	return &commonpb.Empty{}, nil
 }

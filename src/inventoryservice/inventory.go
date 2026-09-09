@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type inventory struct {
+type inventoryService struct {
 	inventorypb.UnimplementedInventoryServiceServer
 
 	stockMu   sync.Mutex
@@ -45,20 +45,20 @@ type inventory struct {
 	resolvedAlertTTL time.Duration
 }
 
-func (p *inventory) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+func (is *inventoryService) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
 }
 
-func (p *inventory) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
+func (is *inventoryService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_WatchServer) error {
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
-func (p *inventory) ListInventory(context.Context, *commonpb.Empty) (*inventorypb.ListInventoryResponse, error) {
-	return &inventorypb.ListInventoryResponse{Products: p.parseInventory()}, nil
+func (is *inventoryService) ListInventory(context.Context, *commonpb.Empty) (*inventorypb.ListInventoryResponse, error) {
+	return &inventorypb.ListInventoryResponse{Products: is.parseInventory()}, nil
 }
 
-func (p *inventory) GetInventoryProduct(ctx context.Context, req *inventorypb.GetInventoryProductRequest) (*inventorypb.InventoryProduct, error) {
-	inventory := p.parseInventory()
+func (is *inventoryService) GetInventoryProduct(ctx context.Context, req *inventorypb.GetInventoryProductRequest) (*inventorypb.InventoryProduct, error) {
+	inventory := is.parseInventory()
 	for _, product := range inventory {
 		if req.Id == product.Id {
 			return product, nil
@@ -68,8 +68,8 @@ func (p *inventory) GetInventoryProduct(ctx context.Context, req *inventorypb.Ge
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
-func (p *inventory) applyStockDeltaLocked(productID string, delta int64) (*inventorypb.InventoryProduct, error) {
-	for _, product := range p.parseInventory() {
+func (is *inventoryService) applyStockDeltaLocked(productID string, delta int64) (*inventorypb.InventoryProduct, error) {
+	for _, product := range is.parseInventory() {
 		if product.GetId() != productID {
 			continue
 		}
@@ -78,13 +78,13 @@ func (p *inventory) applyStockDeltaLocked(productID string, delta int64) (*inven
 			return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", productID)
 		}
 		product.Stock = newStock
-		p.publishStockEventOverMQTT(p.mqttBrokerAddr, product)
+		is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
 		return product, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", productID)
 }
 
-func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
+func (is *inventoryService) ChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
 	claims, ok := shared.GetClaims(ctx)
 	log.Infof("ChangeInventoryProductStock called for product with ID %s with claims: %v", req.Id, claims)
 	if !ok {
@@ -92,33 +92,33 @@ func (p *inventory) ChangeInventoryProductStock(ctx context.Context, req *invent
 	}
 	log.Printf("ChangeInventoryProductStock called by user: %s, roles: %v", claims.Username, claims.Roles)
 
-	if !p.userAllowedToModifyProduct(ctx, req.GetId(), *claims) {
+	if !is.userAllowedToModifyProduct(ctx, req.GetId(), *claims) {
 		return nil, status.Error(codes.Unauthenticated, "user not allowed to modify product")
 	}
 
-	p.stockMu.Lock()
-	defer p.stockMu.Unlock()
+	is.stockMu.Lock()
+	defer is.stockMu.Unlock()
 
-	product, err := p.applyStockDeltaLocked(req.GetId(), req.GetDelta())
+	product, err := is.applyStockDeltaLocked(req.GetId(), req.GetDelta())
 	if err != nil {
 		return nil, err
 	}
 	return &inventorypb.ChangeInventoryProductStockResponse{Product: product}, nil
 }
 
-func (p *inventory) CompensateChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
-	return p.ChangeInventoryProductStock(ctx, &inventorypb.ChangeInventoryProductStockRequest{
+func (is *inventoryService) CompensateChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
+	return is.ChangeInventoryProductStock(ctx, &inventorypb.ChangeInventoryProductStockRequest{
 		Id:    req.GetId(),
 		Delta: -req.GetDelta(),
 	})
 }
 
-func (p *inventory) SetInventoryProductStock(ctx context.Context, req *inventorypb.SetInventoryProductStockRequest) (*inventorypb.SetInventoryProductStockRequestResponse, error) {
-	inventory := p.parseInventory()
+func (is *inventoryService) SetInventoryProductStock(ctx context.Context, req *inventorypb.SetInventoryProductStockRequest) (*inventorypb.SetInventoryProductStockRequestResponse, error) {
+	inventory := is.parseInventory()
 	for _, product := range inventory {
 		if req.GetId() == product.GetId() {
 			product.Stock = req.GetNewStock()
-			p.publishStockEventOverMQTT(p.mqttBrokerAddr, product)
+			is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
 			return &inventorypb.SetInventoryProductStockRequestResponse{Product: product}, nil
 		}
 	}
@@ -127,13 +127,13 @@ func (p *inventory) SetInventoryProductStock(ctx context.Context, req *inventory
 		Id:    req.GetId(),
 		Stock: req.GetNewStock(),
 	}
-	p.inventory.Products = append(p.parseInventory(), product)
+	is.inventory.Products = append(is.parseInventory(), product)
 	log.Infof("Inventory product updated: %s", product.Id)
-	p.publishStockEventOverMQTT(p.mqttBrokerAddr, product)
+	is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
 	return &inventorypb.SetInventoryProductStockRequestResponse{Product: product}, nil
 }
 
-func (p *inventory) CreateNewInventoryProduct(ctx context.Context, req *inventorypb.CreateNewInventoryProductRequest) (*inventorypb.CreateNewInventoryProductResponse, error) {
+func (is *inventoryService) CreateNewInventoryProduct(ctx context.Context, req *inventorypb.CreateNewInventoryProductRequest) (*inventorypb.CreateNewInventoryProductResponse, error) {
 	// Simulate inventory failure if enabled
 	configPath := "/var/behavior-config/FAIL_INVENTORY"
 
@@ -149,7 +149,7 @@ func (p *inventory) CreateNewInventoryProduct(ctx context.Context, req *inventor
 		Id:    req.GetId(),
 		Stock: req.GetInitialStock(),
 	}
-	p.inventory.Products = append(p.parseInventory(), product)
+	is.inventory.Products = append(is.parseInventory(), product)
 	log.Infof("Inventory product created: %s", product.Id)
 	return &inventorypb.CreateNewInventoryProductResponse{Product: product}, nil
 }
@@ -171,11 +171,11 @@ func getConfigValue(configPath string) (string, error) {
 	return configValue, nil
 }
 
-func (p *inventory) DeleteInventoryProduct(ctx context.Context, req *inventorypb.DeleteInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {
-	inventory := p.parseInventory()
+func (is *inventoryService) DeleteInventoryProduct(ctx context.Context, req *inventorypb.DeleteInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {
+	inventory := is.parseInventory()
 	for i, product := range inventory {
 		if req.GetId() == product.GetId() {
-			p.inventory.Products = append(inventory[:i], inventory[i+1:]...)
+			is.inventory.Products = append(inventory[:i], inventory[i+1:]...)
 			log.Infof("Inventory product deleted: %s", product.Id)
 			return &inventorypb.DeleteInventoryProductResponse{Product: product}, nil
 		}
@@ -183,12 +183,12 @@ func (p *inventory) DeleteInventoryProduct(ctx context.Context, req *inventorypb
 	return &inventorypb.DeleteInventoryProductResponse{}, nil
 }
 
-func (p *inventory) ResolveStockAlert(ctx context.Context, req *inventorypb.ResolveStockAlertRequest) (*inventorypb.ResolveStockAlertResponse, error) {
+func (is *inventoryService) ResolveStockAlert(ctx context.Context, req *inventorypb.ResolveStockAlertRequest) (*inventorypb.ResolveStockAlertResponse, error) {
 	claims, ok := shared.GetClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "failed to resolve user identity data from context")
 	}
-	if !p.userAllowedToModifyProduct(ctx, req.GetProductId(), *claims) {
+	if !is.userAllowedToModifyProduct(ctx, req.GetProductId(), *claims) {
 		return nil, status.Error(codes.Unauthenticated, "user not allowed to modify product")
 	}
 	if req.GetReorderAmount() <= 0 {
@@ -200,43 +200,43 @@ func (p *inventory) ResolveStockAlert(ctx context.Context, req *inventorypb.Reso
 
 	key := fmt.Sprintf("%s|%d", req.GetProductId(), req.GetCreatedAt().AsTime().Unix())
 
-	p.stockMu.Lock()
-	defer p.stockMu.Unlock()
+	is.stockMu.Lock()
+	defer is.stockMu.Unlock()
 
-	if _, seen := p.resolvedAlerts[key]; seen {
-		product, err := p.GetInventoryProduct(ctx, &inventorypb.GetInventoryProductRequest{Id: req.GetProductId()})
+	if _, seen := is.resolvedAlerts[key]; seen {
+		product, err := is.GetInventoryProduct(ctx, &inventorypb.GetInventoryProductRequest{Id: req.GetProductId()})
 		if err != nil {
 			return nil, err
 		}
 		return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: true}, nil
 	}
 
-	product, err := p.applyStockDeltaLocked(req.GetProductId(), req.GetReorderAmount())
+	product, err := is.applyStockDeltaLocked(req.GetProductId(), req.GetReorderAmount())
 	if err != nil {
 		return nil, err
 	}
-	p.resolvedAlerts[key] = time.Now()
+	is.resolvedAlerts[key] = time.Now()
 
 	return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: false}, nil
 }
 
-func (p *inventory) reapResolvedAlerts(interval time.Duration) {
+func (is *inventoryService) reapResolvedAlerts(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for range ticker.C {
-		cutoff := time.Now().Add(-p.resolvedAlertTTL)
-		p.stockMu.Lock()
-		for key, resolvedAt := range p.resolvedAlerts {
+		cutoff := time.Now().Add(-is.resolvedAlertTTL)
+		is.stockMu.Lock()
+		for key, resolvedAt := range is.resolvedAlerts {
 			if resolvedAt.Before(cutoff) {
-				delete(p.resolvedAlerts, key)
+				delete(is.resolvedAlerts, key)
 			}
 		}
-		p.stockMu.Unlock()
+		is.stockMu.Unlock()
 	}
 }
 
-func (p *inventory) CompensateCreateNewInventoryProduct(ctx context.Context, req *inventorypb.CreateNewInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {
-	res, err := p.DeleteInventoryProduct(ctx, &inventorypb.DeleteInventoryProductRequest{Id: req.GetId()})
+func (is *inventoryService) CompensateCreateNewInventoryProduct(ctx context.Context, req *inventorypb.CreateNewInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {
+	res, err := is.DeleteInventoryProduct(ctx, &inventorypb.DeleteInventoryProductRequest{Id: req.GetId()})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to compensate create inventory product: %v", err)
 	}
@@ -244,15 +244,15 @@ func (p *inventory) CompensateCreateNewInventoryProduct(ctx context.Context, req
 	return res, nil
 }
 
-func (p *inventory) parseInventory() []*inventorypb.InventoryProduct {
-	if len(p.inventory.Products) == 0 {
-		err := loadInventory(&p.inventory)
+func (is *inventoryService) parseInventory() []*inventorypb.InventoryProduct {
+	if len(is.inventory.Products) == 0 {
+		err := loadInventory(&is.inventory)
 		if err != nil {
 			return []*inventorypb.InventoryProduct{}
 		}
 	}
 
-	return p.inventory.Products
+	return is.inventory.Products
 }
 
 type inventoryProductWithCategory struct {
@@ -262,13 +262,13 @@ type inventoryProductWithCategory struct {
 	Categories []string `json:"categories"`
 }
 
-func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *inventorypb.InventoryProduct) {
+func (is *inventoryService) publishStockEventOverMQTT(brokerAddr string, product *inventorypb.InventoryProduct) {
 	stock := product.GetStock()
 	var severity string
 	switch {
-	case stock <= p.thresholds.criticalStock:
+	case stock <= is.thresholds.criticalStock:
 		severity = "critical"
-	case stock <= p.thresholds.lowStock:
+	case stock <= is.thresholds.lowStock:
 		severity = "low"
 	default:
 		severity = "normal"
@@ -277,7 +277,7 @@ func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *invent
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 
-	catalogResp, err := productcatalogpb.NewProductCatalogServiceClient(p.productCatalogSvcConn).GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: product.GetId()})
+	catalogResp, err := productcatalogpb.NewProductCatalogServiceClient(is.productCatalogSvcConn).GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: product.GetId()})
 
 	var categories []string
 	if err != nil {
@@ -301,20 +301,20 @@ func (p *inventory) publishStockEventOverMQTT(brokerAddr string, product *invent
 		fullTopic := "inventory/" + category + "/" + product.GetId() + "/stock"
 		log.Infof("Publishing event for topic '%s'...", fullTopic)
 		go func(t string, pld []byte) {
-			_ = p.publishEventOverMQTT(brokerAddr, t, pld)
+			_ = is.publishEventOverMQTT(brokerAddr, t, pld)
 		}(fullTopic, payload)
 	}
 }
 
-func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payload []byte) error {
+func (is *inventoryService) publishEventOverMQTT(brokerAddr string, topic string, payload []byte) error {
 	log.Infof("Attempting to publish event for topic '%s'...", topic)
-	if p.mqttClient == nil || !p.mqttClient.IsConnected() {
+	if is.mqttClient == nil || !is.mqttClient.IsConnected() {
 		log.Errorf("MQTT client is not connected")
 		return status.Error(codes.Internal, "MQTT client is not connected")
 	}
 
 	log.Printf("Publishing event for topic '%s'...", topic)
-	token := p.mqttClient.Publish(topic, 1, true, payload)
+	token := is.mqttClient.Publish(topic, 1, true, payload)
 
 	if finished := token.WaitTimeout(time.Second * 2); !finished {
 		return status.Error(codes.DeadlineExceeded, "MQTT publish timed out")
@@ -326,7 +326,7 @@ func (p *inventory) publishEventOverMQTT(brokerAddr string, topic string, payloa
 	return nil
 }
 
-func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId string, claims shared.UserClaims) bool {
+func (is *inventoryService) userAllowedToModifyProduct(ctx context.Context, productId string, claims shared.UserClaims) bool {
 	for _, role := range claims.Roles {
 		if role == "SYSTEM_SERVICE" || role == "ADMIN" {
 			log.WithField("role", role).Info("User has system service or admin role, allowing modification")
@@ -341,7 +341,7 @@ func (p *inventory) userAllowedToModifyProduct(ctx context.Context, productId st
 		return true
 	}
 
-	product, err := productcatalogpb.NewProductCatalogServiceClient(p.productCatalogSvcConn).GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: productId})
+	product, err := productcatalogpb.NewProductCatalogServiceClient(is.productCatalogSvcConn).GetProduct(ctx, &productcatalogpb.GetProductRequest{Id: productId})
 	if err != nil {
 		log.Errorf("failed to get product from catalog: %v", err)
 		return false
