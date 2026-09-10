@@ -55,11 +55,11 @@ type platformDetails struct {
 	provider string
 }
 
-type Ratings struct {
-	Ratings []Rating `json:"ratings"`
+type ratings struct {
+	Ratings []rating `json:"ratings"`
 	Average float32  `json:"average"`
 }
-type Rating struct {
+type rating struct {
 	ID        string  `json:"id"`
 	UserID    string  `json:"user_id"`
 	Score     float32 `json:"score"`
@@ -105,7 +105,7 @@ func computeHeavyLoad(iterations int) string {
 	data := []byte("monitoring-load-test-payload-data")
 	hash := sha256.Sum256(data)
 
-	for i := 0; i < iterations; i++ {
+	for range iterations {
 		// Chain the hashes together to force serial CPU computation
 		hash = sha256.Sum256(hash[:])
 	}
@@ -181,7 +181,7 @@ func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
-type Product struct {
+type product struct {
 	Item        *productcatalogpb.Product
 	Stock       int64
 	Severity    string
@@ -210,9 +210,9 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 	products, _ := fe.getProducts(r.Context())
 	inventoryProducts, _ := fe.listInventory(r.Context())
 
-	combinedMap := make(map[string]*Product, len(products)+len(inventoryProducts))
-	for _, product := range products {
-		combinedMap[product.GetId()] = &Product{Item: product, Stock: 0, Reorderable: false}
+	combinedMap := make(map[string]*product, len(products)+len(inventoryProducts))
+	for _, p := range products {
+		combinedMap[p.GetId()] = &product{Item: p, Stock: 0, Reorderable: false}
 	}
 	for _, inventoryProduct := range inventoryProducts {
 		if cp, ok := combinedMap[inventoryProduct.GetId()]; ok {
@@ -222,28 +222,22 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	combinedList := make([]*Product, 0, len(combinedMap))
+	combinedList := make([]*product, 0, len(combinedMap))
 	for _, cp := range combinedMap {
 		combinedList = append(combinedList, cp)
 	}
 
-	log.Infof("Claims: %s", claims)
-
-	//categories := claimsToCategories(claims)
-
-	log.Infof("User %s has access to categories: %v, combined inventory list has the following content: %v", claims.Username, categoryAccess, combinedList)
-
 	filtered := combinedList
 	if categoryAccess != nil {
-		tmp := make([]*Product, 0, len(combinedList))
+		tmp := make([]*product, 0, len(combinedList))
 		for _, cp := range combinedList {
 			if cp == nil || cp.Item == nil {
 				continue
 			}
 			severity := severityFromStock(cp.Stock)
 
-			if slices.Contains(categoryAccess, shared.CategoryAccess{shared.CategoryAll, shared.PermissionWrite}) {
-				cp = &Product{
+			if slices.Contains(categoryAccess, shared.CategoryAccess{Category: shared.CategoryAll, Permission: shared.PermissionWrite}) {
+				cp = &product{
 					Item:        cp.Item,
 					Stock:       cp.Stock,
 					Severity:    severity,
@@ -253,10 +247,10 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 				continue
 			}
 			for _, cat := range cp.Item.Categories {
-				targetW := shared.CategoryAccess{shared.Category(cat), shared.PermissionWrite}
-				targetRO := shared.CategoryAccess{shared.Category(cat), shared.PermissionRead}
+				targetW := shared.CategoryAccess{Category: shared.Category(cat), Permission: shared.PermissionWrite}
+				targetRO := shared.CategoryAccess{Category: shared.Category(cat), Permission: shared.PermissionRead}
 				if slices.Contains(categoryAccess, targetW) {
-					cp = &Product{
+					cp = &product{
 						Item:        cp.Item,
 						Stock:       cp.Stock,
 						Severity:    severity,
@@ -272,7 +266,7 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 		filtered = tmp
 	}
 
-	slices.SortFunc(filtered, func(a, b *Product) int {
+	slices.SortFunc(filtered, func(a, b *product) int {
 		if a.Reorderable != b.Reorderable {
 			if a.Reorderable {
 				return -1
@@ -303,7 +297,7 @@ func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*shared.UserCla
 	tokenString := cookie.Value
 	claims := &shared.UserClaims{}
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
 		return fe.publicKey, nil
 	})
 	return claims, token, err
@@ -350,16 +344,7 @@ func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request)
 	if err != nil || !token.Valid {
 		log.WithError(err).Warn("stale or invalid token detected, clearing session")
 
-		http.SetCookie(w, &http.Cookie{
-			Name:     cookieAuth,
-			Value:    "",
-			MaxAge:   -1,
-			Path:     "/",
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-			// Secure: true,
-		})
-		http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
+		fe.invalidateCookie(w, r, cookieAuth, err)
 		return
 	}
 
@@ -380,8 +365,8 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nextTarget := r.FormValue("next")
 	// Handle POST
+	nextTarget := r.FormValue("next")
 	username := r.FormValue("uid")
 	password := r.FormValue("password")
 
@@ -631,7 +616,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	product := struct {
 		Item     *productcatalogpb.Product
 		Price    *commonpb.Money
-		Ratings  *Ratings
+		Ratings  *ratings
 		Stock    int64
 		Severity string
 	}{p, price, nil, -1, ""}
@@ -640,7 +625,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		resp, err := http.Get(fmt.Sprintf("http://%s/ratings/product/%s", fe.ratingSvcAddr, p.GetId()))
 		log.Println("Response: %s", resp)
 		if err == nil {
-			var ratings Ratings
+			var ratings ratings
 			defer resp.Body.Close()
 			if err := json.NewDecoder(resp.Body).Decode(&ratings); err == nil {
 				log.Println("Ratings: %s", ratings)
@@ -699,7 +684,7 @@ func (fe *frontendServer) ratingHandler(w http.ResponseWriter, r *http.Request) 
 
 	score, _ := strconv.ParseFloat(r.FormValue("score"), 32)
 
-	rating := Rating{
+	rating := rating{
 		Score:     float32(score),
 		Body:      r.FormValue("body"),
 		ProductID: r.FormValue("product_id"),
