@@ -63,6 +63,8 @@ var (
 
 type ctxKeySessionID struct{}
 
+// frontendServer implements the frontend service and keeps the
+// configuration needed to connect to different services.
 type frontendServer struct {
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
@@ -106,6 +108,8 @@ type frontendServer struct {
 	notificationSvcConn *grpc.ClientConn
 }
 
+// main initializes the frontend service, loads configuration and credentials,
+// connects to downstream services, registers HTTP routes, and starts the server.
 func main() {
 	ctx := context.Background()
 	log := logrus.New()
@@ -253,6 +257,7 @@ func main() {
 	log.Infof("starting server on %s:%s", addr, srvPort)
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
+
 func initStats(log logrus.FieldLogger) {
 	// TODO(arbrown) Implement OpenTelemtry stats
 }

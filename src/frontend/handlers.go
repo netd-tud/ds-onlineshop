@@ -55,10 +55,15 @@ type platformDetails struct {
 	provider string
 }
 
+// ratings represents the aggregated review payload returned for a product,
+// including the list of individual ratings and the computed average score.
 type ratings struct {
 	Ratings []rating `json:"ratings"`
 	Average float32  `json:"average"`
 }
+
+// rating describes a single product review submitted to or returned from the
+// rating microservice.
 type rating struct {
 	ID        string  `json:"id"`
 	UserID    string  `json:"user_id"`
@@ -72,6 +77,7 @@ var (
 	isCymbalBrand    = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
 	assistantEnabled = "true" == strings.ToLower(os.Getenv("ENABLE_ASSISTANT"))
 
+	// flags which enable/disable the specific services in the frontend ui
 	authEnabled         = false
 	inventoryEnabled    = false
 	notificationEnabled = false
@@ -87,6 +93,11 @@ var (
 
 var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
 
+// heavyLoadHandler is an HTTP handler designed to intentionally consume
+// CPU cycles for load testing and monitoring validation.
+//
+// It looks for an "iters" query parameter in the request URL to determine
+// how many hashing iterations to perform, defaulting to 500,000 if omitted.
 func (fe *frontendServer) heavyLoadHandler(w http.ResponseWriter, r *http.Request) {
 	iters := r.URL.Query().Get("iters")
 	if iters == "" {
@@ -101,6 +112,8 @@ func (fe *frontendServer) heavyLoadHandler(w http.ResponseWriter, r *http.Reques
 	w.Write([]byte(computeHeavyLoad(iterations)))
 }
 
+// computeHeavyLoad simulates heavy CPU utilization by performing sequential
+// SHA256 hashing.
 func computeHeavyLoad(iterations int) string {
 	data := []byte("monitoring-load-test-payload-data")
 	hash := sha256.Sum256(data)
@@ -113,6 +126,8 @@ func computeHeavyLoad(iterations int) string {
 	return fmt.Sprintf("%x", hash)
 }
 
+// openAlertsForRequest retrieves the stock alerts for the authenticated user
+// based on their claims and sorts them based on the stock value.
 func (fe *frontendServer) openAlertsForRequest(w http.ResponseWriter, r *http.Request) ([]*notificationpb.StockAlert, error) {
 	cookie, err := r.Cookie(cookieAuth)
 	if err != nil {
@@ -140,6 +155,8 @@ func (fe *frontendServer) openAlertsForRequest(w http.ResponseWriter, r *http.Re
 	return productAlerts, nil
 }
 
+// recentOrdersForRequest retrieves the recent orders for the authenticated user
+// based on their claims and partitions them by currencies.
 func (fe *frontendServer) recentOrdersForRequest(w http.ResponseWriter, r *http.Request) (map[string]*notificationpb.OrderList, error) {
 	cookie, err := r.Cookie(cookieAuth)
 	if err != nil {
@@ -157,6 +174,7 @@ func (fe *frontendServer) recentOrdersForRequest(w http.ResponseWriter, r *http.
 	return recentOrdersPerCurrency, nil
 }
 
+// notificationHandler is an HTTP handler for rendering stock-alert and order notifications.
 func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
@@ -181,6 +199,8 @@ func (fe *frontendServer) notificationHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// product wraps inventory related information around a product catalog item,
+// including its stock, severity level and weither the item is reorderable.
 type product struct {
 	Item        *productcatalogpb.Product
 	Stock       int64
@@ -188,6 +208,12 @@ type product struct {
 	Reorderable bool
 }
 
+// inventoryHandler is an HTTP handler for rendering a list of inventory products
+// the user is responsible for.
+//
+// It verifies the user is logged-in and redirects to the login page if not. Afterward,
+// it retrieves product information from both productcatalog and inventory services, combines them,
+// filters them based on the user's category access and sorts based on stock.
 func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
@@ -293,6 +319,7 @@ func (fe *frontendServer) inventoryHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// claimsFromCookie extracts the user claims and jwt token from a http cookie.
 func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*shared.UserClaims, *jwt.Token, error) {
 	tokenString := cookie.Value
 	claims := &shared.UserClaims{}
@@ -303,6 +330,9 @@ func (fe *frontendServer) claimsFromCookie(cookie *http.Cookie) (*shared.UserCla
 	return claims, token, err
 }
 
+// invalidateCookie invalidates a cookie by the given name and request.
+//
+// The cookie is invalidated by setting MaxAge to -1.
 func (fe *frontendServer) invalidateCookie(w http.ResponseWriter, r *http.Request, cookieName string, err error) {
 	log.WithError(err).Warn("invalidating cookie")
 	http.SetCookie(w, &http.Cookie{
@@ -317,6 +347,7 @@ func (fe *frontendServer) invalidateCookie(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, baseUrl+"/login", http.StatusFound)
 }
 
+// profileHandler is an HTTP handler, which redirects the user to /account if they are logged-in or to /login if not.
 func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
@@ -352,6 +383,17 @@ func (fe *frontendServer) profileHandler(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, baseUrl+"/account", http.StatusFound)
 }
 
+// loginHandler is an HTTP handler for processeing HTTP requests for the user authentication flow.
+//
+// For GET requests, it renders the login form and preserves the user's
+// intended post-login destination via the "next" query parameter.
+//
+// For POST requests, it validates the submitted credentials against the
+// backend authentication gRPC service. Upon success, it establishes the
+// user session by setting an HTTP-only JWT cookie and a short-lived
+// notification flag. It then redirects the user to their original
+// destination, strictly sanitizing the redirect target to prevent external
+// routing exploits.
 func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
@@ -399,6 +441,7 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 		// Secure: true,
 	})
 
+	// Security check: ensure the redirect path is strictly local to prevent open redirect vulnerabilities.
 	if nextTarget == "" || !strings.HasPrefix(nextTarget, "/") || strings.HasPrefix(nextTarget, "//") {
 		nextTarget = "/"
 	}
@@ -416,6 +459,11 @@ func (fe *frontendServer) loginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, baseUrl+nextTarget, http.StatusFound)
 }
 
+// reorderHandler processes HTTP requests to trigger a product restock.
+//
+// It verifies that the user is currently authenticated, extracts the target
+// product ID and requested quantity from the form payload, and delegates
+// the reorder operation to the backend.
 func (fe *frontendServer) reorderHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
@@ -448,6 +496,13 @@ func (fe *frontendServer) reorderHandler(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, baseUrl+"/inventory", http.StatusFound)
 }
 
+// accountHandler processes HTTP requests to display the user's account profile.
+//
+// It requires an active authenticated session. It extracts and validates
+// the JWT from the user's cookie, mapping the embedded identity claims
+// (such as name, title, and roles) directly into the view. If the session
+// is missing, expired, or invalid, the request is safely aborted and the
+// user is redirected to re-authenticate.
 func (fe *frontendServer) accountHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 
@@ -480,6 +535,12 @@ func (fe *frontendServer) accountHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// homeHandler processes HTTP requests for the application landing page.
+//
+// It aggregates core data by fetching available currencies, the
+// product catalog, and the user's active shopping cart. It converts product
+// prices to the user's preferred currency, checks for post-login
+// stock notifications, and renders the home template.
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.WithField("currency", currentCurrency(r)).Info("home")
@@ -573,6 +634,13 @@ func (plat *platformDetails) setPlatformDetails(env string) {
 	}
 }
 
+// productHandler processes HTTP requests to display an individual product detail page.
+//
+// It extracts the product ID from the URL path, retrieves the catalog details,
+// converts prices into the user's preferred currency, and loads supporting data
+// such as active cart size and recommendations. It then optionally queries
+// external services for ratings, inventory stock levels, and packaging info,
+// logs a view analytics event, and renders the product template.
 func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	id := mux.Vars(r)["id"]
@@ -676,6 +744,12 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// ratingHandler processes HTTP POST requests to submit a new product rating.
+//
+// It restricts access to POST operations, parses the submitted review data
+// from the form, marshals the payload into JSON, and forwards it to the
+// downstream rating microservice. Upon successful creation, it redirects
+// the user back to the respective product detail page.
 func (fe *frontendServer) ratingHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -728,6 +802,12 @@ func (fe *frontendServer) ratingHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// addToCartHandler processes HTTP requests to add a specified product quantity to the user's shopping cart.
+//
+// It parses and validates the form input using the add-to-cart payload validator,
+// verifies the product exists via the catalog service, propagates the user session ID
+// via gRPC metadata, inserts the item into the cart.
+// Then redirects the client to the cart view.
 func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	quantity, _ := strconv.ParseUint(r.FormValue("quantity"), 10, 32)
@@ -764,6 +844,10 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusFound)
 }
 
+// emptyCartHandler processes HTTP requests to clear all items from the user's shopping cart.
+//
+// It retrieves the current session identifier, invokes the backend cart-clearing
+// operation, and redirects the client back to the home page upon success.
 func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.Debug("emptying cart")
@@ -776,6 +860,12 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusFound)
 }
 
+// viewCartHandler processes HTTP requests to display the user's shopping cart.
+//
+// It retrieves available currencies, active cart items, and product catalog details,
+// converting prices into the user's preferred currency. It computes shipping
+// estimates, calculates itemized totals, checks for any transient order error
+// cookies to display flash messages, and renders the cart template.
 func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.Debug("view user cart")
@@ -862,6 +952,14 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// placeOrderHandler processes HTTP POST requests to finalize a user purchase.
+//
+// It parses and validates shipping and payment details from the form payload,
+// injects session metadata into the outgoing context, and issues a PlaceOrder
+// gRPC call to the checkout service. If the checkout fails due to a business
+// logic abort (e.g., payment failure or insufficient stock), it sets a transient
+// error cookie and redirects back to the cart; otherwise, it calculates the
+// total amount paid and renders the order confirmation view.
 func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.Debug("placing order")
@@ -984,6 +1082,11 @@ func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// logoutHandler processes HTTP requests to terminate the user session.
+//
+// It iterates through all active cookies present in the request, explicitly
+// invalidating and expiring each one, and then redirects the client
+// back to the home page.
 func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.Debug("logging out")
@@ -996,6 +1099,11 @@ func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusFound)
 }
 
+// getProductByID processes HTTP requests to retrieve and return a single product as JSON.
+//
+// It extracts the product identifier from the router variables, fetches the product
+// details from the catalog service using the authentication cookie, marshals
+// the payload into JSON, and writes the resulting data directly to the HTTP response.
 func (fe *frontendServer) getProductByID(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["ids"]
 	if id == "" {
@@ -1066,6 +1174,11 @@ func (fe *frontendServer) chatBotHandler(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
+// setCurrencyHandler processes HTTP requests to update the user's preferred currency.
+//
+// It parses and validates the submitted currency code against the payload validator,
+// persists the new currency choice in an HTTP cookie, and redirects the client
+// back to their referring page (or the home page if no referer is provided).
 func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	cur := r.FormValue("currency_code")
@@ -1103,6 +1216,8 @@ func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log lo
 	return ads[rand.Intn(len(ads))]
 }
 
+// renderHTTPError logs an HTTP request failure, sets the response status code,
+// and renders the user-facing error template with the provided error details.
 func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWriter, err error, code int) {
 	log.WithField("error", err).Error("request error")
 	errMsg := fmt.Sprintf("%+v", err)
@@ -1118,6 +1233,8 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 	}
 }
 
+// injectCommonTemplateData populates and returns a map containing common
+// global template context variables, merging them with any route-specific payload data.
 func injectCommonTemplateData(r *http.Request, payload map[string]any) map[string]any {
 	data := map[string]any{
 		"session_id":           sessionID(r),
@@ -1143,6 +1260,8 @@ func injectCommonTemplateData(r *http.Request, payload map[string]any) map[strin
 	return data
 }
 
+// currentCurrency retrieves the user's selected currency from the request cookie,
+// falling back to the default system currency if the cookie is missing or unset.
 func currentCurrency(r *http.Request) string {
 	c, _ := r.Cookie(cookieCurrency)
 	if c != nil {
@@ -1151,6 +1270,8 @@ func currentCurrency(r *http.Request) string {
 	return defaultCurrency
 }
 
+// sessionID retrieves the current session id from the request cookie,
+// falling back to an empty string if the cookie is missing or unset.
 func sessionID(r *http.Request) string {
 	v := r.Context().Value(ctxKeySessionID{})
 	if v != nil {
@@ -1159,6 +1280,7 @@ func sessionID(r *http.Request) string {
 	return ""
 }
 
+// cartIDs extracts product IDs from a slice of cart items.
 func cartIDs(c []*cartpb.CartItem) []string {
 	out := make([]string, len(c))
 	for i, v := range c {
@@ -1167,7 +1289,7 @@ func cartIDs(c []*cartpb.CartItem) []string {
 	return out
 }
 
-// get total # of items in cart
+// cartSize calculates the total number of items in a shopping cart.
 func cartSize(c []*cartpb.CartItem) int {
 	cartSize := 0
 	for _, item := range c {
@@ -1176,11 +1298,15 @@ func cartSize(c []*cartpb.CartItem) int {
 	return cartSize
 }
 
-func renderMoney(money commonpb.Money) string {
+// renderMoney formats a monetary amount into a human-readable string representation,
+// combining the appropriate currency symbol, units, and fractional nano-precision value.
+func renderMoney(money *commonpb.Money) string {
 	currencyLogo := renderCurrencyLogo(money.GetCurrencyCode())
 	return fmt.Sprintf("%s%d.%02d", currencyLogo, money.GetUnits(), money.GetNanos()/10000000)
 }
 
+// renderCurrencyLogo maps a given currency code to its corresponding symbol,
+// defaulting to the US dollar sign if the code is unrecognized.
 func renderCurrencyLogo(currencyCode string) string {
 	logos := map[string]string{
 		"USD": "$",
@@ -1207,6 +1333,9 @@ func stringinSlice(slice []string, val string) bool {
 	return false
 }
 
+// calculateOrderTotal computes the aggregate monetary sum of a slice of order items,
+// multiplying each item's cost by its quantity, normalizing fractional nanos,
+// and returning the total in the matching currency.
 func calculateOrderTotal(items []*checkoutpb.OrderItem) *commonpb.Money {
 	if len(items) == 0 {
 		return &commonpb.Money{}
@@ -1239,6 +1368,7 @@ func calculateOrderTotal(items []*checkoutpb.OrderItem) *commonpb.Money {
 	}
 }
 
+// severityFromStock maps an inventory stock count to a corresponding severity status level.
 func severityFromStock(stock int64) string {
 	switch {
 	case stock == 0:
