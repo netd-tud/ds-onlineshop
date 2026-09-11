@@ -16,6 +16,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// notificationService represents the notification and alerting microservice backend.
+//
+// It manages incoming stock events from the MQTT broker, tracks active stock alerts,
+// maintains per-currency order queues, and coordinates real-time subscriber channels
+// using read-write mutexes for concurrent state protection.
 type notificationService struct {
 	notificationpb.UnimplementedNotificationServiceServer
 
@@ -42,6 +47,10 @@ func (ns *notificationService) Check(ctx context.Context, req *healthpb.HealthCh
 	return &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING}, nil
 }
 
+// ListOpenAlerts handles the gRPC request to retrieve currently open stock alerts filtered by category.
+//
+// It parses the requested categories, acquires a read lock on the alerts map, filters active stock alerts
+// matching either the specified categories or an "all" catch-all permission, and returns the list of matching alerts.
 func (ns *notificationService) ListOpenAlerts(ctx context.Context, req *notificationpb.ListOpenAlertsRequest) (*notificationpb.ListOpenAlertsResponse, error) {
 	reqCats := make(map[string]bool, len(req.GetCategories()))
 	for _, c := range req.GetCategories() {
@@ -65,6 +74,9 @@ func (ns *notificationService) ListOpenAlerts(ctx context.Context, req *notifica
 	return response, nil
 }
 
+// setupMQTTSubscriber configures and initializes the MQTT client connection, event handlers,
+// and subscription topics for stock updates and completed orders, establishing automatic reconnection behavior
+// and connecting to the message broker.
 func (ns *notificationService) setupMQTTSubscriber() {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(ns.mqttBrokerAddr)
@@ -110,11 +122,11 @@ func (ns *notificationService) setupMQTTSubscriber() {
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		log.Fatalf("Error connecting to MQTT broker: %v", token.Error())
 	}
-
-	log.Printf("Successfully subscribed to %s", stockTopic)
-	log.Printf("Successfully subscribed to %s", orderTopic)
 }
 
+// onStockUpdate handles incoming MQTT stock update messages by unmarshaling the payload,
+// updating or clearing active stock alerts based on severity, preserving original creation timestamps,
+// and triggering real-time alert notifications to subscribers.
 func (ns *notificationService) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 	var p struct {
 		Id         string   `json:"id"`
@@ -157,6 +169,8 @@ func (ns *notificationService) onStockUpdate(_ mqtt.Client, msg mqtt.Message) {
 	ns.triggerNewAlert(alert)
 }
 
+// triggerNewAlert broadcasts a new stock alert to all active subscriber channels
+// matching the alert's categories or a catch-all subscription, handling full client buffers safely without blocking.
 func (ns *notificationService) triggerNewAlert(alert *notificationpb.StockAlert) {
 	ns.channelMu.RLock()
 	defer ns.channelMu.RUnlock()
@@ -177,6 +191,10 @@ func (ns *notificationService) triggerNewAlert(alert *notificationpb.StockAlert)
 	}
 }
 
+// StreamStockAlerts handles a gRPC server-streaming request to stream real-time stock alerts to clients.
+//
+// It registers a dedicated client channel filtered by the requested categories,
+// ensures proper cleanup upon stream disconnection, and forwards incoming alerts to the gRPC stream.
 func (ns *notificationService) StreamStockAlerts(req *notificationpb.StreamStockAlertsRequest, stream grpc.ServerStreamingServer[notificationpb.StockAlert]) error {
 	clientChan := make(chan *notificationpb.StockAlert, 100)
 
@@ -209,6 +227,8 @@ func (ns *notificationService) StreamStockAlerts(req *notificationpb.StreamStock
 
 }
 
+// onOrderCompleted handles incoming MQTT order completion messages by unmarshaling
+// the JSON payload into an order result and pushing it to the notification service's processing queue.
 func (ns *notificationService) onOrderCompleted(_ mqtt.Client, msg mqtt.Message) {
 	order := &checkoutpb.OrderResult{}
 
@@ -220,6 +240,9 @@ func (ns *notificationService) onOrderCompleted(_ mqtt.Client, msg mqtt.Message)
 	ns.PushNewOrder(order)
 }
 
+// PushNewOrder handles incoming completed orders by extracting their currency code,
+// routing them to the appropriate currency-specific order queue, and creating a new queue
+// if one does not already exist for that currency.
 func (ns *notificationService) PushNewOrder(order *checkoutpb.OrderResult) {
 	currency := order.GetShippingCost().GetCurrencyCode()
 	if currency == "" {
@@ -238,6 +261,10 @@ func (ns *notificationService) PushNewOrder(order *checkoutpb.OrderResult) {
 	q.Push(order)
 }
 
+// ListRecentOrdersByCurrency handles the gRPC request to retrieve recent completed orders grouped by currency code.
+//
+// It acquires a read lock on the order queues, iterates through the requested currencies,
+// retrieves all accumulated orders from corresponding queues, and returns them in a structured response map.
 func (ns *notificationService) ListRecentOrdersByCurrency(ctx context.Context, req *notificationpb.ListRecentOrdersByCurrencyRequest) (*notificationpb.ListRecentOrdersByCurrencyResponse, error) {
 	ns.ordersMu.RLock()
 	defer ns.ordersMu.RUnlock()

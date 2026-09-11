@@ -44,6 +44,9 @@ func main() {
 	select {}
 }
 
+// run initializes the gRPC notification server, binds to the specified TCP port,
+// configures notification thresholds, client queues, and MQTT broker connectivity,
+// and starts serving incoming RPC and health check traffic.
 func run(port string) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
