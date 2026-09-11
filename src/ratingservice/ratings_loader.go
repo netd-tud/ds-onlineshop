@@ -7,6 +7,10 @@ import (
 	"os"
 )
 
+// loadRatings loads product ratings from the local JSON persistence file into memory.
+//
+// It opens the ratings data file, reads its raw contents, unmarshals the JSON structure
+// into an internal wrapper slice, and indexes the individual ratings into a map by their unique identifier.
 func loadRatings() (map[string]rating, error) {
 	jsonFile, err := os.Open("ratings.json")
 
