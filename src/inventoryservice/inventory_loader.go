@@ -8,6 +8,8 @@ import (
 	inventorypb "github.com/netd-tud/ds-onlineshop/src/inventoryservice/genproto/inventory"
 )
 
+// loadInventory reads and parses product inventory data from a local JSON file
+// into the provided inventory response structure.
 func loadInventory(inventory *inventorypb.ListInventoryResponse) error {
 	log.Info("loading inventory from local inventory.json file...")
 

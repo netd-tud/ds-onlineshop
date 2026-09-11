@@ -9,6 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// XaPrepareCreateInventoryProduct handles the prepare phase of a distributed two-phase commit (XA) transaction for product creation.
+//
+// It simulates failure conditions if demo mode is enabled, validates the initial stock level,
+// stages the pending product creation mapped to the given global transaction identifier (GID), and ensures idempotency for retried calls.
 func (is *inventoryService) XaPrepareCreateInventoryProduct(ctx context.Context, req *inventorypb.XaPrepareCreateInventoryProductRequest) (*commonpb.Empty, error) {
 	configPath := "/var/behavior-config/FAIL_INVENTORY"
 
@@ -39,6 +43,11 @@ func (is *inventoryService) XaPrepareCreateInventoryProduct(ctx context.Context,
 	return &commonpb.Empty{}, nil
 }
 
+// XaCommitCreateInventoryProduct handles the commit phase of a distributed two-phase commit (XA) transaction for product creation.
+//
+// It retrieves the staged product using the global transaction identifier (GID),
+// appends it to the active inventory list, clears the pending transaction state,
+// and ensures idempotency for retried commit operations.
 func (is *inventoryService) XaCommitCreateInventoryProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
 	is.xaMu.Lock()
 	defer is.xaMu.Unlock()
@@ -54,6 +63,10 @@ func (is *inventoryService) XaCommitCreateInventoryProduct(ctx context.Context, 
 	return &commonpb.Empty{}, nil
 }
 
+// XaRollbackCreateInventoryProduct handles the rollback phase of a distributed two-phase commit (XA) transaction for product creation.
+//
+// It removes the staged product using the global transaction identifier (GID), clears the pending transaction state,
+// and ensures idempotency for retried rollback operations.
 func (is *inventoryService) XaRollbackCreateInventoryProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
 	is.xaMu.Lock()
 	defer is.xaMu.Unlock()

@@ -39,6 +39,9 @@ func init() {
 	log.Out = os.Stdout
 }
 
+// main initializes the server configuration by reading environment variables
+// for the port binding, launches the core service execution loop, and blocks
+// indefinitely to keep the background listener active.
 func main() {
 	port := defaultPort
 	if value, ok := os.LookupEnv("PORT"); ok {
@@ -49,6 +52,11 @@ func main() {
 	select {}
 }
 
+// run initializes and starts the gRPC inventory microservice server.
+//
+// It sets up network listeners, loads JWT public keys for request authentication,
+// initializes the MQTT client connection, loads initial inventory state, and registers the
+// service and health check handlers.
 func run(port string) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
