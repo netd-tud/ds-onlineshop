@@ -29,6 +29,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// productCatalogService represents the product catalog microservice backend.
+//
+// It manages product listings, coordinates distributed XA transactions
+// for product updates or creations, and protects shared state with a mutex.
 type productCatalogService struct {
 	productcatalogpb.UnimplementedProductCatalogServiceServer
 	catalog   productcatalogpb.ListProductsResponse
@@ -44,12 +48,19 @@ func (pcs *productCatalogService) Watch(req *healthpb.HealthCheckRequest, ws hea
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
+// ListProducts handles the gRPC request to retrieve the full product catalog.
+//
+// It retrieves the parsed catalog products and returns them in a structured response.
 func (pcs *productCatalogService) ListProducts(context.Context, *commonpb.Empty) (*productcatalogpb.ListProductsResponse, error) {
 	time.Sleep(extraLatency)
 
 	return &productcatalogpb.ListProductsResponse{Products: pcs.parseCatalog()}, nil
 }
 
+// GetProduct handles the gRPC request to retrieve a single product by its unique identifier.
+//
+// It searches the parsed product catalog for a matching ID,
+// and returns the product details or a gRPC NotFound status if the item does not exist.
 func (pcs *productCatalogService) GetProduct(ctx context.Context, req *productcatalogpb.GetProductRequest) (*productcatalogpb.Product, error) {
 	time.Sleep(extraLatency)
 
@@ -63,6 +74,10 @@ func (pcs *productCatalogService) GetProduct(ctx context.Context, req *productca
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
+// SearchProducts handles the gRPC request to search for products by keyword query.
+//
+// It performs a case-insensitive substring search
+// across product names and descriptions, and returns matching items in a structured response.
 func (pcs *productCatalogService) SearchProducts(ctx context.Context, req *productcatalogpb.SearchProductsRequest) (*productcatalogpb.SearchProductsResponse, error) {
 	time.Sleep(extraLatency)
 
@@ -77,6 +92,10 @@ func (pcs *productCatalogService) SearchProducts(ctx context.Context, req *produ
 	return &productcatalogpb.SearchProductsResponse{Results: ps}, nil
 }
 
+// CreateNewProduct handles the gRPC request to create a new product in the catalog.
+//
+// It generates a random unique identifier if none is provided, constructs the new product entity,
+// appends it to the parsed product catalog list, logs the creation event, and returns the newly created product details.
 func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.CreateNewProductResponse, error) {
 	if req.Id == "" {
 		newId, _ := generateID(10)
@@ -95,6 +114,10 @@ func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *pro
 	return &productcatalogpb.CreateNewProductResponse{Product: product}, nil
 }
 
+// DeleteProduct handles the gRPC request to remove an existing product from the catalog by its ID.
+//
+// It searches the parsed product catalog, splices out the matching product upon discovery,
+// logs the deletion event, and returns the deleted product details or a gRPC NotFound status if the product ID does not exist.
 func (pcs *productCatalogService) DeleteProduct(ctx context.Context, req *productcatalogpb.DeleteProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
 	catalog := pcs.parseCatalog()
 	for i, product := range catalog {
@@ -107,6 +130,10 @@ func (pcs *productCatalogService) DeleteProduct(ctx context.Context, req *produc
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
 
+// CompensateCreateNewProduct handles the compensation (rollback) phase for a failed product creation workflow.
+//
+// It invokes the product deletion logic for the specified product ID to reverse the creation,
+// wraps any errors into an internal gRPC status, logs the compensation action, and returns the deletion response.
 func (pcs *productCatalogService) CompensateCreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
 	res, err := pcs.DeleteProduct(ctx, &productcatalogpb.DeleteProductRequest{Id: req.GetId()})
 	if err != nil {
@@ -116,6 +143,8 @@ func (pcs *productCatalogService) CompensateCreateNewProduct(ctx context.Context
 	return res, nil
 }
 
+// generateID generates a cryptographically secure, URL-safe random string identifier
+// of the specified length using base64 encoding.
 func generateID(length int) (string, error) {
 	// 6 bytes → 8 base64url chars, scale accordingly
 	numBytes := (length*6)/8 + 1
@@ -126,6 +155,8 @@ func generateID(length int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b)[:length], nil
 }
 
+// parseCatalog retrieves and caches the product catalog, reloading it from the configured backend
+// and synchronizing records into the PostgreSQL database when flagged or empty.
 func (pcs *productCatalogService) parseCatalog() []*productcatalogpb.Product {
 	if reloadCatalog || len(pcs.catalog.Products) == 0 {
 		err := loadCatalog(&pcs.catalog)

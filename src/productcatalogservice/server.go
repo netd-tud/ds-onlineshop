@@ -64,6 +64,10 @@ func init() {
 	catalogMutex = &sync.Mutex{}
 }
 
+// main initializes and starts the product catalog microservice.
+//
+// It configures distributed tracing, runtime profiling, environment-injected latency,
+// sets up signal handlers for dynamic catalog reloading flags, and boots the gRPC server.
 func main() {
 	if os.Getenv("ENABLE_TRACING") == "1" {
 		err := initTracing()
@@ -119,6 +123,10 @@ func main() {
 	select {}
 }
 
+// run configures and starts the gRPC server for the product catalog service on the specified port.
+//
+// It sets up network listening, OpenTelemetry propagation and metrics collection, initializes the product catalog,
+// registers the service and standard health checks, and begins serving requests.
 func run(port string) string {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {

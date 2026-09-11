@@ -31,6 +31,9 @@ import (
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/productcatalog"
 )
 
+// loadCatalog thread-safely populates the product catalog data structure
+// by selecting either the cloud AlloyDB cluster backend or a local file source
+// depending on environment configuration.
 func loadCatalog(catalog *productcatalogpb.ListProductsResponse) error {
 	catalogMutex.Lock()
 	defer catalogMutex.Unlock()
@@ -42,6 +45,8 @@ func loadCatalog(catalog *productcatalogpb.ListProductsResponse) error {
 	return loadCatalogFromLocalFile(catalog)
 }
 
+// loadCatalogFromLocalFile reads the product catalog from a local JSON file
+// and unmarshals its contents into the provided protobuf response message structure.
 func loadCatalogFromLocalFile(catalog *productcatalogpb.ListProductsResponse) error {
 	log.Info("loading catalog from local products.json file...")
 
