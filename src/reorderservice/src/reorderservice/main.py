@@ -20,6 +20,15 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 @dataclass
 class Config:
+    """Config holds microservice connection addresses, reorder boundaries, and alert thresholds.
+
+    Attributes:
+        notification_addr: Network address for the notification grpc service.
+        auth_addr: Network address for the authentication grpc service.
+        inventory_addr: Network address for the inventory grpc service.
+        reorder_bounds: Dictionary defining lowest and highest inventory reorder quantities.
+        thresholds: Dictionary defining low and critical alert expiration intervals in seconds.
+    """
     notification_addr: str
     auth_addr: str
     inventory_addr: str
@@ -28,6 +37,7 @@ class Config:
 
     @classmethod
     def from_env(cls):
+        """Creates and populates a Config instance using environment variables with sensible defaults."""
         return cls(
             notification_addr=os.environ.get("NOTIFICATION_ADDR", "notificationservice:50051"),
             auth_addr=os.environ.get("AUTH_ADDR", "authservice:50050"),
@@ -44,7 +54,21 @@ class Config:
 
 
 class AlertManager:
+    """Manages stock alerts, storing them in a thread-safe priority queue based on expiration timestamps,
+    handling severity upgrades, and triggering automated inventory reorder resolutions.
+
+    Attributes:
+        inventory_stub: gRPC client stub for interacting with the inventory service.
+        jwt: Authentication token used for secure gRPC requests.
+        thresholds: Dictionary mapping alert severities to expiration time intervals in seconds.
+        reorder_bounds: Dictionary defining the lower and upper bounds for automated reorder amounts.
+        alerts_heap: Thread-safe priority queue storing active alerts sorted by resolution time.
+        heap_lock: Thread lock protecting concurrent access to the alerts heap.
+        tie_breaker: Counter used to maintain stable heap ordering for items with identical timestamps.
+    """
+
     def __init__(self, inventory_stub, jwt, thresholds, reorder_bounds):
+        """Initializes the AlertManager with service clients, authentication credentials, and operational parameters."""
         self.inventory_stub = inventory_stub
         self.jwt = jwt
         self.thresholds = thresholds
@@ -54,6 +78,11 @@ class AlertManager:
         self.tie_breaker = itertools.count()
 
     def add_alert(self, alert):
+        """Adds a new stock alert to the heap or upgrades an existing alert's severity if appropriate.
+
+        Calculates the expiration timestamp based on alert severity thresholds and manages
+        thread-safe updates to the underlying priority queue.
+        """
         timestamp = alert.created_at.ToDatetime().timestamp()
         resolve_at = timestamp + self.thresholds.get(alert.severity, 0)
 
@@ -75,7 +104,10 @@ class AlertManager:
                 logging.info(f"Received and stored new alert for {alert.product_id}")
 
     def resolve_alert(self, alert):
-        """The function called when an alert reaches the time threshold."""
+        """Triggers the resolution of an expired stock alert by sending a gRPC request to the inventory service.
+
+        Computes a randomized reorder amount within configured bounds and authenticates the request using the stored JWT.
+        """
         logging.info(f"Alert resolving for product: {alert.product_id}")
 
         rand_amount = random.randint(self.reorder_bounds["lowest"], self.reorder_bounds["highest"])
@@ -95,6 +127,7 @@ class AlertManager:
             logging.error(f"Failed to resolve alert for {alert.product_id}: {e.details()} (Code: {e.code()})")
 
     def expiration_worker(self):
+        """Runs a continuous background loop that monitors the alert heap and processes expired stock alerts."""
         while True:
             now = time.time()
             with self.heap_lock:
@@ -109,6 +142,12 @@ class AlertManager:
 
 
 def main() -> None:
+    """Entry point for the stock alert monitoring microservice.
+
+    Loads runtime configuration, authenticates against the auth service to acquire a JWT token,
+    initializes the AlertManager, launches a background thread for alert expiration processing,
+    and continuously streams incoming stock alerts from the notification service with automatic retry logic.
+    """
     config = Config.from_env()
 
     logging.info(f"Connecting to authservice gRPC server at {config.auth_addr}...")
