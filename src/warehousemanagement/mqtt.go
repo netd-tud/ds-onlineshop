@@ -89,77 +89,71 @@ func setupMqttSubscriber(svc *warehouseManagement) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	wg.Add(1)
 
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		finalChan := processMsg(ctx, mqttMsgChan)
 
 		for msg := range finalChan {
-			reqCtx, reqCancel := context.WithTimeout(ctx, 5*time.Second)
-			defer reqCancel()
+			func(msg mqtt.Message) {
+				reqCtx, reqCancel := context.WithTimeout(ctx, 5*time.Second)
+				defer reqCancel()
 
-			switch msg.Topic() {
-			case createTopic:
-				var payload MqttCreateProductPayload
-				if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
-					log.Errorf("MQTT Worker: Failed to parse JSON creation payload: %v", err)
-					reqCancel()
-					continue
-				}
+				switch msg.Topic() {
+				case createTopic:
+					var payload MqttCreateProductPayload
+					if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
+						log.Errorf("MQTT Worker: Failed to parse JSON creation payload: %v", err)
+						return
+					}
 
-				grpcReq := &warehousemanagementpb.CreateWarehouseProductRequest{
-					Name:        payload.Name,
-					Description: payload.Description,
-					PriceUsd: &commonpb.Money{
-						CurrencyCode: payload.PriceUsd.CurrencyCode,
-						Units:        payload.PriceUsd.Units,
-						Nanos:        payload.PriceUsd.Nanos,
-					},
-					Categories:   payload.Categories,
-					InitialStock: payload.InitialStock,
-				}
+					grpcReq := &warehousemanagementpb.CreateWarehouseProductRequest{
+						Name:        payload.Name,
+						Description: payload.Description,
+						PriceUsd: &commonpb.Money{
+							CurrencyCode: payload.PriceUsd.CurrencyCode,
+							Units:        payload.PriceUsd.Units,
+							Nanos:        payload.PriceUsd.Nanos,
+						},
+						Categories:   payload.Categories,
+						InitialStock: payload.InitialStock,
+					}
 
-				if payload.Token != "" {
-					reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
-				}
-				resp, err := svc.CreateNewProduct(reqCtx, grpcReq)
-				if err != nil {
-					log.Errorf("MQTT Worker: CreateNewProduct execution failed: %v", err)
-					reqCancel()
-					continue
-				}
-				log.Infof("MQTT Worker: Product successfully created via MQTT. Allocated ID: %s", resp.GetProduct().GetId())
-			case updateTopic:
-				var payload MqttUpdateStockPayload
-				if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
-					log.Errorf("MQTT Worker: Failed to parse JSON stock update payload: %v", err)
-					reqCancel()
-					continue
-				}
+					if payload.Token != "" {
+						reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
+					}
+					resp, err := svc.CreateNewProduct(reqCtx, grpcReq)
+					if err != nil {
+						log.Errorf("MQTT Worker: CreateNewProduct execution failed: %v", err)
+						return
+					}
+					log.Infof("MQTT Worker: Product successfully created via MQTT. Allocated ID: %s", resp.GetProduct().GetId())
+				case updateTopic:
+					var payload MqttUpdateStockPayload
+					if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
+						log.Errorf("MQTT Worker: Failed to parse JSON stock update payload: %v", err)
+						return
+					}
 
-				log.Infof("MQTT Worker: Processing stock update for item '%s' with delta %d", payload.ID, payload.Delta)
+					log.Infof("MQTT Worker: Processing stock update for item '%s' with delta %d", payload.ID, payload.Delta)
 
-				grpcReq := &inventorypb.ChangeInventoryProductStockRequest{
-					Id:    payload.ID,
-					Delta: payload.Delta,
-				}
+					grpcReq := &inventorypb.ChangeInventoryProductStockRequest{
+						Id:    payload.ID,
+						Delta: payload.Delta,
+					}
 
-				if payload.Token != "" {
-					reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
+					if payload.Token != "" {
+						reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
+					}
+					resp, err := svc.UpdateProductStock(reqCtx, grpcReq)
+					if err != nil {
+						log.Errorf("MQTT Worker: UpdateProductStock execution failed: %v", err)
+						return
+					}
+					log.Infof("MQTT Worker: Stock updated successfully via MQTT. Product ID: %s", resp.GetId())
 				}
-				resp, err := svc.UpdateProductStock(reqCtx, grpcReq)
-				if err != nil {
-					log.Errorf("MQTT Worker: UpdateProductStock execution failed: %v", err)
-					reqCancel()
-					continue
-				}
-				log.Infof("MQTT Worker: Stock updated successfully via MQTT. Product ID: %s", resp.GetId())
-			}
-
-			reqCancel()
+			}(msg)
 		}
-	}()
+	})
 
 	if token := client.Subscribe(createTopic, 1, messagePubHandler); token.Wait() && token.Error() != nil {
 		panic(token.Error())
