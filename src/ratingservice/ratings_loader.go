@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func loadRatings() (map[string]Rating, error) {
+func loadRatings() (map[string]rating, error) {
 	jsonFile, err := os.Open("ratings.json")
 
 	if err != nil {
@@ -29,7 +29,7 @@ func loadRatings() (map[string]Rating, error) {
 	}
 
 	var wrapper struct {
-		Ratings []Rating `json:"ratings"`
+		Ratings []rating `json:"ratings"`
 	}
 
 	err = json.Unmarshal(byteValue, &wrapper)
@@ -38,7 +38,7 @@ func loadRatings() (map[string]Rating, error) {
 		return nil, err
 	}
 
-	ratingsMap := make(map[string]Rating, len(wrapper.Ratings))
+	ratingsMap := make(map[string]rating, len(wrapper.Ratings))
 	for _, rating := range wrapper.Ratings {
 		ratingsMap[rating.ID] = rating
 	}

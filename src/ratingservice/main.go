@@ -12,11 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Ratings struct {
-	Ratings []Rating `json:"ratings"`
+type ratings struct {
+	Ratings []rating `json:"ratings"`
 	Average float32  `json:"average"`
 }
-type Rating struct {
+type rating struct {
 	ID        string  `json:"id"`
 	UserID    string  `json:"user_id"`
 	Score     float32 `json:"score"`
@@ -24,11 +24,11 @@ type Rating struct {
 	ProductID string  `json:"product_id"`
 }
 
-var ratings map[string]Rating
+var ratingsMap map[string]rating
 
 func main() {
 	var err error
-	ratings, err = loadRatings()
+	ratingsMap, err = loadRatings()
 	if err != nil {
 		panic(err)
 	}
@@ -53,13 +53,13 @@ func _healthz(c *gin.Context) {
 }
 
 func getAllRatings(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, ratings)
+	c.IndentedJSON(http.StatusOK, ratingsMap)
 }
 
 func getRatingsByID(c *gin.Context) {
 	id := c.Param("id")
 
-	rating, ok := ratings[id]
+	rating, ok := ratingsMap[id]
 	if ok == false {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "rating not found"})
 		return
@@ -71,12 +71,12 @@ func getRatingsByID(c *gin.Context) {
 func getRatingsByProductID(c *gin.Context) {
 	productID := c.Param("product_id")
 
-	productRatings := make(map[string]Rating)
+	productRatings := make(map[string]rating)
 	totalScore := 0.0
-	for rating, _ := range ratings {
-		if ratings[rating].ProductID == productID {
-			productRatings[rating] = ratings[rating]
-			totalScore += float64(ratings[rating].Score)
+	for rating, _ := range ratingsMap {
+		if ratingsMap[rating].ProductID == productID {
+			productRatings[rating] = ratingsMap[rating]
+			totalScore += float64(ratingsMap[rating].Score)
 		}
 	}
 
@@ -86,13 +86,13 @@ func getRatingsByProductID(c *gin.Context) {
 	}
 
 	averageScore := totalScore / float64(len(productRatings))
-	r := Ratings{Ratings: slices.Collect(maps.Values(productRatings)), Average: float32(averageScore)}
+	r := ratings{Ratings: slices.Collect(maps.Values(productRatings)), Average: float32(averageScore)}
 
 	c.IndentedJSON(http.StatusOK, r)
 }
 
 func postRating(c *gin.Context) {
-	var newRating Rating
+	var newRating rating
 
 	if err := c.BindJSON(&newRating); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid request body"})
@@ -100,7 +100,7 @@ func postRating(c *gin.Context) {
 	}
 
 	newRating.ID, _ = generateID(3)
-	ratings[newRating.ID] = newRating
+	ratingsMap[newRating.ID] = newRating
 
 	c.IndentedJSON(http.StatusCreated, newRating)
 }
