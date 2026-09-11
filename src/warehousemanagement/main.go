@@ -26,14 +26,22 @@ const (
 	wrapperPort = "50000"
 )
 
+// ServedFunction defines the transactional execution mode for the service.
 type ServedFunction int
 
 const (
+	// NAIVE executes requests standardly without distributed transaction coordination and manual rollback.
 	NAIVE ServedFunction = iota
+	// SAGA executes requests using Saga-based distributed transaction management.
 	SAGA
+	// XA executes requests using 2-phase commit (XA) distributed transactions via DTM.
 	XA
 )
 
+// warehouseManagement implements the gRPC WarehouseManagement server.
+//
+// It maintains client connections and address configurations for external microservices,
+// including product catalog, inventory, DTM (Distributed Transaction Manager), and MQTT messaging infrastructure.
 type warehouseManagement struct {
 	servedFunction ServedFunction
 
@@ -72,6 +80,11 @@ func init() {
 	log.Out = os.Stdout
 }
 
+// main initializes and boots the warehouse management microservice.
+//
+// It parses required environment variables for service addresses, determines the distributed
+// transaction mode (SAGA, XA, or NAIVE), establishes gRPC connections to dependencies, starts
+// the server on the designated port, and sets up the MQTT subscriber.
 func main() {
 	svc := new(warehouseManagement)
 
@@ -110,6 +123,11 @@ func main() {
 	setupMqttSubscriber(svc)
 }
 
+// run configures and starts the gRPC server for the warehouse management service.
+//
+// It creates a TCP listener, configures OpenTelemetry tracing, registers the service and
+// health check handlers, initializes DTM workflow support, begins serving requests, and registers
+// the XA product creation workflow before returning the listener address.
 func run(port string, svc *warehouseManagement) string {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
@@ -138,6 +156,11 @@ func run(port string, svc *warehouseManagement) string {
 	return listener.Addr().String()
 }
 
+// mustConnGRPC establishes a blocking gRPC client connection to the specified address with default insecure
+// credentials and OpenTelemetry telemetry handling.
+//
+// It accepts optional extraOpts (e.g., custom unary interceptors like workflow.Interceptor) and panics if
+// connection initialization fails within the context timeout.
 func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string, extraOpts ...grpc.DialOption) {
 	var err error
 	_, cancel := context.WithTimeout(ctx, time.Second*3)

@@ -22,6 +22,10 @@ func (wm *warehouseManagement) Watch(req *healthpb.HealthCheckRequest, ws health
 	return status.Errorf(codes.Unimplemented, "health check via Watch not implemented")
 }
 
+// UpdateProductStock updates stock levels by forwarding the request to the underlying inventory service.
+//
+// It extracts metadata from the incoming context to propagate headers (such as authorization)
+// to the downstream gRPC call, returning the updated inventory product details or an error.
 func (wm *warehouseManagement) UpdateProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.InventoryProduct, error) {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		ctx = metadata.NewOutgoingContext(ctx, md)
@@ -34,6 +38,10 @@ func (wm *warehouseManagement) UpdateProductStock(ctx context.Context, req *inve
 	return resp.Product, nil
 }
 
+// CreateNewProduct routes product creation requests based on the service's configured transactional execution mode.
+//
+// It propagates incoming context metadata downstream and delegates execution to NAIVE, SAGA, or XA transaction handlers,
+// returning an Unimplemented error status if the configured mode is unsupported.
 func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		ctx = metadata.NewOutgoingContext(ctx, md)
@@ -50,6 +58,11 @@ func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *wareho
 	return nil, status.Errorf(codes.Unimplemented, "served function not implemented")
 }
 
+// createNewProductNaive handles non-coordinated product creation across product catalog and inventory services.
+//
+// It attempts sequentially to register the product in the catalog and allocate initial inventory stock.
+// Depending on runtime behavior configuration, it either ignores inventory failure or attempts manual,
+// uncoordinated rollback deletions across services.
 func (wm *warehouseManagement) createNewProductNaive(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
 	configPath := "/var/behavior-config/NAIVE_ROLLBACK_CREATE"
 	configValue, _ := getConfigValue(configPath)
@@ -92,6 +105,10 @@ func (wm *warehouseManagement) createNewProductNaive(ctx context.Context, req *w
 	return &warehousemanagementpb.CreateWarehouseProductResponse{Product: catalogResp.Product}, nil
 }
 
+// getConfigValue reads and returns the string content of a dynamic behavior configuration file.
+//
+// It checks for file existence at the specified path, reads its contents, trims surrounding whitespace,
+// and returns gRPC-compatible status errors if the file is missing or unreadable.
 func getConfigValue(configPath string) (string, error) {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Infof("Behavior file not found at %s, proceeding normally", configPath)

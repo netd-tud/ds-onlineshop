@@ -17,13 +17,17 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// MQTT Structural Mappings
+// MqttMoney represents a monetary amount formatted for JSON payload serialization over MQTT topics.
 type MqttMoney struct {
 	CurrencyCode string `json:"currency_code"`
 	Units        int64  `json:"units"`
 	Nanos        int32  `json:"nanos"`
 }
 
+// MqttCreateProductPayload defines the JSON message structure received via MQTT to trigger product creation.
+//
+// It contains metadata, pricing details, category listings, initial stock allocations,
+// and an authorization token required to process the creation request.
 type MqttCreateProductPayload struct {
 	Name         string    `json:"name"`
 	Description  string    `json:"description"`
@@ -33,26 +37,45 @@ type MqttCreateProductPayload struct {
 	Token        string    `json:"token"`
 }
 
+// MqttUpdateStockPayload defines the JSON message structure received via MQTT to update inventory stock levels.
+//
+// It specifies the target product ID, the relative quantity change (delta), and an authorization token.
 type MqttUpdateStockPayload struct {
 	ID    string `json:"id"`
 	Delta int64  `json:"delta"`
 	Token string `json:"token"`
 }
 
+// mqttMsgChan is a channel used to queue incoming MQTT messages
+// for asynchronous consumption and processing by background workers.
 var mqttMsgChan = make(chan mqtt.Message)
 
+// messagePubHandler is the default MQTT callback function invoked when a message is published to subscribed topics.
+//
+// It forwards incoming MQTT messages directly to the internal mqttMsgChan channel for asynchronous processing.
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	mqttMsgChan <- msg
 }
 
+// connectHandler is the callback function triggered upon successfully establishing a connection to the MQTT broker.
+//
+// It logs a message confirming that the MQTT client connection is active.
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 	fmt.Println("Connected to MQTT Broker")
 }
 
+// connectLostHandler is the callback function triggered upon losing connection to the MQTT broker.
+//
+// It logs a message indicating the connection loss and the associated error.
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
 	fmt.Printf("Connection lost: %v", err)
 }
 
+// processMsg starts a background goroutine that reads MQTT messages from an input channel,
+// logs their topic and payload, and pipes them to an output channel.
+//
+// It returns the output channel for further pipeline processing and automatically closes
+// it when the input channel is closed or the context is canceled.
 func processMsg(ctx context.Context, input <-chan mqtt.Message) chan mqtt.Message {
 	out := make(chan mqtt.Message)
 	go func() {
@@ -73,6 +96,11 @@ func processMsg(ctx context.Context, input <-chan mqtt.Message) chan mqtt.Messag
 	return out
 }
 
+// setupMqttSubscriber initializes and manages the MQTT client connection, topic subscriptions, and background message processing loop.
+//
+// It connects to the configured broker, subscribes to product creation and stock update topics,
+// and routes incoming messages to internal gRPC handlers with context-propagated authorization tokens.
+// It also listens for termination signals to perform clean unsubscriptions and graceful shutdowns.
 func setupMqttSubscriber(svc *warehouseManagement) {
 	createTopic := "inventory/create-item"
 	updateTopic := "inventory/update-product-stock"
@@ -165,7 +193,7 @@ func setupMqttSubscriber(svc *warehouseManagement) {
 	}
 	fmt.Printf("Subscribed to topic: %s\n", updateTopic)
 
-	// Wait for interrupt signal to gracefully shutdown the subscriber
+	// Wait for interrupt signal to gracefully shut down the subscriber
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	<-sigChan

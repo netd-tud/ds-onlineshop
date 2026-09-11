@@ -17,11 +17,18 @@ import (
 
 const xaCreateProductWorkflow = "xa-create-product"
 
+// XaCreateProductInput defines the input payload used for executing two-phase commit (XA) workflows managed by DTM.
+//
+// It pairs a pre-generated product ID with the original gRPC request payload containing product creation metadata.
 type XaCreateProductInput struct {
 	ProductId string                                               `json:"product_id"`
 	Req       *warehousemanagementpb.CreateWarehouseProductRequest `json:"req"`
 }
 
+// registerXaCreateProductWorkflow registers the DTM XA two-phase commit workflow for atomic product creation.
+//
+// It unmarshals the input payload, initializes XA branches for both the product catalog and inventory services,
+// and defines their respective Prepare, Commit, and Rollback phase handlers using DTM branch barriers.
 func (wm *warehouseManagement) registerXaCreateProductWorkflow() error {
 	return workflow.Register(xaCreateProductWorkflow, func(wf *workflow.Workflow, data []byte) error {
 		input := XaCreateProductInput{}
@@ -76,6 +83,10 @@ func (wm *warehouseManagement) registerXaCreateProductWorkflow() error {
 	})
 }
 
+// createNewProductXa executes product creation using a 2-phase commit (XA) workflow coordinated by DTM.
+//
+// It generates a global transaction ID (GID) and product ID, serializes the workflow input payload,
+// triggers the registered XA workflow, and retrieves the verified product and inventory records upon success.
 func (wm *warehouseManagement) createNewProductXa(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
 	productID, _ := generateID(10)

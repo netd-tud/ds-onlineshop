@@ -13,6 +13,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// createNewProductSaga orchestrates product creation across microservices using a SAGA distributed transaction managed by DTM.
+//
+// It generates a unique product ID and transaction GID, registers forward and compensating gRPC operations
+// for both the product catalog and inventory services, submits the SAGA, and fetches the resulting product details upon successful completion.
 func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
 	productID, _ := generateID(10)
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
@@ -61,6 +65,8 @@ func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *wa
 	}, nil
 }
 
+// generateID generates a cryptographically secure, URL-safe random string identifier
+// of the specified length using base64 encoding.
 func generateID(length int) (string, error) {
 	// 6 bytes → 8 base64url chars, scale accordingly
 	numBytes := (length*6)/8 + 1
