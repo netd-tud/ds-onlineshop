@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ratings struct {
+type ratingsForProduct struct {
 	Ratings []rating `json:"ratings"`
 	Average float32  `json:"average"`
 }
@@ -24,11 +24,11 @@ type rating struct {
 	ProductID string  `json:"product_id"`
 }
 
-var ratingsMap map[string]rating
+var allRatings map[string]rating
 
 func main() {
 	var err error
-	ratingsMap, err = loadRatings()
+	allRatings, err = loadRatings()
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/_healthz", _healthz)
 	router.GET("/ratings", getAllRatings)
-	router.GET("/ratings/:id", getRatingsByID)
+	router.GET("/ratings/:id", getRatingByID)
 	router.GET("/ratings/product/:product_id", getRatingsByProductID)
 	router.POST("/ratings/new", postRating)
 
@@ -53,13 +53,17 @@ func _healthz(c *gin.Context) {
 }
 
 func getAllRatings(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, ratingsMap)
+	c.IndentedJSON(http.StatusOK, allRatings)
 }
 
-func getRatingsByID(c *gin.Context) {
+// getRatingsByID handles the HTTP request to retrieve a specific rating by its unique identifier.
+//
+// It extracts the ID from the URL parameter, looks up the entry in the ratings store,
+// and responds with either the serialized rating as indented JSON or an HTTP 404 Not Found error status.
+func getRatingByID(c *gin.Context) {
 	id := c.Param("id")
 
-	rating, ok := ratingsMap[id]
+	rating, ok := allRatings[id]
 	if ok == false {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "rating not found"})
 		return
@@ -73,10 +77,10 @@ func getRatingsByProductID(c *gin.Context) {
 
 	productRatings := make(map[string]rating)
 	totalScore := 0.0
-	for rating, _ := range ratingsMap {
-		if ratingsMap[rating].ProductID == productID {
-			productRatings[rating] = ratingsMap[rating]
-			totalScore += float64(ratingsMap[rating].Score)
+	for rating, _ := range allRatings {
+		if allRatings[rating].ProductID == productID {
+			productRatings[rating] = allRatings[rating]
+			totalScore += float64(allRatings[rating].Score)
 		}
 	}
 
@@ -86,7 +90,7 @@ func getRatingsByProductID(c *gin.Context) {
 	}
 
 	averageScore := totalScore / float64(len(productRatings))
-	r := ratings{Ratings: slices.Collect(maps.Values(productRatings)), Average: float32(averageScore)}
+	r := ratingsForProduct{Ratings: slices.Collect(maps.Values(productRatings)), Average: float32(averageScore)}
 
 	c.IndentedJSON(http.StatusOK, r)
 }
@@ -100,7 +104,7 @@ func postRating(c *gin.Context) {
 	}
 
 	newRating.ID, _ = generateID(3)
-	ratingsMap[newRating.ID] = newRating
+	allRatings[newRating.ID] = newRating
 
 	c.IndentedJSON(http.StatusCreated, newRating)
 }
