@@ -30,6 +30,11 @@ DT_PORTS = {
 
 
 def load_config(file_path: Path) -> Dict[str, Any]:
+    """
+    Loads and parses the JSON configuration file from the specified path.
+
+    Exits the process with status code 1 if the file is missing or contains invalid JSON.
+    """
     try:
         with open(file_path, "r") as f:
             return json.load(f)
@@ -42,12 +47,19 @@ def load_config(file_path: Path) -> Dict[str, Any]:
 
 
 def create_secure_channel(target_address: str) -> grpc.Channel:
+    """
+    Creates an SSL/TLS-encrypted gRPC channel target_address with SNI hostname override.
+    """
     credentials = grpc.ssl_channel_credentials()
     options = [('grpc.ssl_target_name_override', BASE_HOST)]
     return grpc.secure_channel(target_address, credentials, options=options)
 
 
 def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: str):
+    """
+    Establishes a secure gRPC channel and routes the specified action ('create' or 'update')
+    to its corresponding handler with the provided JWT authentication data.
+    """
     logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
     with create_secure_channel(grpc_address) as channel:
         stub = whm_pb_grpc.WarehouseManagementStub(channel)
@@ -59,6 +71,10 @@ def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: 
 
 
 def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
+    """
+    Executes the CreateNewProduct gRPC request using product parameters from the configuration
+    and attaches the JWT bearer token for authorization.
+    """
     logging.info("--- Calling CreateNewProduct via gRPC ---")
 
     price_data = data.get("price_usd", {})
@@ -89,6 +105,10 @@ def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str
 
 
 def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
+    """
+    Executes the UpdateProductStock gRPC request to change inventory stock levels,
+    validating the target product ID and attaching the JWT bearer token.
+    """
     logging.info("--- Calling UpdateProductStock via gRPC ---")
 
     product_id = data.get("id")
@@ -114,6 +134,10 @@ def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str
 
 
 def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> str:
+    """
+    Authenticates against the AuthService via gRPC using configured credentials
+    and returns the acquired JSON Web Token (JWT).
+    """
     username = config.get("username")
     password = config.get("password")
     try:
@@ -125,6 +149,10 @@ def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> s
 
 
 def mqtt_execution(config: Dict[str, Any], jwt: str):
+    """
+    Initializes a TLS-enabled MQTT client, connects to the broker, loop-starts the background thread,
+    and dispatches requested operations ('create' or 'update') before disconnecting.
+    """
     action = config.get("action", "").lower().strip()
     logging.info("--- MQTT PUBLISHING ---")
 
@@ -156,6 +184,10 @@ def mqtt_execution(config: Dict[str, Any], jwt: str):
 
 
 def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
+    """
+    Serializes product creation metadata and authorization token into JSON format and publishes
+    it to the 'inventory/create-item' MQTT topic with QoS 1.
+    """
     create_topic = "inventory/create-item"
     product_data = config.get("create_product", {}) if config else {}
     price_data = product_data.get("price_usd", {})
@@ -186,6 +218,10 @@ def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
 
 
 def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
+    """
+    Serializes stock modification parameters and authorization token into JSON format and publishes
+    it to the 'inventory/update-product-stock' MQTT topic with QoS 1.
+    """
     update_topic = "inventory/update-product-stock"
     update_data = config.get("update_stock", {}) if config else {}
 
@@ -208,6 +244,10 @@ def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
 
 
 def main():
+    """
+    Entry point for the client utility. Validates configuration settings, acquires an auth token,
+    and executes product operations over gRPC or MQTT based on selected transaction modes.
+    """
     config = load_config(CONFIG_FILE)
 
     dt_function = config.get("dt-function", "").lower().strip()
@@ -244,6 +284,7 @@ def main():
     elif connection_type == "grpc":
         grpc_execution(config, action, grpc_address, jwt)
         return
+
 
 if __name__ == "__main__":
     main()
