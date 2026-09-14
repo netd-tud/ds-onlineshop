@@ -38,7 +38,7 @@ func (pcs *productCatalogService) XaPrepareCreateProduct(ctx context.Context, re
 // XaCommitCreateProduct handles the commit phase of a distributed two-phase commit (XA) transaction for product creation.
 //
 // It retrieves the staged product using the global transaction identifier (GID),
-// appends it to the active catalog products list, clears the pending transaction state,
+// stores it in the active catalog products map, clears the pending transaction state,
 // and ensures idempotency for retried commit operations.
 func (pcs *productCatalogService) XaCommitCreateProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
 	pcs.xaMu.Lock()
@@ -49,7 +49,12 @@ func (pcs *productCatalogService) XaCommitCreateProduct(ctx context.Context, req
 		// retried commit for a gid already committed -> idempotent no-op
 		return &commonpb.Empty{}, nil
 	}
-	pcs.catalog.Products = append(pcs.parseCatalog(), product)
+
+	pcs.mu.Lock()
+	pcs.ensureCatalogLoadedLocked()
+	pcs.catalog[product.Id] = product
+	pcs.mu.Unlock()
+
 	delete(pcs.xaPending, req.Gid)
 	log.Infof("XA: product %s committed for gid %s", product.Id, req.Gid)
 	return &commonpb.Empty{}, nil

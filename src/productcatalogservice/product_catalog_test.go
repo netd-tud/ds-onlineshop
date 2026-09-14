@@ -31,27 +31,31 @@ var (
 
 func TestMain(m *testing.M) {
 	mockProductCatalog = &productCatalogService{
-		catalog: productcatalogpb.ListProductsResponse{
-			Products: []*productcatalogpb.Product{},
+		catalog: make(map[string]*productcatalogpb.Product),
+	}
+
+	products := []*productcatalogpb.Product{
+		{
+			Id:   "abc001",
+			Name: "Product Alpha One",
+		},
+		{
+			Id:   "abc002",
+			Name: "Product Delta",
+		},
+		{
+			Id:   "abc003",
+			Name: "Product Alpha Two",
+		},
+		{
+			Id:   "abc004",
+			Name: "Product Gamma",
 		},
 	}
 
-	mockProductCatalog.catalog.Products = append(mockProductCatalog.catalog.Products, &productcatalogpb.Product{
-		Id:   "abc001",
-		Name: "Product Alpha One",
-	})
-	mockProductCatalog.catalog.Products = append(mockProductCatalog.catalog.Products, &productcatalogpb.Product{
-		Id:   "abc002",
-		Name: "Product Delta",
-	})
-	mockProductCatalog.catalog.Products = append(mockProductCatalog.catalog.Products, &productcatalogpb.Product{
-		Id:   "abc003",
-		Name: "Product Alpha Two",
-	})
-	mockProductCatalog.catalog.Products = append(mockProductCatalog.catalog.Products, &productcatalogpb.Product{
-		Id:   "abc004",
-		Name: "Product Gamma",
-	})
+	for _, p := range products {
+		mockProductCatalog.catalog[p.Id] = p
+	}
 
 	os.Exit(m.Run())
 }

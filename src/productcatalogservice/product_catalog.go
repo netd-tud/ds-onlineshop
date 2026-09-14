@@ -35,7 +35,8 @@ import (
 // for product updates or creations, and protects shared state with a mutex.
 type productCatalogService struct {
 	productcatalogpb.UnimplementedProductCatalogServiceServer
-	catalog   productcatalogpb.ListProductsResponse
+	mu        sync.Mutex
+	catalog   map[string]*productcatalogpb.Product
 	xaMu      sync.Mutex
 	xaPending map[string]*productcatalogpb.Product
 }
@@ -54,21 +55,31 @@ func (pcs *productCatalogService) Watch(req *healthpb.HealthCheckRequest, ws hea
 func (pcs *productCatalogService) ListProducts(context.Context, *commonpb.Empty) (*productcatalogpb.ListProductsResponse, error) {
 	time.Sleep(extraLatency)
 
-	return &productcatalogpb.ListProductsResponse{Products: pcs.parseCatalog()}, nil
+	pcs.mu.Lock()
+	defer pcs.mu.Unlock()
+
+	pcs.ensureCatalogLoadedLocked()
+	products := make([]*productcatalogpb.Product, 0, len(pcs.catalog))
+	for _, product := range pcs.catalog {
+		products = append(products, product)
+	}
+
+	return &productcatalogpb.ListProductsResponse{Products: products}, nil
 }
 
 // GetProduct handles the gRPC request to retrieve a single product by its unique identifier.
 //
-// It searches the parsed product catalog for a matching ID,
+// It searches the parsed product catalog for a matching ID in O(1) time,
 // and returns the product details or a gRPC NotFound status if the item does not exist.
 func (pcs *productCatalogService) GetProduct(ctx context.Context, req *productcatalogpb.GetProductRequest) (*productcatalogpb.Product, error) {
 	time.Sleep(extraLatency)
 
-	catalog := pcs.parseCatalog()
-	for _, product := range catalog {
-		if req.Id == product.Id {
-			return product, nil
-		}
+	pcs.mu.Lock()
+	defer pcs.mu.Unlock()
+
+	pcs.ensureCatalogLoadedLocked()
+	if product, ok := pcs.catalog[req.Id]; ok {
+		return product, nil
 	}
 
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
@@ -81,8 +92,12 @@ func (pcs *productCatalogService) GetProduct(ctx context.Context, req *productca
 func (pcs *productCatalogService) SearchProducts(ctx context.Context, req *productcatalogpb.SearchProductsRequest) (*productcatalogpb.SearchProductsResponse, error) {
 	time.Sleep(extraLatency)
 
+	pcs.mu.Lock()
+	defer pcs.mu.Unlock()
+
+	pcs.ensureCatalogLoadedLocked()
 	var ps []*productcatalogpb.Product
-	for _, product := range pcs.parseCatalog() {
+	for _, product := range pcs.catalog {
 		if strings.Contains(strings.ToLower(product.Name), strings.ToLower(req.Query)) ||
 			strings.Contains(strings.ToLower(product.Description), strings.ToLower(req.Query)) {
 			ps = append(ps, product)
@@ -95,7 +110,7 @@ func (pcs *productCatalogService) SearchProducts(ctx context.Context, req *produ
 // CreateNewProduct handles the gRPC request to create a new product in the catalog.
 //
 // It generates a random unique identifier if none is provided, constructs the new product entity,
-// appends it to the parsed product catalog list, logs the creation event, and returns the newly created product details.
+// stores it in the product catalog map, logs the creation event, and returns the newly created product details.
 func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.CreateNewProductResponse, error) {
 	if req.Id == "" {
 		newId, _ := generateID(10)
@@ -109,23 +124,29 @@ func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *pro
 		PriceUsd:    req.PriceUsd,
 		Categories:  req.Categories,
 	}
-	pcs.catalog.Products = append(pcs.parseCatalog(), product)
+
+	pcs.mu.Lock()
+	defer pcs.mu.Unlock()
+
+	pcs.ensureCatalogLoadedLocked()
+	pcs.catalog[product.Id] = product
 	log.Infof("Product created: %s", product.Id)
 	return &productcatalogpb.CreateNewProductResponse{Product: product}, nil
 }
 
 // DeleteProduct handles the gRPC request to remove an existing product from the catalog by its ID.
 //
-// It searches the parsed product catalog, splices out the matching product upon discovery,
+// It searches the product catalog map, deletes the matching product upon discovery,
 // logs the deletion event, and returns the deleted product details or a gRPC NotFound status if the product ID does not exist.
 func (pcs *productCatalogService) DeleteProduct(ctx context.Context, req *productcatalogpb.DeleteProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
-	catalog := pcs.parseCatalog()
-	for i, product := range catalog {
-		if req.GetId() == product.GetId() {
-			pcs.catalog.Products = append(catalog[:i], catalog[i+1:]...)
-			log.Infof("Product deleted: %s", product.Id)
-			return &productcatalogpb.DeleteProductResponse{Product: product}, nil
-		}
+	pcs.mu.Lock()
+	defer pcs.mu.Unlock()
+
+	pcs.ensureCatalogLoadedLocked()
+	if product, ok := pcs.catalog[req.GetId()]; ok {
+		delete(pcs.catalog, req.GetId())
+		log.Infof("Product deleted: %s", product.Id)
+		return &productcatalogpb.DeleteProductResponse{Product: product}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
@@ -155,20 +176,21 @@ func generateID(length int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b)[:length], nil
 }
 
-// parseCatalog retrieves and caches the product catalog, reloading it from the configured backend
+// ensureCatalogLoadedLocked retrieves and caches the product catalog, reloading it from the configured backend
 // and synchronizing records into the PostgreSQL database when flagged or empty.
-func (pcs *productCatalogService) parseCatalog() []*productcatalogpb.Product {
-	if reloadCatalog || len(pcs.catalog.Products) == 0 {
-		err := loadCatalog(&pcs.catalog)
+func (pcs *productCatalogService) ensureCatalogLoadedLocked() {
+	if reloadCatalog || len(pcs.catalog) == 0 {
+		if pcs.catalog == nil {
+			pcs.catalog = make(map[string]*productcatalogpb.Product)
+		}
+		err := loadCatalog(pcs.catalog)
 		if err != nil {
-			return []*productcatalogpb.Product{}
+			return
 		}
 
 		log.Info("Inserting into database...")
-		if err := loadCatalogIntoPostgres(&pcs.catalog); err != nil {
-			log.Warn("failed to insert product details into Postgres database: %v", err)
+		if err := loadCatalogIntoPostgres(pcs.catalog); err != nil {
+			log.Warnf("failed to insert product details into Postgres database: %v", err)
 		}
 	}
-
-	return pcs.catalog.Products
 }
