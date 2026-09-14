@@ -10,6 +10,11 @@ spec:
         externalIPs:
           - 172.26.125.182
     ports:
+      external-inv-prodcat:
+        port: 30050
+        expose: { default: true }
+        exposedPort: 30050
+        protocol: TCP
       grpc-naive:
         port: 30051
         expose: { default: true }

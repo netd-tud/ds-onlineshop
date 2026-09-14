@@ -75,3 +75,45 @@ spec:
           port: 8081
   tls:
     secretName: vm1-tls-cert
+---
+# ==========================================
+# Inventory and Product Catalog Expose
+# ==========================================
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: external-grpc-filtered
+  namespace: default
+spec:
+  entryPoints:
+    - external-inv-prodcat
+  routes:
+    - match: >-
+        Host(`ds-exercise-01.netd.cs.tu-dresden.de`) && (
+        Path(`/hipstershop.InventoryService/GetInventoryProduct`) ||
+        Path(`/hipstershop.InventoryService/CreateNewInventoryProduct`) ||
+        Path(`/hipstershop.InventoryService/DeleteInventoryProduct`) ||
+        Path(`/hipstershop.InventoryService/ChangeInventoryProductStock`)||
+        Path(`/hipstershop.InventoryService/XaCommitCreateInventoryProduct`) ||
+        Path(`/hipstershop.InventoryService/XaRollbackCreateInventoryProduct`) ||
+        Path(`/hipstershop.InventoryService/XaPrepareCreateInventoryProduct`))
+      kind: Rule
+      services:
+        - name: inventoryservice
+          port: 50002
+          scheme: h2c
+
+    - match: >-
+        Host(`ds-exercise-01.netd.cs.tu-dresden.de`) && (
+        Path(`/hipstershop.ProductCatalogService/GetProduct`) ||
+        Path(`/hipstershop.ProductCatalogService/CreateNewProduct`) ||
+        Path(`/hipstershop.ProductCatalogService/DeleteProduct`) ||
+        Path(`/hipstershop.ProductCatalogService/XaCommitCreateProduct`) ||
+        Path(`/hipstershop.ProductCatalogService/XaRollbackCreateProduct`) ||
+        Path(`/hipstershop.ProductCatalogService/XaPrepareCreateProduct`))
+      kind: Rule
+      services:
+        - name: productcatalogservice
+          port: 3550
+          scheme: h2c
+  tls: {}
