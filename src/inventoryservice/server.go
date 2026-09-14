@@ -92,6 +92,7 @@ func run(port string) error {
 	)
 
 	svc := &inventoryService{
+		inventory: make(map[string]*inventorypb.InventoryProduct),
 		thresholds: struct {
 			lowStock      int64
 			criticalStock int64
@@ -117,11 +118,11 @@ func run(port string) error {
 	}
 	log.Debugln("MQTT: Connected successfully to broker")
 
-	err = loadInventory(&svc.inventory)
+	err = loadInventory(svc.inventory)
 	if err != nil {
 		log.Fatalf("could not parse inventory: %v", err)
 	}
-	for _, product := range svc.inventory.Products {
+	for _, product := range svc.inventory {
 		log.Info("Publishing initial stock event for product: ", product)
 		svc.publishStockEventOverMQTT(svc.mqttBrokerAddr, product)
 	}

@@ -46,7 +46,7 @@ func (is *inventoryService) XaPrepareCreateInventoryProduct(ctx context.Context,
 // XaCommitCreateInventoryProduct handles the commit phase of a distributed two-phase commit (XA) transaction for product creation.
 //
 // It retrieves the staged product using the global transaction identifier (GID),
-// appends it to the active inventory list, clears the pending transaction state,
+// stores it in the active inventory map, clears the pending transaction state,
 // and ensures idempotency for retried commit operations.
 func (is *inventoryService) XaCommitCreateInventoryProduct(ctx context.Context, req *commonpb.XaBranchRequest) (*commonpb.Empty, error) {
 	is.xaMu.Lock()
@@ -57,7 +57,12 @@ func (is *inventoryService) XaCommitCreateInventoryProduct(ctx context.Context, 
 		// retried commit for a gid already committed -> idempotent no-op
 		return &commonpb.Empty{}, nil
 	}
-	is.inventory.Products = append(is.parseInventory(), product)
+
+	is.stockMu.Lock()
+	is.ensureInventoryLoadedLocked()
+	is.inventory[product.Id] = product
+	is.stockMu.Unlock()
+
 	delete(is.xaPending, req.Gid)
 	log.Infof("XA: inventory product %s committed for gid %s", product.Id, req.Gid)
 	return &commonpb.Empty{}, nil

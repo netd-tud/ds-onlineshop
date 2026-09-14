@@ -9,8 +9,8 @@ import (
 )
 
 // loadInventory reads and parses product inventory data from a local JSON file
-// into the provided inventory response structure.
-func loadInventory(inventory *inventorypb.ListInventoryResponse) error {
+// into the provided inventory map.
+func loadInventory(inventory map[string]*inventorypb.InventoryProduct) error {
 	log.Info("loading inventory from local inventory.json file...")
 
 	inventoryJSON, err := os.ReadFile("inventory.json")
@@ -19,9 +19,14 @@ func loadInventory(inventory *inventorypb.ListInventoryResponse) error {
 		return err
 	}
 
-	if err := jsonpb.Unmarshal(bytes.NewReader(inventoryJSON), inventory); err != nil {
+	var resp inventorypb.ListInventoryResponse
+	if err := jsonpb.Unmarshal(bytes.NewReader(inventoryJSON), &resp); err != nil {
 		log.Warnf("failed to parse the inventory JSON: %v", err)
 		return err
+	}
+
+	for _, p := range resp.Products {
+		inventory[p.Id] = p
 	}
 
 	log.Info("successfully parsed product inventory json")

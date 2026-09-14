@@ -30,7 +30,7 @@ type inventoryService struct {
 	inventorypb.UnimplementedInventoryServiceServer
 
 	stockMu   sync.Mutex
-	inventory inventorypb.ListInventoryResponse
+	inventory map[string]*inventorypb.InventoryProduct
 
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
@@ -63,18 +63,27 @@ func (is *inventoryService) Watch(req *healthpb.HealthCheckRequest, ws healthpb.
 // It returns a populated ListInventoryResponse containing the parsed inventory items
 // managed by the service.
 func (is *inventoryService) ListInventory(context.Context, *commonpb.Empty) (*inventorypb.ListInventoryResponse, error) {
-	return &inventorypb.ListInventoryResponse{Products: is.parseInventory()}, nil
+	is.stockMu.Lock()
+	defer is.stockMu.Unlock()
+
+	is.ensureInventoryLoadedLocked()
+	products := make([]*inventorypb.InventoryProduct, 0, len(is.inventory))
+	for _, product := range is.inventory {
+		products = append(products, product)
+	}
+	return &inventorypb.ListInventoryResponse{Products: products}, nil
 }
 
 // GetInventoryProduct handles the gRPC request to retrieve a specific inventory product.
 //
 // It returns the requested InventoryProduct if found, otherwise an error.
 func (is *inventoryService) GetInventoryProduct(ctx context.Context, req *inventorypb.GetInventoryProductRequest) (*inventorypb.InventoryProduct, error) {
-	inventory := is.parseInventory()
-	for _, product := range inventory {
-		if req.Id == product.Id {
-			return product, nil
-		}
+	is.stockMu.Lock()
+	defer is.stockMu.Unlock()
+
+	is.ensureInventoryLoadedLocked()
+	if product, ok := is.inventory[req.Id]; ok {
+		return product, nil
 	}
 
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
@@ -83,24 +92,23 @@ func (is *inventoryService) GetInventoryProduct(ctx context.Context, req *invent
 // applyStockDeltaLocked modifies the stock quantity of a specified product under lock
 // and publishes the updated state over MQTT.
 //
-// It searches for the product by identifier, adjusts its stock by the given delta,
+// It searches for the product by identifier in the map, adjusts its stock by the given delta,
 // ensures stock levels do not drop below zero, triggers an MQTT stock event notification,
 // and returns the updated product. An error is returned if the product is not found or stock
 // is insufficient.
 func (is *inventoryService) applyStockDeltaLocked(productID string, delta int64) (*inventorypb.InventoryProduct, error) {
-	for _, product := range is.parseInventory() {
-		if product.GetId() != productID {
-			continue
-		}
-		newStock := product.Stock + delta
-		if newStock < 0 {
-			return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", productID)
-		}
-		product.Stock = newStock
-		is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
-		return product, nil
+	is.ensureInventoryLoadedLocked()
+	product, ok := is.inventory[productID]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "no product with ID %s", productID)
 	}
-	return nil, status.Errorf(codes.NotFound, "no product with ID %s", productID)
+	newStock := product.Stock + delta
+	if newStock < 0 {
+		return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", productID)
+	}
+	product.Stock = newStock
+	is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
+	return product, nil
 }
 
 // ChangeInventoryProductStock handles the gRPC request to adjust a product's stock level by a given delta.
@@ -143,24 +151,24 @@ func (is *inventoryService) CompensateChangeInventoryProductStock(ctx context.Co
 
 // SetInventoryProductStock handles the gRPC request to set an absolute stock level for a product.
 //
-// It searches the existing inventory for a matching product ID and updates its stock directly.
-// If the product does not exist, it creates and appends a new inventory product entry,
+// It searches the existing inventory map for a matching product ID and updates its stock directly.
+// If the product does not exist, it creates a new inventory product entry in the map,
 // publishes the updated state over MQTT, and returns the modified product response.
 func (is *inventoryService) SetInventoryProductStock(ctx context.Context, req *inventorypb.SetInventoryProductStockRequest) (*inventorypb.SetInventoryProductStockRequestResponse, error) {
-	inventory := is.parseInventory()
-	for _, product := range inventory {
-		if req.GetId() == product.GetId() {
-			product.Stock = req.GetNewStock()
-			is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
-			return &inventorypb.SetInventoryProductStockRequestResponse{Product: product}, nil
+	is.stockMu.Lock()
+	defer is.stockMu.Unlock()
+
+	is.ensureInventoryLoadedLocked()
+	product, ok := is.inventory[req.GetId()]
+	if ok {
+		product.Stock = req.GetNewStock()
+	} else {
+		product = &inventorypb.InventoryProduct{
+			Id:    req.GetId(),
+			Stock: req.GetNewStock(),
 		}
+		is.inventory[req.GetId()] = product
 	}
-	// create product if non-existent
-	product := &inventorypb.InventoryProduct{
-		Id:    req.GetId(),
-		Stock: req.GetNewStock(),
-	}
-	is.inventory.Products = append(is.parseInventory(), product)
 	log.Infof("Inventory product updated: %s", product.Id)
 	is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
 	return &inventorypb.SetInventoryProductStockRequestResponse{Product: product}, nil
@@ -169,7 +177,7 @@ func (is *inventoryService) SetInventoryProductStock(ctx context.Context, req *i
 // CreateNewInventoryProduct handles the gRPC request to create a new product in the inventory.
 //
 // It checks for a simulated demo failure configuration file to conditionally abort the operation,
-// instantiates a new inventory product with the requested initial stock, appends it to the inventory list,
+// instantiates a new inventory product with the requested initial stock, adds it to the inventory map,
 // and returns the newly created product response.
 func (is *inventoryService) CreateNewInventoryProduct(ctx context.Context, req *inventorypb.CreateNewInventoryProductRequest) (*inventorypb.CreateNewInventoryProductResponse, error) {
 	// Simulate inventory failure if enabled
@@ -183,11 +191,15 @@ func (is *inventoryService) CreateNewInventoryProduct(ctx context.Context, req *
 		}
 	}
 
+	is.stockMu.Lock()
+	defer is.stockMu.Unlock()
+
+	is.ensureInventoryLoadedLocked()
 	product := &inventorypb.InventoryProduct{
 		Id:    req.GetId(),
 		Stock: req.GetInitialStock(),
 	}
-	is.inventory.Products = append(is.parseInventory(), product)
+	is.inventory[req.GetId()] = product
 	log.Infof("Inventory product created: %s", product.Id)
 	return &inventorypb.CreateNewInventoryProductResponse{Product: product}, nil
 }
@@ -213,16 +225,17 @@ func getConfigValue(configPath string) (string, error) {
 
 // DeleteInventoryProduct handles the gRPC request to delete a product from the inventory.
 //
-// It searches the existing inventory for a matching product ID and removes it.
-// If the product does not exist, it returns an appropriate error.
+// It removes the product with the matching product ID from the map.
+// If the product does not exist, it returns an empty response.
 func (is *inventoryService) DeleteInventoryProduct(ctx context.Context, req *inventorypb.DeleteInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {
-	inventory := is.parseInventory()
-	for i, product := range inventory {
-		if req.GetId() == product.GetId() {
-			is.inventory.Products = append(inventory[:i], inventory[i+1:]...)
-			log.Infof("Inventory product deleted: %s", product.Id)
-			return &inventorypb.DeleteInventoryProductResponse{Product: product}, nil
-		}
+	is.stockMu.Lock()
+	defer is.stockMu.Unlock()
+
+	is.ensureInventoryLoadedLocked()
+	if product, ok := is.inventory[req.GetId()]; ok {
+		delete(is.inventory, req.GetId())
+		log.Infof("Inventory product deleted: %s", product.Id)
+		return &inventorypb.DeleteInventoryProductResponse{Product: product}, nil
 	}
 	// return empty response
 	return &inventorypb.DeleteInventoryProductResponse{}, nil
@@ -255,9 +268,10 @@ func (is *inventoryService) ResolveStockAlert(ctx context.Context, req *inventor
 	defer is.stockMu.Unlock()
 
 	if _, seen := is.resolvedAlerts[key]; seen {
-		product, err := is.GetInventoryProduct(ctx, &inventorypb.GetInventoryProductRequest{Id: req.GetProductId()})
-		if err != nil {
-			return nil, err
+		is.ensureInventoryLoadedLocked()
+		product, ok := is.inventory[req.GetProductId()]
+		if !ok {
+			return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.GetProductId())
 		}
 		return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: true}, nil
 	}
@@ -300,17 +314,15 @@ func (is *inventoryService) CompensateCreateNewInventoryProduct(ctx context.Cont
 	return res, nil
 }
 
-// parseInventory retrieves the list of inventory products, lazily loading them
-// from the underlying storage if the internal product cache is uninitialized.
-func (is *inventoryService) parseInventory() []*inventorypb.InventoryProduct {
-	if len(is.inventory.Products) == 0 {
-		err := loadInventory(&is.inventory)
-		if err != nil {
-			return []*inventorypb.InventoryProduct{}
-		}
+// ensureInventoryLoadedLocked lazily loads the inventory products from
+// the underlying storage if the internal product map is uninitialized.
+func (is *inventoryService) ensureInventoryLoadedLocked() {
+	if is.inventory == nil {
+		is.inventory = make(map[string]*inventorypb.InventoryProduct)
+		_ = loadInventory(is.inventory)
+	} else if len(is.inventory) == 0 {
+		_ = loadInventory(is.inventory)
 	}
-
-	return is.inventory.Products
 }
 
 // inventoryProductWithCategory represents an enriched inventory product record,
