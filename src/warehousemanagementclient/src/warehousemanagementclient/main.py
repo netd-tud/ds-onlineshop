@@ -55,19 +55,24 @@ def create_secure_channel(target_address: str) -> grpc.Channel:
     return grpc.secure_channel(target_address, credentials, options=options)
 
 
-def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: str):
+def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> str:
     """
-    Establishes a secure gRPC channel and routes the specified action ('create' or 'update')
-    to its corresponding handler with the provided JWT authentication data.
+    Authenticates against the AuthService via gRPC using configured credentials
+    and returns the acquired JSON Web Token (JWT).
     """
-    logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
-    with create_secure_channel(grpc_address) as channel:
-        stub = whm_pb_grpc.WarehouseManagementStub(channel)
+    username = config.get("username")
+    password = config.get("password")
 
-        if action == "create":
-            handle_create_grpc(stub, config.get("create_product", {}), jwt)
-        elif action == "update":
-            handle_update_grpc(stub, config.get("update_stock", {}), jwt)
+    if not username or not password:
+        logging.error("Missing 'username' or 'password' in configuration.")
+        return None
+
+    try:
+        response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
+        return response.token
+    except grpc.RpcError as e:
+        logging.error(f"Auth failed: {e.details()}")
+        return None
 
 
 def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
@@ -133,54 +138,21 @@ def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str
         logging.error(f"gRPC: Could not update product stock: {e.details()} (Code: {e.code()})")
 
 
-def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> str:
+def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: str):
     """
-    Authenticates against the AuthService via gRPC using configured credentials
-    and returns the acquired JSON Web Token (JWT).
+    Establishes a secure gRPC channel and routes the specified action ('create' or 'update')
+    to its corresponding handler with the provided JWT authentication data.
     """
-    username = config.get("username")
-    password = config.get("password")
+    logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
     try:
-        response = stub.Login(auth_pb.LoginRequest(username=username, password=password))
-        return response.token
-    except grpc.RpcError as e:
-        logging.error(f"Auth failed: {e.details()}")
-        return None
-
-
-def mqtt_execution(config: Dict[str, Any], jwt: str):
-    """
-    Initializes a TLS-enabled MQTT client, connects to the broker, loop-starts the background thread,
-    and dispatches requested operations ('create' or 'update') before disconnecting.
-    """
-    action = config.get("action", "").lower().strip()
-    logging.info("--- MQTT PUBLISHING ---")
-
-    try:
-        mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="warehousemanagement_client")
-    except AttributeError:
-        mqtt_client = mqtt.Client(client_id="warehousemanagement_client")
-
-    mqtt_client.tls_set()
-
-    try:
-        mqtt_client.connect(BASE_HOST, MQTT_BROKER_PORT, keepalive=60)
+        with create_secure_channel(grpc_address) as channel:
+            stub = whm_pb_grpc.WarehouseManagementStub(channel)
+            if action == "create":
+                handle_create_grpc(stub, config.get("create_product", {}), jwt)
+            elif action == "update":
+                handle_update_grpc(stub, config.get("update_stock", {}), jwt)
     except Exception as e:
-        logging.error(f"MQTT: Connection failed: {e}")
-        return
-
-    mqtt_client.loop_start()
-    logging.info("MQTT: Connected successfully to broker")
-
-    try:
-        if action == "create":
-            handle_create_mqtt(mqtt_client, config, jwt)
-        elif action == "update":
-            handle_update_mqtt(mqtt_client, config, jwt)
-    finally:
-        mqtt_client.loop_stop()
-        mqtt_client.disconnect()
-        logging.info("MQTT: Disconnected from broker")
+        logging.error(f"gRPC execution failed: {e}")
 
 
 def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
@@ -189,7 +161,7 @@ def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
     it to the 'inventory/create-item' MQTT topic with QoS 1.
     """
     create_topic = "inventory/create-item"
-    product_data = config.get("create_product", {}) if config else {}
+    product_data = config.get("create_product", {})
     price_data = product_data.get("price_usd", {})
 
     new_product_payload = {
@@ -209,12 +181,15 @@ def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
     logging.info(
         f"MQTT: Publishing creation request for '{new_product_payload['name']}' to topic '{create_topic}'...")
     token = client.publish(create_topic, create_bytes, qos=1)
-    token.wait_for_publish(timeout=5)
 
-    if token.is_published():
-        logging.info("MQTT: Creation request published successfully")
-    else:
-        logging.error("MQTT: Publishing creation failed")
+    try:
+        token.wait_for_publish(timeout=5)
+        if token.is_published():
+            logging.info("MQTT: Creation request published successfully")
+        else:
+            logging.error("MQTT: Publishing creation timed out or failed")
+    except RuntimeError as e:
+        logging.error(f"MQTT: Failed during publish wait: {e}")
 
 
 def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
@@ -223,7 +198,7 @@ def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
     it to the 'inventory/update-product-stock' MQTT topic with QoS 1.
     """
     update_topic = "inventory/update-product-stock"
-    update_data = config.get("update_stock", {}) if config else {}
+    update_data = config.get("update_stock", {})
 
     update_payload = {
         "id": update_data.get("id", ""),
@@ -235,12 +210,47 @@ def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
     logging.info(
         f"MQTT: Publishing update request for product '{update_payload['id']}' to topic '{update_topic}'...")
     token = client.publish(update_topic, update_bytes, qos=1)
-    token.wait_for_publish(timeout=5)
 
-    if token.is_published():
-        logging.info("MQTT: Update request published successfully")
-    else:
-        logging.error("MQTT: Publishing update failed")
+    try:
+        token.wait_for_publish(timeout=5)
+        if token.is_published():
+            logging.info("MQTT: Update request published successfully")
+        else:
+            logging.error("MQTT: Publishing update timed out or failed")
+    except RuntimeError as e:
+        logging.error(f"MQTT: Failed during publish wait: {e}")
+
+
+def mqtt_execution(config: Dict[str, Any], jwt: str):
+    """
+    Initializes a TLS-enabled MQTT client, connects to the broker, loop-starts the background thread,
+    and dispatches requested operations ('create' or 'update') before disconnecting.
+    """
+    action = config.get("action", "").lower().strip()
+    logging.info("--- MQTT PUBLISHING ---")
+
+    try:
+        mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="warehousemanagement_client")
+    except AttributeError:
+        mqtt_client = mqtt.Client(client_id="warehousemanagement_client")
+
+    mqtt_client.tls_set()
+
+    try:
+        mqtt_client.connect(BASE_HOST, MQTT_BROKER_PORT, keepalive=60)
+        mqtt_client.loop_start()
+        logging.info("MQTT: Connected successfully to broker")
+
+        if action == "create":
+            handle_create_mqtt(mqtt_client, config, jwt)
+        elif action == "update":
+            handle_update_mqtt(mqtt_client, config, jwt)
+    except Exception as e:
+        logging.error(f"MQTT: Connection failed: {e}")
+    finally:
+        mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+        logging.info("MQTT: Disconnected from broker")
 
 
 def main():
@@ -268,15 +278,19 @@ def main():
         sys.exit(1)
 
     logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
-    with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
-        auth_stub = auth_pb_grpc.AuthServiceStub(channel)
-        jwt = receive_jwt(auth_stub, config)
+    try:
+        with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
+            auth_stub = auth_pb_grpc.AuthServiceStub(channel)
+            jwt = receive_jwt(auth_stub, config)
 
-        if not jwt:
-            logging.error("Could not acquire JWT token. Exiting.")
-            sys.exit(1)
+            if not jwt:
+                logging.error("Could not acquire JWT token. Exiting.")
+                sys.exit(1)
 
-        logging.info(f"Authenticated successfully. Token: {jwt[:5]}...{jwt[-5:]}")
+            logging.info(f"Authenticated successfully. Token: {jwt[:5]}...{jwt[-5:]}")
+    except Exception as e:
+        logging.error(f"Failed to authenticate with AuthService: {e}")
+        sys.exit(1)
 
     if connection_type == "mqtt":
         mqtt_execution(config, jwt)
