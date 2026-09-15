@@ -75,7 +75,7 @@ def receive_jwt(stub: auth_pb_grpc.AuthServiceStub, config: Dict[str, Any]) -> s
         return None
 
 
-def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
+def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str, caller_id: str):
     """
     Executes the CreateNewProduct gRPC request using product parameters from the configuration
     and attaches the JWT bearer token for authorization.
@@ -101,7 +101,10 @@ def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str
         response = stub.CreateNewProduct(
             request,
             timeout=5,
-            metadata=[("authorization", f"Bearer {jwt}")]
+            metadata=[
+                ("authorization", f"Bearer {jwt}"),
+                ("x-caller-id-secret", f"{caller_id}")
+            ]
         )
         logging.info(f"gRPC: Product Created Successfully!")
         logging.info(f"ID: {response.product.id} | Name: {response.product.name}")
@@ -109,7 +112,7 @@ def handle_create_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str
         logging.error(f"gRPC: Could not create product: {e.details()} (Code: {e.code()})")
 
 
-def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str):
+def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str, Any], jwt: str, caller_id: str):
     """
     Executes the UpdateProductStock gRPC request to change inventory stock levels,
     validating the target product ID and attaching the JWT bearer token.
@@ -130,7 +133,10 @@ def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str
         response = stub.UpdateProductStock(
             request,
             timeout=5,
-            metadata=[("authorization", f"Bearer {jwt}")]
+            metadata=[
+                ("authorization", f"Bearer {jwt}"),
+                ("x-caller-id-secret", f"{caller_id}")
+            ]
         )
         logging.info(f"gRPC: Stock Updated Successfully!")
         logging.info(f"Product ID: {response.id} | New Stock Level: {response.stock}")
@@ -138,7 +144,7 @@ def handle_update_grpc(stub: whm_pb_grpc.WarehouseManagementStub, data: Dict[str
         logging.error(f"gRPC: Could not update product stock: {e.details()} (Code: {e.code()})")
 
 
-def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: str):
+def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: str, caller_id: str):
     """
     Establishes a secure gRPC channel and routes the specified action ('create' or 'update')
     to its corresponding handler with the provided JWT authentication data.
@@ -148,9 +154,9 @@ def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: 
         with create_secure_channel(grpc_address) as channel:
             stub = whm_pb_grpc.WarehouseManagementStub(channel)
             if action == "create":
-                handle_create_grpc(stub, config.get("create_product", {}), jwt)
+                handle_create_grpc(stub, config.get("create_product", {}), jwt, caller_id)
             elif action == "update":
-                handle_update_grpc(stub, config.get("update_stock", {}), jwt)
+                handle_update_grpc(stub, config.get("update_stock", {}), jwt, caller_id)
     except Exception as e:
         logging.error(f"gRPC execution failed: {e}")
 
@@ -296,7 +302,7 @@ def main():
         mqtt_execution(config, jwt)
         return
     elif connection_type == "grpc":
-        grpc_execution(config, action, grpc_address, jwt)
+        grpc_execution(config, action, grpc_address, jwt, config.get("caller-id", ""))
         return
 
 
