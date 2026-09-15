@@ -12,6 +12,7 @@ import (
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/productcatalog"
 	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/warehousemanagement"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -21,6 +22,7 @@ const xaCreateProductWorkflow = "xa-create-product"
 //
 // It pairs a pre-generated product ID with the original gRPC request payload containing product creation metadata.
 type XaCreateProductInput struct {
+	CallerId  string                                               `json:"caller_id""`
 	ProductId string                                               `json:"product_id"`
 	Req       *warehousemanagementpb.CreateWarehouseProductRequest `json:"req"`
 }
@@ -38,21 +40,23 @@ func (wm *warehouseManagement) registerXaCreateProductWorkflow() error {
 		req := input.Req
 		productID := input.ProductId
 
+		outCtx := metadata.AppendToOutgoingContext(wf.Context, "x-caller-id-secret", input.CallerId)
+
 		catalogCli := productcatalogpb.NewProductCatalogServiceClient(wm.xaProductCatalogConn)
 		inventoryCli := inventorypb.NewInventoryServiceClient(wm.xaInventoryConn)
 
 		// Branch 1: Product Catalog
 		wf.NewBranch().OnCommit(func(bb *dtmcli.BranchBarrier) error {
 			log.Info("XA: Committing product creation in catalog")
-			_, err := catalogCli.XaCommitCreateProduct(wf.Context, &commonpb.XaBranchRequest{Gid: wf.Gid})
+			_, err := catalogCli.XaCommitCreateProduct(outCtx, &commonpb.XaBranchRequest{Gid: wf.Gid})
 			return err
 		}).OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			log.Info("XA: Rolling back product creation in catalog")
-			_, err := catalogCli.XaRollbackCreateProduct(wf.Context, &commonpb.XaBranchRequest{Gid: wf.Gid})
+			_, err := catalogCli.XaRollbackCreateProduct(outCtx, &commonpb.XaBranchRequest{Gid: wf.Gid})
 			return err
 		})
 		log.Info("XA: Preparing product creation in catalog")
-		if _, err := catalogCli.XaPrepareCreateProduct(wf.Context, &productcatalogpb.XaPrepareCreateProductRequest{
+		if _, err := catalogCli.XaPrepareCreateProduct(outCtx, &productcatalogpb.XaPrepareCreateProductRequest{
 			Gid:         wf.Gid,
 			Id:          productID,
 			Name:        req.Name,
@@ -66,15 +70,15 @@ func (wm *warehouseManagement) registerXaCreateProductWorkflow() error {
 		// Branch 2: Inventory
 		wf.NewBranch().OnCommit(func(bb *dtmcli.BranchBarrier) error {
 			log.Info("XA: Committing inventory product creation")
-			_, err := inventoryCli.XaCommitCreateInventoryProduct(wf.Context, &commonpb.XaBranchRequest{Gid: wf.Gid})
+			_, err := inventoryCli.XaCommitCreateInventoryProduct(outCtx, &commonpb.XaBranchRequest{Gid: wf.Gid})
 			return err
 		}).OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			log.Info("XA: Rolling back inventory product creation")
-			_, err := inventoryCli.XaRollbackCreateInventoryProduct(wf.Context, &commonpb.XaBranchRequest{Gid: wf.Gid})
+			_, err := inventoryCli.XaRollbackCreateInventoryProduct(outCtx, &commonpb.XaBranchRequest{Gid: wf.Gid})
 			return err
 		})
 		log.Info("XA: Preparing inventory product creation")
-		_, err := inventoryCli.XaPrepareCreateInventoryProduct(wf.Context, &inventorypb.XaPrepareCreateInventoryProductRequest{
+		_, err := inventoryCli.XaPrepareCreateInventoryProduct(outCtx, &inventorypb.XaPrepareCreateInventoryProductRequest{
 			Gid:          wf.Gid,
 			Id:           productID,
 			InitialStock: req.InitialStock,
@@ -91,7 +95,13 @@ func (wm *warehouseManagement) createNewProductXa(ctx context.Context, req *ware
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
 	productID, _ := generateID(10)
 
-	data, err := json.Marshal(XaCreateProductInput{ProductId: productID, Req: req})
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if !ok || len(md.Get("x-caller-id-secret")) == 0 {
+		return nil, status.Errorf(codes.Unauthenticated, "caller ID is missing")
+	}
+	callerId := md.Get("x-caller-id-secret")[0]
+
+	data, err := json.Marshal(XaCreateProductInput{CallerId: callerId, ProductId: productID, Req: req})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to marshal request: %v", err)
 	}
