@@ -10,6 +10,7 @@ import (
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/productcatalog"
 	warehousemanagementpb "github.com/netd-tud/ds-onlineshop/src/warehousemanagement/genproto/warehousemanagement"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -19,9 +20,19 @@ import (
 // for both the product catalog and inventory services, submits the SAGA, and fetches the resulting product details upon successful completion.
 func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
 	productID, _ := generateID(10)
+
+	md, _ := metadata.FromOutgoingContext(ctx)
+	callerId := md.Get("x-caller-id-secret")[0]
+	auth := md.Get("authorization")[0]
+
+	headers := map[string]string{
+		"x-caller-id-secret": callerId,
+		"authorization":      auth,
+	}
+
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
 
-	saga := dtmgrpc.NewSagaGrpc(wm.dtmSvcAddr, gid).
+	saga := dtmgrpc.NewSagaGrpc(wm.dtmSvcAddr, gid, dtmgrpc.WithBranchHeaders(headers)).
 		Add(
 			wm.productCatalogSvcAddr+"/hipstershop.ProductCatalogService/CreateNewProduct",
 			wm.productCatalogSvcAddr+"/hipstershop.ProductCatalogService/CompensateCreateNewProduct",

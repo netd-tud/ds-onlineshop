@@ -43,6 +43,14 @@ func (wm *warehouseManagement) UpdateProductStock(ctx context.Context, req *inve
 // It propagates incoming context metadata downstream and delegates execution to NAIVE, SAGA, or XA transaction handlers,
 // returning an Unimplemented error status if the configured mode is unsupported.
 func (wm *warehouseManagement) CreateNewProduct(ctx context.Context, req *warehousemanagementpb.CreateWarehouseProductRequest) (*warehousemanagementpb.CreateWarehouseProductResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok || len(md.Get("authorization")) == 0 {
+		return nil, status.Errorf(codes.Unauthenticated, "authorization header is missing")
+	}
+	if len(md.Get("x-caller-id-secret")) == 0 {
+		return nil, status.Errorf(codes.Unauthenticated, "caller ID is missing")
+	}
+
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		ctx = metadata.NewOutgoingContext(ctx, md)
 	}

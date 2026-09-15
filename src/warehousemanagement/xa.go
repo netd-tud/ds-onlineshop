@@ -97,15 +97,9 @@ func (wm *warehouseManagement) createNewProductXa(ctx context.Context, req *ware
 	gid := dtmgrpc.MustGenGid(wm.dtmSvcAddr)
 	productID, _ := generateID(10)
 
-	md, ok := metadata.FromOutgoingContext(ctx)
-	if !ok || len(md.Get("x-caller-id-secret")) == 0 {
-		return nil, status.Errorf(codes.Unauthenticated, "caller ID is missing")
-	}
+	md, _ := metadata.FromOutgoingContext(ctx)
 	callerId := md.Get("x-caller-id-secret")[0]
 	log.Info("Caller id: ", callerId)
-	if !ok || len(md.Get("authorization")) == 0 {
-		return nil, status.Errorf(codes.Unauthenticated, "authorization header is missing")
-	}
 	authToken := md.Get("authorization")[0]
 
 	data, err := json.Marshal(XaCreateProductInput{CallerId: callerId, authToken: authToken, ProductId: productID, Req: req})
