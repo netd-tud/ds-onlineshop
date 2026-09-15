@@ -28,3 +28,8 @@ resources:
 - shippingservice.yaml
 - inventoryservice.yaml
 - mqtt-broker.yaml
+
+secretGenerator:
+  - name: system-secrets
+    envs:
+      - secrets.env

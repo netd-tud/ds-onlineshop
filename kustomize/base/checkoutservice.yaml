@@ -73,8 +73,8 @@ spec:
           - name: SYSTEM_JWT_SECRET
             valueFrom:
               secretKeyRef:
-                name: system-jwt-secret
-                key: secret
+                name: system-secrets
+                key: SYSTEM_JWT_SECRET
           resources:
             requests:
               cpu: 100m
