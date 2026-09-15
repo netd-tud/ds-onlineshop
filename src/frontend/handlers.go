@@ -898,7 +898,7 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		Price    *commonpb.Money
 	}
 	items := make([]cartItemView, len(cart))
-	totalPrice := commonpb.Money{CurrencyCode: currentCurrency(r)}
+	totalPrice := &commonpb.Money{CurrencyCode: currentCurrency(r)}
 	for i, item := range cart {
 		cookie, _ := r.Cookie(cookieAuth)
 		p, err := fe.getProduct(r.Context(), item.GetProductId(), cookie)
@@ -912,14 +912,14 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		multPrice := money.MultiplySlow(*price, uint32(item.GetQuantity()))
+		multPrice := money.MultiplySlow(price, uint32(item.GetQuantity()))
 		items[i] = cartItemView{
 			Item:     p,
 			Quantity: item.GetQuantity(),
-			Price:    &multPrice}
+			Price:    multPrice}
 		totalPrice = money.Must(money.Sum(totalPrice, multPrice))
 	}
-	totalPrice = money.Must(money.Sum(totalPrice, *shippingCost))
+	totalPrice = money.Must(money.Sum(totalPrice, shippingCost))
 	year := time.Now().Year()
 
 	var errorMessage string
@@ -1044,9 +1044,9 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 	order.GetOrder().GetItems()
 	recommendations, _ := fe.getRecommendations(ctx, sessionID(r), nil)
 
-	totalPaid := *order.GetOrder().GetShippingCost()
+	totalPaid := order.GetOrder().GetShippingCost()
 	for _, v := range order.GetOrder().GetItems() {
-		multPrice := money.MultiplySlow(*v.GetCost(), uint32(v.GetItem().GetQuantity()))
+		multPrice := money.MultiplySlow(v.GetCost(), uint32(v.GetItem().GetQuantity()))
 		totalPaid = money.Must(money.Sum(totalPaid, multPrice))
 	}
 
