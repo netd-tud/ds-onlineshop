@@ -25,6 +25,8 @@ const defaultPort = "50002"
 
 var log *logrus.Logger
 
+var systemUserIDSecret string
+
 func init() {
 	log = logrus.New()
 	log.Level = logrus.DebugLevel
@@ -92,7 +94,7 @@ func run(port string) error {
 	)
 
 	svc := &inventoryService{
-		inventory: make(map[string]*inventorypb.InventoryProduct),
+		inventory: make(map[string]*inventoryEntry),
 		thresholds: struct {
 			lowStock      int64
 			criticalStock int64
@@ -104,6 +106,8 @@ func run(port string) error {
 
 	shared.MustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	shared.MustMapEnv(&svc.mqttBrokerAddr, "MQTT_BROKER_ADDR")
+
+	shared.MustMapEnv(&systemUserIDSecret, "SYSTEM_USER_ID_SECRET")
 
 	ctx := context.Background()
 	shared.MustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
@@ -122,9 +126,9 @@ func run(port string) error {
 	if err != nil {
 		log.Fatalf("could not parse inventory: %v", err)
 	}
-	for _, product := range svc.inventory {
-		log.Info("Publishing initial stock event for product: ", product)
-		svc.publishStockEventOverMQTT(svc.mqttBrokerAddr, product)
+	for _, entry := range svc.inventory {
+		log.Info("Publishing initial stock event for product: ", entry)
+		svc.publishStockEventOverMQTT(svc.mqttBrokerAddr, entry.product)
 	}
 
 	inventorypb.RegisterInventoryServiceServer(srv, svc)

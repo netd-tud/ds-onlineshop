@@ -18,8 +18,17 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
+
+// inventoryEntry represents an entry in the inventory.
+//
+// It contains the InventoryProduct as well as the owner who created the Product.
+type inventoryEntry struct {
+	product *inventorypb.InventoryProduct
+	owner   string
+}
 
 // inventoryService represents the inventory microservice backend.
 //
@@ -30,7 +39,7 @@ type inventoryService struct {
 	inventorypb.UnimplementedInventoryServiceServer
 
 	stockMu   sync.Mutex
-	inventory map[string]*inventorypb.InventoryProduct
+	inventory map[string]*inventoryEntry
 
 	productCatalogSvcAddr string
 	productCatalogSvcConn *grpc.ClientConn
@@ -44,7 +53,7 @@ type inventoryService struct {
 	}
 
 	xaMu      sync.Mutex
-	xaPending map[string]*inventorypb.InventoryProduct
+	xaPending map[string]*inventoryEntry
 
 	resolvedAlerts   map[string]time.Time
 	resolvedAlertTTL time.Duration
@@ -68,8 +77,8 @@ func (is *inventoryService) ListInventory(context.Context, *commonpb.Empty) (*in
 
 	is.ensureInventoryLoadedLocked()
 	products := make([]*inventorypb.InventoryProduct, 0, len(is.inventory))
-	for _, product := range is.inventory {
-		products = append(products, product)
+	for _, entry := range is.inventory {
+		products = append(products, entry.product)
 	}
 	return &inventorypb.ListInventoryResponse{Products: products}, nil
 }
@@ -82,8 +91,8 @@ func (is *inventoryService) GetInventoryProduct(ctx context.Context, req *invent
 	defer is.stockMu.Unlock()
 
 	is.ensureInventoryLoadedLocked()
-	if product, ok := is.inventory[req.Id]; ok {
-		return product, nil
+	if entry, ok := is.inventory[req.Id]; ok {
+		return entry.product, nil
 	}
 
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
@@ -98,17 +107,17 @@ func (is *inventoryService) GetInventoryProduct(ctx context.Context, req *invent
 // is insufficient.
 func (is *inventoryService) applyStockDeltaLocked(productID string, delta int64) (*inventorypb.InventoryProduct, error) {
 	is.ensureInventoryLoadedLocked()
-	product, ok := is.inventory[productID]
+	entry, ok := is.inventory[productID]
 	if !ok {
 		return nil, status.Errorf(codes.NotFound, "no product with ID %s", productID)
 	}
-	newStock := product.Stock + delta
+	newStock := entry.product.Stock + delta
 	if newStock < 0 {
 		return nil, status.Errorf(codes.Internal, "insufficient stock for product with ID %s", productID)
 	}
-	product.Stock = newStock
-	is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
-	return product, nil
+	entry.product.Stock = newStock
+	is.publishStockEventOverMQTT(is.mqttBrokerAddr, entry.product)
+	return entry.product, nil
 }
 
 // ChangeInventoryProductStock handles the gRPC request to adjust a product's stock level by a given delta.
@@ -117,6 +126,14 @@ func (is *inventoryService) applyStockDeltaLocked(productID string, delta int64)
 // validates whether the user has permission to modify the specific product,
 // acquires a stock mutex lock, applies the requested delta update, and returns the modified product response.
 func (is *inventoryService) ChangeInventoryProductStock(ctx context.Context, req *inventorypb.ChangeInventoryProductStockRequest) (*inventorypb.ChangeInventoryProductStockResponse, error) {
+	callerID, err := is.getCallerID(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not get caller id: %v", err)
+	}
+	if is.inventory[req.Id].owner != callerID {
+		return nil, status.Error(codes.PermissionDenied, "caller is not the owner of the product")
+	}
+
 	claims, ok := shared.GetClaims(ctx)
 	log.Infof("ChangeInventoryProductStock called for product with ID %s with claims: %v", req.Id, claims)
 	if !ok {
@@ -159,19 +176,19 @@ func (is *inventoryService) SetInventoryProductStock(ctx context.Context, req *i
 	defer is.stockMu.Unlock()
 
 	is.ensureInventoryLoadedLocked()
-	product, ok := is.inventory[req.GetId()]
+	entry, ok := is.inventory[req.GetId()]
 	if ok {
-		product.Stock = req.GetNewStock()
+		entry.product.Stock = req.GetNewStock()
 	} else {
-		product = &inventorypb.InventoryProduct{
+		entry.product = &inventorypb.InventoryProduct{
 			Id:    req.GetId(),
 			Stock: req.GetNewStock(),
 		}
-		is.inventory[req.GetId()] = product
+		is.inventory[req.GetId()] = entry
 	}
-	log.Infof("Inventory product updated: %s", product.Id)
-	is.publishStockEventOverMQTT(is.mqttBrokerAddr, product)
-	return &inventorypb.SetInventoryProductStockRequestResponse{Product: product}, nil
+	log.Infof("Inventory product updated: %s", entry.product.Id)
+	is.publishStockEventOverMQTT(is.mqttBrokerAddr, entry.product)
+	return &inventorypb.SetInventoryProductStockRequestResponse{Product: entry.product}, nil
 }
 
 // CreateNewInventoryProduct handles the gRPC request to create a new product in the inventory.
@@ -191,6 +208,11 @@ func (is *inventoryService) CreateNewInventoryProduct(ctx context.Context, req *
 		}
 	}
 
+	callerID, err := is.getCallerID(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not get caller id: %v", err)
+	}
+
 	is.stockMu.Lock()
 	defer is.stockMu.Unlock()
 
@@ -199,7 +221,13 @@ func (is *inventoryService) CreateNewInventoryProduct(ctx context.Context, req *
 		Id:    req.GetId(),
 		Stock: req.GetInitialStock(),
 	}
-	is.inventory[req.GetId()] = product
+
+	entry := &inventoryEntry{
+		product: product,
+		owner:   callerID,
+	}
+
+	is.inventory[req.GetId()] = entry
 	log.Infof("Inventory product created: %s", product.Id)
 	return &inventorypb.CreateNewInventoryProductResponse{Product: product}, nil
 }
@@ -228,14 +256,23 @@ func getConfigValue(configPath string) (string, error) {
 // It removes the product with the matching product ID from the map.
 // If the product does not exist, it returns an empty response.
 func (is *inventoryService) DeleteInventoryProduct(ctx context.Context, req *inventorypb.DeleteInventoryProductRequest) (*inventorypb.DeleteInventoryProductResponse, error) {
+	callerID, err := is.getCallerID(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not get caller id: %v", err)
+	}
+
 	is.stockMu.Lock()
 	defer is.stockMu.Unlock()
 
 	is.ensureInventoryLoadedLocked()
-	if product, ok := is.inventory[req.GetId()]; ok {
+	if entry, ok := is.inventory[req.GetId()]; ok {
+		if entry.owner != callerID {
+			log.Warn("User not authorized to delete product: %s", req.GetId())
+			return nil, status.Error(codes.PermissionDenied, "user not authorized to delete this product")
+		}
 		delete(is.inventory, req.GetId())
-		log.Infof("Inventory product deleted: %s", product.Id)
-		return &inventorypb.DeleteInventoryProductResponse{Product: product}, nil
+		log.Infof("Inventory product deleted: %s", entry.product.Id)
+		return &inventorypb.DeleteInventoryProductResponse{Product: entry.product}, nil
 	}
 	// return empty response
 	return &inventorypb.DeleteInventoryProductResponse{}, nil
@@ -269,11 +306,11 @@ func (is *inventoryService) ResolveStockAlert(ctx context.Context, req *inventor
 
 	if _, seen := is.resolvedAlerts[key]; seen {
 		is.ensureInventoryLoadedLocked()
-		product, ok := is.inventory[req.GetProductId()]
+		entry, ok := is.inventory[req.GetProductId()]
 		if !ok {
 			return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.GetProductId())
 		}
-		return &inventorypb.ResolveStockAlertResponse{Product: product, AlreadyResolved: true}, nil
+		return &inventorypb.ResolveStockAlertResponse{Product: entry.product, AlreadyResolved: true}, nil
 	}
 
 	product, err := is.applyStockDeltaLocked(req.GetProductId(), req.GetReorderAmount())
@@ -318,7 +355,7 @@ func (is *inventoryService) CompensateCreateNewInventoryProduct(ctx context.Cont
 // the underlying storage if the internal product map is uninitialized.
 func (is *inventoryService) ensureInventoryLoadedLocked() {
 	if is.inventory == nil {
-		is.inventory = make(map[string]*inventorypb.InventoryProduct)
+		is.inventory = make(map[string]*inventoryEntry)
 		_ = loadInventory(is.inventory)
 	} else if len(is.inventory) == 0 {
 		_ = loadInventory(is.inventory)
@@ -436,4 +473,22 @@ func (is *inventoryService) userAllowedToModifyProduct(ctx context.Context, prod
 	}
 
 	return false
+}
+
+// getCallerID extracts the "x-caller-id-secret" token from the incoming gRPC metadata context.
+// It returns an error if the context lacks metadata or if the specific key is not found.
+func (is *inventoryService) getCallerID(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", fmt.Errorf("missing metadata in context")
+	}
+
+	values := md.Get("x-caller-id-secret")
+	if len(values) == 0 {
+		return "", fmt.Errorf("missing x-caller-id-secret in metadata")
+	}
+
+	log.Infof("Retrieved x-caller-id-secret from metadata: %v", values)
+
+	return values[0], nil
 }

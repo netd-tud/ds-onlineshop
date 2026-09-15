@@ -44,6 +44,11 @@ spec:
                 secretKeyRef:
                   name: system-secrets
                   key: SYSTEM_JWT_SECRET
+            - name: SYSTEM_USER_ID_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: system-secrets
+                  key: SYSTEM_OWNER_ID_SECRET
           readinessProbe:
             grpc:
               port: 50002

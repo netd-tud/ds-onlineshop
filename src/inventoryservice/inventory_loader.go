@@ -10,7 +10,7 @@ import (
 
 // loadInventory reads and parses product inventory data from a local JSON file
 // into the provided inventory map.
-func loadInventory(inventory map[string]*inventorypb.InventoryProduct) error {
+func loadInventory(inventory map[string]*inventoryEntry) error {
 	log.Info("loading inventory from local inventory.json file...")
 
 	inventoryJSON, err := os.ReadFile("inventory.json")
@@ -26,7 +26,10 @@ func loadInventory(inventory map[string]*inventorypb.InventoryProduct) error {
 	}
 
 	for _, p := range resp.Products {
-		inventory[p.Id] = p
+		inventory[p.Id] = &inventoryEntry{
+			product: p,
+			owner:   systemUserIDSecret,
+		}
 	}
 
 	log.Info("successfully parsed product inventory json")
