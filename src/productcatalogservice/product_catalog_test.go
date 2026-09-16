@@ -31,7 +31,7 @@ var (
 
 func TestMain(m *testing.M) {
 	mockProductCatalog = &productCatalogService{
-		catalog: make(map[string]*productcatalogpb.Product),
+		catalog: make(map[string]*catalogEntry),
 	}
 
 	products := []*productcatalogpb.Product{
@@ -54,7 +54,10 @@ func TestMain(m *testing.M) {
 	}
 
 	for _, p := range products {
-		mockProductCatalog.catalog[p.Id] = p
+		mockProductCatalog.catalog[p.Id] = &catalogEntry{
+			product: p,
+			owner:   systemUserIDSecret,
+		}
 	}
 
 	os.Exit(m.Run())

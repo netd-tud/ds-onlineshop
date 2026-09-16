@@ -48,6 +48,8 @@ var (
 	port = "3550"
 
 	reloadCatalog bool
+
+	systemUserIDSecret string
 )
 
 func init() {
@@ -133,6 +135,8 @@ func run(port string) string {
 		log.Fatal(err)
 	}
 
+	shared.MustMapEnv(&systemUserIDSecret, "SYSTEM_USER_ID_SECRET")
+
 	// Propagate trace context
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
@@ -143,7 +147,7 @@ func run(port string) string {
 	srv = grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
 
 	svc := &productCatalogService{
-		catalog: make(map[string]*productcatalogpb.Product),
+		catalog: make(map[string]*catalogEntry),
 	}
 	svc.mu.Lock()
 	svc.ensureCatalogLoadedLocked()

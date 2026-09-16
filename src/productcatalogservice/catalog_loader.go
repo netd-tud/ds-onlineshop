@@ -34,7 +34,7 @@ import (
 // loadCatalog thread-safely populates the product catalog data structure
 // by selecting either the cloud AlloyDB cluster backend or a local file source
 // depending on environment configuration.
-func loadCatalog(catalog map[string]*productcatalogpb.Product) error {
+func loadCatalog(catalog map[string]*catalogEntry) error {
 	catalogMutex.Lock()
 	defer catalogMutex.Unlock()
 
@@ -47,7 +47,7 @@ func loadCatalog(catalog map[string]*productcatalogpb.Product) error {
 
 // loadCatalogFromLocalFile reads the product catalog from a local JSON file
 // and unmarshals its contents into the provided product map.
-func loadCatalogFromLocalFile(catalog map[string]*productcatalogpb.Product) error {
+func loadCatalogFromLocalFile(catalog map[string]*catalogEntry) error {
 	log.Info("loading catalog from local products.json file...")
 
 	catalogJSON, err := os.ReadFile("products.json")
@@ -63,14 +63,17 @@ func loadCatalogFromLocalFile(catalog map[string]*productcatalogpb.Product) erro
 	}
 
 	for _, p := range resp.Products {
-		catalog[p.Id] = p
+		catalog[p.Id] = &catalogEntry{
+			product: p,
+			owner:   systemUserIDSecret,
+		}
 	}
 
 	log.Info("successfully parsed product catalog json")
 	return nil
 }
 
-func loadCatalogIntoPostgres(catalog map[string]*productcatalogpb.Product) error {
+func loadCatalogIntoPostgres(catalog map[string]*catalogEntry) error {
 	log.Info("loading catalog into Postgres database...")
 
 	dbAddress := os.Getenv("DB_ADDRESS")
@@ -100,8 +103,10 @@ func loadCatalogIntoPostgres(catalog map[string]*productcatalogpb.Product) error
 	}
 
 	// Insert catalog products
-	for _, product := range catalog {
-		insertQuery := "INSERT INTO " + dbTable + " (sku, name, description, picture, price_usd_currency_code, price_usd_units, price_usd_nanos, categories) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+	for _, entry := range catalog {
+		insertQuery := "INSERT INTO " + dbTable + " (sku, name, description, picture, price_usd_currency_code, price_usd_units, price_usd_nanos, categories, owner) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+
+		product := entry.product
 
 		_, err = pool.Exec(context.Background(), insertQuery,
 			product.Id,
@@ -112,6 +117,7 @@ func loadCatalogIntoPostgres(catalog map[string]*productcatalogpb.Product) error
 			product.PriceUsd.Units,
 			product.PriceUsd.Nanos,
 			product.Categories,
+			systemUserIDSecret,
 		)
 		if err != nil {
 			log.Warnf("failed to insert product: %v", err)
@@ -146,7 +152,7 @@ func getSecretPayload(project, secret, version string) (string, error) {
 	return string(result.Payload.Data), nil
 }
 
-func loadCatalogFromAlloyDB(catalog map[string]*productcatalogpb.Product) error {
+func loadCatalogFromAlloyDB(catalog map[string]*catalogEntry) error {
 	log.Info("loading catalog from AlloyDB...")
 
 	projectID := os.Getenv("PROJECT_ID")
@@ -219,7 +225,10 @@ func loadCatalogFromAlloyDB(catalog map[string]*productcatalogpb.Product) error 
 		categories = strings.ToLower(categories)
 		product.Categories = strings.Split(categories, ",")
 
-		catalog[product.Id] = product
+		catalog[product.Id] = &catalogEntry{
+			product: product,
+			owner:   systemUserIDSecret,
+		}
 	}
 
 	log.Info("successfully parsed product catalog from AlloyDB")

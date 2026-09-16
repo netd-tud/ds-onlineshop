@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -26,8 +27,17 @@ import (
 	productcatalogpb "github.com/netd-tud/ds-onlineshop/src/productcatalogservice/genproto/productcatalog"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
+
+// catalogEntry represents an entry in the catalog
+//
+// It contains the Product as well as the owner who created the Product.
+type catalogEntry struct {
+	product *productcatalogpb.Product
+	owner   string
+}
 
 // productCatalogService represents the product catalog microservice backend.
 //
@@ -36,9 +46,9 @@ import (
 type productCatalogService struct {
 	productcatalogpb.UnimplementedProductCatalogServiceServer
 	mu        sync.Mutex
-	catalog   map[string]*productcatalogpb.Product
+	catalog   map[string]*catalogEntry
 	xaMu      sync.Mutex
-	xaPending map[string]*productcatalogpb.Product
+	xaPending map[string]*catalogEntry
 }
 
 func (pcs *productCatalogService) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
@@ -60,8 +70,8 @@ func (pcs *productCatalogService) ListProducts(context.Context, *commonpb.Empty)
 
 	pcs.ensureCatalogLoadedLocked()
 	products := make([]*productcatalogpb.Product, 0, len(pcs.catalog))
-	for _, product := range pcs.catalog {
-		products = append(products, product)
+	for _, entry := range pcs.catalog {
+		products = append(products, entry.product)
 	}
 
 	return &productcatalogpb.ListProductsResponse{Products: products}, nil
@@ -78,8 +88,8 @@ func (pcs *productCatalogService) GetProduct(ctx context.Context, req *productca
 	defer pcs.mu.Unlock()
 
 	pcs.ensureCatalogLoadedLocked()
-	if product, ok := pcs.catalog[req.Id]; ok {
-		return product, nil
+	if entry, ok := pcs.catalog[req.Id]; ok {
+		return entry.product, nil
 	}
 
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
@@ -97,10 +107,10 @@ func (pcs *productCatalogService) SearchProducts(ctx context.Context, req *produ
 
 	pcs.ensureCatalogLoadedLocked()
 	var ps []*productcatalogpb.Product
-	for _, product := range pcs.catalog {
-		if strings.Contains(strings.ToLower(product.Name), strings.ToLower(req.Query)) ||
-			strings.Contains(strings.ToLower(product.Description), strings.ToLower(req.Query)) {
-			ps = append(ps, product)
+	for _, entry := range pcs.catalog {
+		if strings.Contains(strings.ToLower(entry.product.Name), strings.ToLower(req.Query)) ||
+			strings.Contains(strings.ToLower(entry.product.Description), strings.ToLower(req.Query)) {
+			ps = append(ps, entry.product)
 		}
 	}
 
@@ -112,6 +122,11 @@ func (pcs *productCatalogService) SearchProducts(ctx context.Context, req *produ
 // It generates a random unique identifier if none is provided, constructs the new product entity,
 // stores it in the product catalog map, logs the creation event, and returns the newly created product details.
 func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *productcatalogpb.CreateNewProductRequest) (*productcatalogpb.CreateNewProductResponse, error) {
+	callerID, err := pcs.getCallerID(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not get caller id: %v", err)
+	}
+
 	if req.Id == "" {
 		newId, _ := generateID(10)
 		req.Id = newId
@@ -129,7 +144,10 @@ func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *pro
 	defer pcs.mu.Unlock()
 
 	pcs.ensureCatalogLoadedLocked()
-	pcs.catalog[product.Id] = product
+	pcs.catalog[product.Id] = &catalogEntry{
+		product: product,
+		owner:   callerID,
+	}
 	log.Infof("Product created: %s", product.Id)
 	return &productcatalogpb.CreateNewProductResponse{Product: product}, nil
 }
@@ -139,14 +157,22 @@ func (pcs *productCatalogService) CreateNewProduct(ctx context.Context, req *pro
 // It searches the product catalog map, deletes the matching product upon discovery,
 // logs the deletion event, and returns the deleted product details or a gRPC NotFound status if the product ID does not exist.
 func (pcs *productCatalogService) DeleteProduct(ctx context.Context, req *productcatalogpb.DeleteProductRequest) (*productcatalogpb.DeleteProductResponse, error) {
+	callerID, err := pcs.getCallerID(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not get caller id: %v", err)
+	}
+	if pcs.catalog[req.Id].owner != callerID {
+		return nil, status.Error(codes.PermissionDenied, "caller is not the owner of the product")
+	}
+
 	pcs.mu.Lock()
 	defer pcs.mu.Unlock()
 
 	pcs.ensureCatalogLoadedLocked()
-	if product, ok := pcs.catalog[req.GetId()]; ok {
+	if entry, ok := pcs.catalog[req.GetId()]; ok {
 		delete(pcs.catalog, req.GetId())
-		log.Infof("Product deleted: %s", product.Id)
-		return &productcatalogpb.DeleteProductResponse{Product: product}, nil
+		log.Infof("Product deleted: %s", entry.product.Id)
+		return &productcatalogpb.DeleteProductResponse{Product: entry.product}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
 }
@@ -181,7 +207,7 @@ func generateID(length int) (string, error) {
 func (pcs *productCatalogService) ensureCatalogLoadedLocked() {
 	if reloadCatalog || len(pcs.catalog) == 0 {
 		if pcs.catalog == nil {
-			pcs.catalog = make(map[string]*productcatalogpb.Product)
+			pcs.catalog = make(map[string]*catalogEntry)
 		}
 		err := loadCatalog(pcs.catalog)
 		if err != nil {
@@ -193,4 +219,22 @@ func (pcs *productCatalogService) ensureCatalogLoadedLocked() {
 			log.Warnf("failed to insert product details into Postgres database: %v", err)
 		}
 	}
+}
+
+// getCallerID extracts the "x-caller-id-secret" token from the incoming gRPC metadata context.
+// It returns an error if the context lacks metadata or if the specific key is not found.
+func (pcs *productCatalogService) getCallerID(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", fmt.Errorf("missing metadata in context")
+	}
+
+	values := md.Get("x-caller-id-secret")
+	if len(values) == 0 {
+		return "", fmt.Errorf("missing x-caller-id-secret in metadata")
+	}
+
+	log.Infof("Retrieved x-caller-id-secret from metadata: %v", values)
+
+	return values[0], nil
 }
