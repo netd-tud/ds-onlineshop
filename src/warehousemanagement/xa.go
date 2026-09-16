@@ -23,7 +23,7 @@ const xaCreateProductWorkflow = "xa-create-product"
 // It pairs a pre-generated product ID with the original gRPC request payload containing product creation metadata.
 type XaCreateProductInput struct {
 	CallerId  string                                               `json:"caller_id"`
-	authToken string                                               `json:"auth_token"`
+	AuthToken string                                               `json:"auth_token"`
 	ProductId string                                               `json:"product_id"`
 	Req       *warehousemanagementpb.CreateWarehouseProductRequest `json:"req"`
 }
@@ -42,7 +42,7 @@ func (wm *warehouseManagement) registerXaCreateProductWorkflow() error {
 		productID := input.ProductId
 
 		outCtx := metadata.AppendToOutgoingContext(wf.Context, "x-caller-id-secret", input.CallerId)
-		outCtx = metadata.AppendToOutgoingContext(outCtx, "authorization", input.authToken)
+		outCtx = metadata.AppendToOutgoingContext(outCtx, "authorization", input.AuthToken)
 
 		catalogCli := productcatalogpb.NewProductCatalogServiceClient(wm.xaProductCatalogConn)
 		inventoryCli := inventorypb.NewInventoryServiceClient(wm.xaInventoryConn)
@@ -102,7 +102,7 @@ func (wm *warehouseManagement) createNewProductXa(ctx context.Context, req *ware
 	log.Info("Caller id: ", callerId)
 	authToken := md.Get("authorization")[0]
 
-	data, err := json.Marshal(XaCreateProductInput{CallerId: callerId, authToken: authToken, ProductId: productID, Req: req})
+	data, err := json.Marshal(XaCreateProductInput{CallerId: callerId, AuthToken: authToken, ProductId: productID, Req: req})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to marshal request: %v", err)
 	}
