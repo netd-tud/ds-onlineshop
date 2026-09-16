@@ -28,8 +28,6 @@ patches:
                     value: "XA"
                   - name: PORT
                     value: "50003"
-                  - name: WAREHOUSE_MANAGEMENT_SVC_ADDR
-                    value: "warehousemanagement-xa:50003"
                 readinessProbe:
                   grpc:
                     port: 50003

@@ -28,8 +28,6 @@ patches:
                     value: "NAIVE"
                   - name: PORT
                     value: "50001"
-                  - name: WAREHOUSE_MANAGEMENT_SVC_ADDR
-                    value: "warehousemanagement-naive:50001"
                 readinessProbe:
                   grpc:
                     port: 50001

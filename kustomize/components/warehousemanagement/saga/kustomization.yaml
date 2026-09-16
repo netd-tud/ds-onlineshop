@@ -28,8 +28,6 @@ patches:
                     value: "SAGA"
                   - name: PORT
                     value: "50002"
-                  - name: WAREHOUSE_MANAGEMENT_SVC_ADDR
-                    value: "warehousemanagement-saga:50002"
                 readinessProbe:
                   grpc:
                     port: 50002
