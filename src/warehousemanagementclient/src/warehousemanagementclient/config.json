@@ -1,9 +1,11 @@
 {
+  "custom-warehousemanagement-addr": "localhost:50001",
+
   "username": "admin",
   "password": "admin",
   "caller-id": "student123",
 
-  "connection-type": "mqtt",
+  "connection-type": "grpc",
 
   "dt-function": "naive",
 

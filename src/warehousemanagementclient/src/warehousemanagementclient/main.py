@@ -46,10 +46,16 @@ def load_config(file_path: Path) -> Dict[str, Any]:
         sys.exit(1)
 
 
-def create_secure_channel(target_address: str) -> grpc.Channel:
+def create_channel(target_address: str) -> grpc.Channel:
     """
-    Creates an SSL/TLS-encrypted gRPC channel target_address with SNI hostname override.
+    Creates an insecure channel for local testing, or a secure TLS-encrypted
+    channel with SNI override for the remote cluster.
     """
+    if "localhost" in target_address or "127.0.0.1" in target_address:
+        logging.info(f"Using insecure channel for local target: {target_address}")
+        return grpc.insecure_channel(target_address)
+
+    logging.info(f"Using secure TLS channel for remote target: {target_address}")
     credentials = grpc.ssl_channel_credentials()
     options = [('grpc.ssl_target_name_override', BASE_HOST)]
     return grpc.secure_channel(target_address, credentials, options=options)
@@ -151,7 +157,7 @@ def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: 
     """
     logging.info(f"Connecting to warehousemanagement gRPC server at {grpc_address}...")
     try:
-        with create_secure_channel(grpc_address) as channel:
+        with create_channel(grpc_address) as channel:
             stub = whm_pb_grpc.WarehouseManagementStub(channel)
             if action == "create":
                 handle_create_grpc(stub, config.get("create_product", {}), jwt, caller_id)
@@ -271,7 +277,11 @@ def main():
         logging.error(f"Invalid distributed transaction function '{dt_function}'. Use 'naive', 'saga' or 'xa'")
         sys.exit(1)
 
-    grpc_address = f"{BASE_HOST}:{DT_PORTS[dt_function]}"
+    whm_target = config.get("custom-warehousemanagement-addr", "").lower().strip()
+    if whm_target != "":
+        grpc_address = f"{whm_target}"
+    else:
+        grpc_address = f"{BASE_HOST}:{DT_PORTS[dt_function]}"
 
     action = config.get("action", "").lower().strip()
     if action not in ["create", "update"]:
@@ -285,7 +295,7 @@ def main():
 
     logging.info(f"Connecting to authservice gRPC server at {AUTH_GRPC_ADDRESS}...")
     try:
-        with create_secure_channel(AUTH_GRPC_ADDRESS) as channel:
+        with create_channel(AUTH_GRPC_ADDRESS) as channel:
             auth_stub = auth_pb_grpc.AuthServiceStub(channel)
             jwt = receive_jwt(auth_stub, config)
 
