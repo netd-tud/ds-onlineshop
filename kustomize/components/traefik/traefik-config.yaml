@@ -40,6 +40,11 @@ spec:
         expose: { default: true }
         exposedPort: 30789
         protocol: TCP
+      dtm-grpc:
+        port: 30790
+        expose: { default: true }
+        exposedPort: 30790
+        protocol: TCP
       ldap:
         port: 30389
         expose: { default: true }
