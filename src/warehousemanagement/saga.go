@@ -34,8 +34,8 @@ func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *wa
 
 	saga := dtmgrpc.NewSagaGrpc(wm.dtmSvcAddr, gid, dtmgrpc.WithBranchHeaders(headers)).
 		Add(
-			wm.productCatalogSvcAddr+"/hipstershop.ProductCatalogService/CreateNewProduct",
-			wm.productCatalogSvcAddr+"/hipstershop.ProductCatalogService/CompensateCreateNewProduct",
+			wm.dtmProductCatalogSvcAddr+"/hipstershop.ProductCatalogService/CreateNewProduct",
+			wm.dtmProductCatalogSvcAddr+"/hipstershop.ProductCatalogService/CompensateCreateNewProduct",
 			&productcatalogpb.CreateNewProductRequest{
 				Id:          productID,
 				Name:        req.Name,
@@ -45,8 +45,8 @@ func (wm *warehouseManagement) createNewProductSaga(ctx context.Context, req *wa
 			},
 		).
 		Add(
-			wm.inventorySvcAddr+"/hipstershop.InventoryService/CreateNewInventoryProduct",
-			wm.inventorySvcAddr+"/hipstershop.InventoryService/CompensateCreateNewInventoryProduct",
+			wm.dtmInventorySvcAddr+"/hipstershop.InventoryService/CreateNewInventoryProduct",
+			wm.dtmInventorySvcAddr+"/hipstershop.InventoryService/CompensateCreateNewInventoryProduct",
 			&inventorypb.CreateNewInventoryProductRequest{
 				Id:           productID,
 				InitialStock: req.InitialStock,

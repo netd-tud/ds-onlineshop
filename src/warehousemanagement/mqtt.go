@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -106,6 +107,14 @@ func setupMqttSubscriber(svc *warehouseManagement) {
 	updateTopic := "inventory/update-product-stock"
 
 	opts := mqtt.NewClientOptions()
+
+	if svc.locallyDeployed {
+		opts.AddBroker(fmt.Sprintf("tcps://%s", svc.mqttBrokerAddr))
+		opts.SetTLSConfig(&tls.Config{
+			InsecureSkipVerify: false,
+		})
+	}
+
 	opts.AddBroker(svc.mqttBrokerAddr)
 	opts.OnConnect = connectHandler
 	opts.OnConnectionLost = connectLostHandler
