@@ -28,7 +28,7 @@ type MqttMoney struct {
 // MqttCreateProductPayload defines the JSON message structure received via MQTT to trigger product creation.
 //
 // It contains metadata, pricing details, category listings, initial stock allocations,
-// and an authorization token required to process the creation request.
+// an authorization token and caller identifier required to process the creation request.
 type MqttCreateProductPayload struct {
 	Name         string    `json:"name"`
 	Description  string    `json:"description"`
@@ -36,15 +36,18 @@ type MqttCreateProductPayload struct {
 	Categories   []string  `json:"categories"`
 	InitialStock int64     `json:"initial_stock"`
 	Token        string    `json:"token"`
+	CallerID     string    `json:"caller_id"`
 }
 
 // MqttUpdateStockPayload defines the JSON message structure received via MQTT to update inventory stock levels.
 //
-// It specifies the target product ID, the relative quantity change (delta), and an authorization token.
+// It specifies the target product ID, the relative quantity change (delta), and an authorization token and
+// a caller identifier.
 type MqttUpdateStockPayload struct {
-	ID    string `json:"id"`
-	Delta int64  `json:"delta"`
-	Token string `json:"token"`
+	ID       string `json:"id"`
+	Delta    int64  `json:"delta"`
+	Token    string `json:"token"`
+	CallerID string `json:"caller_id"`
 }
 
 // mqttMsgChan is a channel used to queue incoming MQTT messages
@@ -97,25 +100,25 @@ func processMsg(ctx context.Context, input <-chan mqtt.Message) chan mqtt.Messag
 	return out
 }
 
-// setupMqttSubscriber initializes and manages the MQTT client connection, topic subscriptions, and background message processing loop.
+// setupMqttSubscriber initializes the MQTT client, configures TLS settings if running locally,
+// and establishes subscriptions for product creation and stock update topics.
 //
-// It connects to the configured broker, subscribes to product creation and stock update topics,
-// and routes incoming messages to internal gRPC handlers with context-propagated authorization tokens.
-// It also listens for termination signals to perform clean unsubscriptions and graceful shutdowns.
-func setupMqttSubscriber(svc *warehouseManagement) {
+// It spawns a worker goroutine using sync.WaitGroup to process incoming messages sequentially,
+// and blocks until an interrupt signal (SIGINT/SIGTERM) is received to perform a graceful shutdown.
+func (wm *warehouseManagement) setupMqttSubscriber() {
 	createTopic := "inventory/create-item"
 	updateTopic := "inventory/update-product-stock"
 
 	opts := mqtt.NewClientOptions()
 
-	if svc.locallyDeployed {
-		opts.AddBroker(fmt.Sprintf("tcps://%s", svc.mqttBrokerAddr))
+	if wm.locallyDeployed {
+		opts.AddBroker(fmt.Sprintf("tcps://%s", wm.mqttBrokerAddr))
 		opts.SetTLSConfig(&tls.Config{
 			InsecureSkipVerify: false,
 		})
 	}
 
-	opts.AddBroker(svc.mqttBrokerAddr)
+	opts.AddBroker(wm.mqttBrokerAddr)
 	opts.OnConnect = connectHandler
 	opts.OnConnectionLost = connectLostHandler
 
@@ -137,56 +140,9 @@ func setupMqttSubscriber(svc *warehouseManagement) {
 
 				switch msg.Topic() {
 				case createTopic:
-					var payload MqttCreateProductPayload
-					if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
-						log.Errorf("MQTT Worker: Failed to parse JSON creation payload: %v", err)
-						return
-					}
-
-					grpcReq := &warehousemanagementpb.CreateWarehouseProductRequest{
-						Name:        payload.Name,
-						Description: payload.Description,
-						PriceUsd: &commonpb.Money{
-							CurrencyCode: payload.PriceUsd.CurrencyCode,
-							Units:        payload.PriceUsd.Units,
-							Nanos:        payload.PriceUsd.Nanos,
-						},
-						Categories:   payload.Categories,
-						InitialStock: payload.InitialStock,
-					}
-
-					if payload.Token != "" {
-						reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
-					}
-					resp, err := svc.CreateNewProduct(reqCtx, grpcReq)
-					if err != nil {
-						log.Errorf("MQTT Worker: CreateNewProduct execution failed: %v", err)
-						return
-					}
-					log.Infof("MQTT Worker: Product successfully created via MQTT. Allocated ID: %s", resp.GetProduct().GetId())
+					wm.createProductFromMQTTMessage(reqCtx, msg)
 				case updateTopic:
-					var payload MqttUpdateStockPayload
-					if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
-						log.Errorf("MQTT Worker: Failed to parse JSON stock update payload: %v", err)
-						return
-					}
-
-					log.Infof("MQTT Worker: Processing stock update for item '%s' with delta %d", payload.ID, payload.Delta)
-
-					grpcReq := &inventorypb.ChangeInventoryProductStockRequest{
-						Id:    payload.ID,
-						Delta: payload.Delta,
-					}
-
-					if payload.Token != "" {
-						reqCtx = metadata.NewOutgoingContext(reqCtx, metadata.Pairs("authorization", "Bearer "+payload.Token))
-					}
-					resp, err := svc.UpdateProductStock(reqCtx, grpcReq)
-					if err != nil {
-						log.Errorf("MQTT Worker: UpdateProductStock execution failed: %v", err)
-						return
-					}
-					log.Infof("MQTT Worker: Stock updated successfully via MQTT. Product ID: %s", resp.GetId())
+					wm.updateProductFromMQTTMessage(reqCtx, msg)
 				}
 			}(msg)
 		}
@@ -218,4 +174,85 @@ func setupMqttSubscriber(svc *warehouseManagement) {
 	// Wait for the goroutine to finish
 	wg.Wait()
 	fmt.Println("MQTT cleanup complete, exiting...")
+}
+
+// createProductFromMQTTMessage parses an MQTT creation message payload and invokes the internal product creation handler.
+//
+// It unmarshals the message into an MqttCreateProductPayload, injects any provided authorization token
+// into the outgoing gRPC context, and calls CreateNewProduct.
+func (wm *warehouseManagement) createProductFromMQTTMessage(ctx context.Context, msg mqtt.Message) {
+	var payload MqttCreateProductPayload
+	if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
+		log.Errorf("MQTT Worker: Failed to parse JSON creation payload: %v", err)
+		return
+	}
+
+	grpcReq := &warehousemanagementpb.CreateWarehouseProductRequest{
+		Name:        payload.Name,
+		Description: payload.Description,
+		PriceUsd: &commonpb.Money{
+			CurrencyCode: payload.PriceUsd.CurrencyCode,
+			Units:        payload.PriceUsd.Units,
+			Nanos:        payload.PriceUsd.Nanos,
+		},
+		Categories:   payload.Categories,
+		InitialStock: payload.InitialStock,
+	}
+
+	md := metadata.MD{}
+	if payload.Token != "" {
+		md.Set("authorization", "Bearer "+payload.Token)
+	}
+	if payload.CallerID != "" {
+		md.Set("x-caller-id-secret", payload.CallerID)
+	}
+
+	if len(md) > 0 {
+		ctx = metadata.NewIncomingContext(ctx, md)
+	}
+
+	resp, err := wm.CreateNewProduct(ctx, grpcReq)
+	if err != nil {
+		log.Errorf("MQTT Worker: CreateNewProduct execution failed: %v", err)
+		return
+	}
+	log.Infof("MQTT Worker: Product successfully created via MQTT. Allocated ID: %s", resp.GetProduct().GetId())
+}
+
+// updateProductFromMQTTMessage parses an MQTT stock modification payload and invokes the internal stock update handler.
+//
+// It unmarshals the message into an MqttUpdateStockPayload, injects any provided authorization token
+// into the outgoing gRPC context, and calls UpdateProductStock.
+func (wm *warehouseManagement) updateProductFromMQTTMessage(ctx context.Context, msg mqtt.Message) {
+	var payload MqttUpdateStockPayload
+	if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
+		log.Errorf("MQTT Worker: Failed to parse JSON stock update payload: %v", err)
+		return
+	}
+
+	log.Infof("MQTT Worker: Processing stock update for item '%s' with delta %d", payload.ID, payload.Delta)
+
+	grpcReq := &inventorypb.ChangeInventoryProductStockRequest{
+		Id:    payload.ID,
+		Delta: payload.Delta,
+	}
+
+	md := metadata.MD{}
+	if payload.Token != "" {
+		md.Set("authorization", "Bearer "+payload.Token)
+	}
+	if payload.CallerID != "" {
+		md.Set("x-caller-id-secret", payload.CallerID)
+	}
+
+	if len(md) > 0 {
+		ctx = metadata.NewIncomingContext(ctx, md)
+	}
+
+	resp, err := wm.UpdateProductStock(ctx, grpcReq)
+	if err != nil {
+		log.Errorf("MQTT Worker: UpdateProductStock execution failed: %v", err)
+		return
+	}
+	log.Infof("MQTT Worker: Stock updated successfully via MQTT. Product ID: %s", resp.GetId())
 }

@@ -150,7 +150,7 @@ func main() {
 	mustConnGRPC(ctx, &svc.xaInventoryConn, svc.inventorySvcAddr, grpc.WithUnaryInterceptor(workflow.Interceptor))
 
 	run(srvPort, svc)
-	setupMqttSubscriber(svc)
+	svc.setupMqttSubscriber()
 }
 
 // run configures and starts the gRPC server for the warehouse management service.
