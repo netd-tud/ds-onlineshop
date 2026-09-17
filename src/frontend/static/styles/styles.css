@@ -344,7 +344,11 @@ main {
 .product-card img {
   width: 100%;
   height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
   border-radius: 20% 0 20% 20%;
+  background-color: #f0f0f0;
+  display: block;
 }
 
 .hot-product-card-name,
@@ -429,7 +433,11 @@ similar to that of the hot-products-row.
 
 .h-product .product-image {
   width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background-color: #f0f0f0;
   border-radius: 20% 20% 0 20%;
+  display: block;
 }
 
 .h-product .product-price {
@@ -588,9 +596,13 @@ similar to that of the hot-products-row.
 }
 
 .recommendations img {
-  height: 100%;
+  height: auto;
   width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background-color: #f0f0f0;
   border-radius: 20% 0 20% 20%;
+  display: block;
 }
 
 select {

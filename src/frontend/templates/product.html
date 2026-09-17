@@ -26,7 +26,7 @@
   <div class="h-product container">
     <div class="row">
       <div class="col-md-6">
-        <img class="product-image" alt="" src="{{ $.baseUrl }}{{$.product.Item.Picture}}" />
+        <img class="product-image" alt="{{ $.product.Item.Name }}" src="{{ if $.product.Item.Picture }}{{ $.baseUrl }}{{$.product.Item.Picture}}{{ else }}{{ $.baseUrl }}/static/img/no-image.svg{{ end }}" onerror="this.onerror=null;this.src='{{ $.baseUrl }}/static/img/no-image.svg';" />
       </div>
       <div class="product-info col-md-5">
         <div class="product-wrapper">

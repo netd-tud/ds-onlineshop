@@ -63,7 +63,12 @@
 }
 
 .cart-summary-item-row img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    background-color: #f0f0f0;
     border-radius: 20% 0 20% 20%;
+    display: block;
 }
 
 .cart-summary-item-row-item-id-row {

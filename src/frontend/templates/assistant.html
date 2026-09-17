@@ -177,9 +177,9 @@
 
         // Construct product image
         const botProductImg = document.createElement("img");
-        botProductImg.src = product["picture"];
+        botProductImg.src = product["picture"] ? product["picture"] : "{{ $.baseUrl }}/static/img/no-image.svg";
         botProductImg.classList.add("bot-product-img");
-        botProductImg.onerror = function() { this.style.display = 'none'; };
+        botProductImg.onerror = function() { this.onerror=null; this.src = '{{ $.baseUrl }}/static/img/no-image.svg'; };
         botProductDiv.appendChild(botProductImg);
 
         // Construct product description div
