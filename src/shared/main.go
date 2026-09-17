@@ -18,14 +18,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// contextKey is a custom string type used for defining context keys to prevent collisions across packages.
 type contextKey string
 
+// UserContextKey is the context key used to store and retrieve parsed UserClaims within the gRPC request context.
 const UserContextKey contextKey = "user_info"
 
+// CtxKeyLoadTest is an empty struct type used as a context key to store load-testing flags in the context.
 type CtxKeyLoadTest struct{}
 
+// LoadTestHeaderName is the HTTP/gRPC metadata header key used to propagate load-testing flags across microservices.
 const LoadTestHeaderName = "x-load-test"
 
+// UserClaims defines the JWT claims structure for end-user authorization.
+//
+// It encapsulates identity attributes, assigned user roles, and standard registered JWT claims.
 type UserClaims struct {
 	UserID   string   `json:"user_id"`
 	Username string   `json:"username"`
@@ -37,12 +44,16 @@ type UserClaims struct {
 
 var systemJWTSecret = []byte(os.Getenv("SYSTEM_JWT_SECRET"))
 
+// SystemClaims defines the JWT claims structure used for inter-service HMAC authentication.
+//
+// It captures the identifying service name, elevated service roles, and standard registered JWT claims.
 type SystemClaims struct {
 	ServiceName string   `json:"service_name"`
 	Roles       []string `json:"roles"`
 	jwt.RegisteredClaims
 }
 
+// Category represents a string-based classification for inventory and catalog product grouping.
 type Category string
 
 const (
@@ -58,6 +69,7 @@ const (
 	CategoryKitchen     Category = "kitchen"
 )
 
+// Permission specifies the access level (Read or Write) granted for a specific domain resource.
 type Permission int
 
 const (
@@ -65,11 +77,15 @@ const (
 	PermissionWrite
 )
 
+// CategoryAccess pairs an inventory Category with its associated access Permission level.
 type CategoryAccess struct {
 	Category   Category
 	Permission Permission
 }
 
+// CategoriesForClaims maps RBAC role strings to their corresponding CategoryAccess permission rules.
+//
+// It defines which product categories a role can access and whether read or write privileges are granted.
 var CategoriesForClaims = map[string]CategoryAccess{
 	"admins":                       {CategoryAll, PermissionWrite},
 	"inventory-accessories-view":   {CategoryAccessories, PermissionRead},
@@ -92,6 +108,9 @@ var CategoriesForClaims = map[string]CategoryAccess{
 	"inventory-home-manage":        {CategoryHome, PermissionWrite},
 }
 
+// CurrenciesForClaims maps RBAC role strings to their authorized ISO currency codes.
+//
+// It restricts multi-currency operational permissions based on assigned user roles.
 var CurrenciesForClaims = map[string][]string{
 	"admins":       {"USD", "EUR", "GBP", "JPY", "CAD", "TRY"},
 	"currency-usd": {"USD"},
@@ -102,12 +121,19 @@ var CurrenciesForClaims = map[string][]string{
 	"currency-try": {"TRY"},
 }
 
+// defaultPublicMethods defines a set of standard gRPC full method names that bypass authentication.
+//
+// By default, health check and health watch endpoints are marked public to permit unauthenticated health probes.
 var defaultPublicMethods = map[string]struct{}{
 	healthpb.Health_Check_FullMethodName: {},
 	healthpb.Health_Watch_FullMethodName: {},
 	healthpb.Health_List_FullMethodName:  {},
 }
 
+// NewAuthInterceptor constructs a gRPC UnaryServerInterceptor that enforces JWT bearer token authentication.
+//
+// It validates incoming RSA public-key user tokens or HMAC system tokens against exempt methods,
+// populating the request context with parsed claims upon success.
 func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.UnaryServerInterceptor {
 	pubKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyPEM)
 	if err != nil {
@@ -181,8 +207,11 @@ func NewAuthInterceptor(publicKeyPEM []byte, publicMethods ...string) grpc.Unary
 	}
 }
 
+// LoadTestInterceptor constructs a gRPC UnaryClientInterceptor that propagates load-testing markers via outgoing metadata.
+//
+// It inspects the context for a CtxKeyLoadTest value and attaches the x-load-test header to downstream gRPC calls.
 func LoadTestInterceptor() grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		if loadTest, ok := ctx.Value(CtxKeyLoadTest{}).(string); ok {
 			ctx = metadata.AppendToOutgoingContext(ctx, LoadTestHeaderName, loadTest)
 		}
@@ -191,21 +220,26 @@ func LoadTestInterceptor() grpc.UnaryClientInterceptor {
 	}
 }
 
+// GetClaims retrieves the parsed UserClaims from the provided context.
+//
+// It returns the user claims struct pointer and a boolean indicating whether valid claims were present.
 func GetClaims(ctx context.Context) (*UserClaims, bool) {
 	claims, ok := ctx.Value(UserContextKey).(*UserClaims)
 	return claims, ok
 }
 
+// ClaimsToCategories maps assigned user roles to their corresponding slice of allowed CategoryAccess permissions.
 func ClaimsToCategories(claims *UserClaims) []CategoryAccess {
-	var categories []CategoryAccess
+	var categoryAccesses []CategoryAccess
 	for _, role := range claims.Roles {
 		if access, ok := CategoriesForClaims[role]; ok {
-			categories = append(categories, access)
+			categoryAccesses = append(categoryAccesses, access)
 		}
 	}
-	return categories
+	return categoryAccesses
 }
 
+// ClaimsToCurrencies maps assigned user roles to their corresponding slice of supported ISO currency codes.
 func ClaimsToCurrencies(claims *UserClaims) []string {
 	var currencies []string
 	for _, role := range claims.Roles {
@@ -216,6 +250,9 @@ func ClaimsToCurrencies(claims *UserClaims) []string {
 	return currencies
 }
 
+// MustMapEnv populates the target string pointer with the value of the specified environment variable.
+//
+// It panics if the environment variable is unset or contains an empty string.
 func MustMapEnv(target *string, envKey string) {
 	v := os.Getenv(envKey)
 	if v == "" {
@@ -224,6 +261,9 @@ func MustMapEnv(target *string, envKey string) {
 	*target = v
 }
 
+// MustConnGRPC initializes an insecure gRPC client connection with OpenTelemetry stats handlers and load-test interceptors.
+//
+// It assigns the created connection to the provided pointer and panics if the connection setup fails.
 func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
 	*conn, err = grpc.NewClient(addr,
@@ -235,10 +275,14 @@ func MustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	}
 }
 
+// ContextWithLoadTest wraps the provided context with a load-testing flag value.
 func ContextWithLoadTest(ctx context.Context, loadTest string) context.Context {
 	return context.WithValue(ctx, CtxKeyLoadTest{}, loadTest)
 }
 
+// IsLoadTest checks whether the current execution context or incoming metadata denotes a load-test invocation.
+//
+// It returns true if either the context key or incoming 'x-load-test' metadata header equals "true".
 func IsLoadTest(ctx context.Context) bool {
 	if loadTest, ok := ctx.Value(CtxKeyLoadTest{}).(string); ok && loadTest == "true" {
 		return true
@@ -254,6 +298,9 @@ func IsLoadTest(ctx context.Context) bool {
 	return false
 }
 
+// GenerateSystemToken creates a short-lived, HMAC-signed system JWT for inter-service authentication.
+//
+// It returns the signed JWT string or an error if the SYSTEM_JWT_SECRET environment variable is missing.
 func GenerateSystemToken(serviceName string) (string, error) {
 	if len(systemJWTSecret) == 0 {
 		return "", fmt.Errorf("SYSTEM_JWT_SECRET not set")
@@ -274,6 +321,9 @@ func GenerateSystemToken(serviceName string) (string, error) {
 	return token.SignedString(systemJWTSecret)
 }
 
+// ValidateSystemToken verifies and parses an HMAC-signed system JWT string.
+//
+// It checks the signing method and signature validity, returning the parsed SystemClaims or an error.
 func ValidateSystemToken(tokenString string) (*SystemClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &SystemClaims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
