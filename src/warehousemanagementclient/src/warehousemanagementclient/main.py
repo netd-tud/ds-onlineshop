@@ -167,7 +167,7 @@ def grpc_execution(config: Dict[str, Any], action: str, grpc_address: str, jwt: 
         logging.error(f"gRPC execution failed: {e}")
 
 
-def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
+def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str, caller_id: str):
     """
     Serializes product creation metadata and authorization token into JSON format and publishes
     it to the 'inventory/create-item' MQTT topic with QoS 1.
@@ -186,7 +186,8 @@ def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
         },
         "categories": product_data.get("categories", []),
         "initial_stock": product_data.get("initial_stock", 0),
-        "token": jwt
+        "token": jwt,
+        "caller_id": caller_id
     }
 
     create_bytes = json.dumps(new_product_payload)
@@ -204,7 +205,7 @@ def handle_create_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
         logging.error(f"MQTT: Failed during publish wait: {e}")
 
 
-def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
+def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str, caller_id :str):
     """
     Serializes stock modification parameters and authorization token into JSON format and publishes
     it to the 'inventory/update-product-stock' MQTT topic with QoS 1.
@@ -215,7 +216,8 @@ def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
     update_payload = {
         "id": update_data.get("id", ""),
         "delta": update_data.get("delta", 0),
-        "token": jwt
+        "token": jwt,
+        "caller_id": caller_id
     }
 
     update_bytes = json.dumps(update_payload)
@@ -233,7 +235,7 @@ def handle_update_mqtt(client: mqtt.Client, config: Dict[str, Any], jwt: str):
         logging.error(f"MQTT: Failed during publish wait: {e}")
 
 
-def mqtt_execution(config: Dict[str, Any], jwt: str):
+def mqtt_execution(config: Dict[str, Any], jwt: str, caller_id: str):
     """
     Initializes a TLS-enabled MQTT client, connects to the broker, loop-starts the background thread,
     and dispatches requested operations ('create' or 'update') before disconnecting.
@@ -254,9 +256,9 @@ def mqtt_execution(config: Dict[str, Any], jwt: str):
         logging.info("MQTT: Connected successfully to broker")
 
         if action == "create":
-            handle_create_mqtt(mqtt_client, config, jwt)
+            handle_create_mqtt(mqtt_client, config, jwt, caller_id)
         elif action == "update":
-            handle_update_mqtt(mqtt_client, config, jwt)
+            handle_update_mqtt(mqtt_client, config, jwt, caller_id)
     except Exception as e:
         logging.error(f"MQTT: Connection failed: {e}")
     finally:
@@ -308,11 +310,12 @@ def main():
         logging.error(f"Failed to authenticate with AuthService: {e}")
         sys.exit(1)
 
+    caller_id = config.get("caller-id", "")
     if connection_type == "mqtt":
-        mqtt_execution(config, jwt)
+        mqtt_execution(config, jwt, caller_id)
         return
     elif connection_type == "grpc":
-        grpc_execution(config, action, grpc_address, jwt, config.get("caller-id", ""))
+        grpc_execution(config, action, grpc_address, jwt, caller_id)
         return
 
 

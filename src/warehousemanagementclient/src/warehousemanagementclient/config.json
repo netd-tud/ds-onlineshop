@@ -5,11 +5,11 @@
   "password": "admin",
   "caller-id": "student123",
 
-  "connection-type": "grpc",
+  "connection-type": "mqtt",
 
   "dt-function": "naive",
 
-  "action": "create",
+  "action": "update",
 
   "create_product": {
     "name": "Hat",
@@ -24,7 +24,7 @@
   },
 
   "update_stock": {
-    "id": "OLJCESPC7Z",
+    "id": "--ReN_gJls",
     "delta": 85
   }
 }
